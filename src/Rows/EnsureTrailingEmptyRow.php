@@ -22,6 +22,12 @@ final class EnsureTrailingEmptyRow
             return;
         }
 
+        $maxItems = $grid->getMaxItems();
+
+        if ($maxItems !== null && count($rows) >= $maxItems) {
+            return;
+        }
+
         $newKey = $grid->generateUuid() ?? count($rows);
         $rows[$newKey] = [];
 

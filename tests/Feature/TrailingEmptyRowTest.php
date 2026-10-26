@@ -91,3 +91,53 @@ it('runs afterStateUpdated for a live field on the blank row', function (): void
 
     expect($component->get("data.lines.{$trailing}.note"))->toBe('unit changed');
 });
+
+it('counts only filled rows for minItems and maxItems', function (): void {
+    $component = mountLines(
+        [['product_id' => '1', 'quantity' => 2], ['product_id' => '2', 'quantity' => 1]],
+        fn (): array => [
+            DataGrid::make('lines')
+                ->trailingEmptyRow(filledBy: 'product_id')
+                ->minItems(2)
+                ->maxItems(2)
+                ->schema([
+                    Select::make('product_id')->options(['1' => 'Tea', '2' => 'Coffee'])->required(),
+                    TextInput::make('quantity')->numeric()->default(1)->required(),
+                ]),
+        ],
+    );
+
+    expect(rowKeys($component))->toHaveCount(2);
+
+    $component->call('save')->assertHasNoErrors();
+});
+
+it('keeps the blank row out of minItems and stops adding it at maxItems', function (): void {
+    $component = mountLines(
+        [['product_id' => '1', 'quantity' => 2]],
+        fn (): array => [
+            DataGrid::make('lines')
+                ->trailingEmptyRow(filledBy: 'product_id')
+                ->minItems(2)
+                ->maxItems(3)
+                ->schema([
+                    Select::make('product_id')->options(['1' => 'Tea', '2' => 'Coffee'])->required()->live(),
+                    TextInput::make('quantity')->numeric()->default(1)->required(),
+                ]),
+        ],
+    );
+
+    expect(rowKeys($component))->toHaveCount(2);
+
+    $component->call('save')->assertHasErrors(['data.lines' => 'The lines field must have at least 2 items.']);
+
+    $component->set('data.lines.'.rowKeys($component)[1].'.product_id', '2');
+
+    expect(rowKeys($component))->toHaveCount(3);
+
+    $component->set('data.lines.'.rowKeys($component)[2].'.product_id', '1');
+
+    expect(rowKeys($component))->toHaveCount(3);
+
+    $component->call('save')->assertHasNoErrors();
+});

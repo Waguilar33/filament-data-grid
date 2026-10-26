@@ -16,6 +16,7 @@ use Waguilar\FilamentDataGrid\Actions\BuildEditCellAction;
 use Waguilar\FilamentDataGrid\Payload\BuildGridPayload;
 use Waguilar\FilamentDataGrid\Rows\EnsureTrailingEmptyRow;
 use Waguilar\FilamentDataGrid\Rows\IsRowBlank;
+use Waguilar\FilamentDataGrid\Rows\LimitFilledRows;
 use Waguilar\FilamentDataGrid\Rows\ResolveRowFilledFields;
 
 use function Filament\Support\generate_icon_html;
@@ -54,6 +55,43 @@ class DataGrid extends Repeater
         $this->trailingEmptyRowFilledBy = is_string($filledBy) ? [$filledBy] : $filledBy;
 
         return $this;
+    }
+
+    public function maxItems(int|Closure|null $count): static
+    {
+        $this->maxItems = $count;
+
+        $this->rule(
+            static fn (DataGrid $component): Closure => app(LimitFilledRows::class)->max($component),
+            static fn (DataGrid $component): bool => $component->getMaxItems() !== null,
+        );
+
+        return $this;
+    }
+
+    public function minItems(int|Closure|null $count): static
+    {
+        $this->minItems = $count;
+
+        $this->rule(
+            static fn (DataGrid $component): Closure => app(LimitFilledRows::class)->min($component),
+            static fn (DataGrid $component): bool => $component->getMinItems() !== null,
+        );
+
+        return $this;
+    }
+
+    public function getItemsCount(): int
+    {
+        $rows = $this->getRawState();
+
+        if (! is_array($rows)) {
+            return 0;
+        }
+
+        $lastKey = array_key_last($rows);
+
+        return count($rows) - ($lastKey !== null && $this->isTrailingBlankRow($lastKey) ? 1 : 0);
     }
 
     public function frozenColumns(int|Closure $count = 1): static
