@@ -13,6 +13,8 @@ return [
         'save' => 'Save',
         'edit_in_slide_over' => 'Edit in a slide-over',
         'add_sample_lines' => 'Add sample lines',
+        'stock' => 'Stock',
+        'salesperson' => 'Salesperson',
         'add_adjustment' => 'Add adjustment',
     ],
     'columns' => [
@@ -25,7 +27,21 @@ return [
         'total' => 'Total',
         'reason' => 'Reason',
         'amount' => 'Amount',
+        'kind' => 'Type',
+        'status' => 'Status',
+        'date' => 'Date',
+        'color' => 'Color',
+        'available' => 'Available',
+        'salesperson' => 'Salesperson',
         'approved' => 'Approved',
+    ],
+    'kinds' => [
+        'credit' => 'Credit',
+        'debit' => 'Debit',
+    ],
+    'statuses' => [
+        'draft' => 'Draft',
+        'sent' => 'Sent',
     ],
     'units' => [
         'box' => 'Box',

@@ -5,11 +5,15 @@ declare(strict_types=1);
 namespace Workbench\App\Filament\Pages;
 
 use Filament\Actions\Action;
+use Filament\Forms\Components\ColorPicker;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Repeater\TableColumn;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\ToggleButtons;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -17,6 +21,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Str;
 use Waguilar33\FilamentDataGrid\DataGrid;
 use Workbench\App\Catalog\FakeProducts;
@@ -53,7 +58,8 @@ final class DataGridDemo extends Page
                 ['product_id' => 77, 'quantity' => 1.5, 'unit' => 'kg', 'warehouse' => null, 'is_gift' => true, 'comment' => 'Fragile', 'note' => null],
             ],
             'adjustments' => [
-                ['reason' => 'Damaged box', 'amount' => 12.5, 'approved' => false],
+                ['reason' => 'Damaged box', 'kind' => 'credit', 'status' => 'draft', 'date' => now()->toDateString(), 'color' => '#f59e0b', 'amount' => 12.5, 'approved' => false],
+                ['reason' => 'Late delivery', 'kind' => 'debit', 'status' => 'sent', 'date' => null, 'color' => null, 'amount' => 4, 'approved' => true],
             ],
         ]);
     }
@@ -73,7 +79,41 @@ final class DataGridDemo extends Page
         return DataGrid::make('lines')
             ->hiddenLabel()
             ->frozenColumns()
+            ->reorderable(false)
             ->trailingEmptyRow(filledBy: 'product_id')
+            ->extraItemActions([
+                Action::make('stock')
+                    ->label(__('demo::demo.actions.stock'))
+                    ->icon(Heroicon::OutlinedCube)
+                    ->slideOver()
+                    ->modalHeading(fn (array $arguments, DataGrid $component): string => self::productName($component, $arguments))
+                    ->modalSubmitAction(false)
+                    ->schema(fn (array $arguments, DataGrid $component): array => [
+                        TextEntry::make('available')
+                            ->label(__('demo::demo.columns.available'))
+                            ->state(fn (): int => (int) (crc32(self::productName($component, $arguments)) % 40)),
+                    ]),
+                Action::make('salesperson')
+                    ->label(__('demo::demo.actions.salesperson'))
+                    ->icon(Heroicon::OutlinedUser)
+                    ->fillForm(fn (array $arguments, DataGrid $component): array => [
+                        'salesperson' => self::rowState($component, $arguments)['salesperson'] ?? null,
+                    ])
+                    ->schema([
+                        Select::make('salesperson')
+                            ->label(__('demo::demo.columns.salesperson'))
+                            ->options(['ana' => 'Ana', 'luis' => 'Luis', 'marta' => 'Marta']),
+                    ])
+                    ->action(function (array $data, array $arguments, DataGrid $component): void {
+                        $rows = $component->getRawState();
+                        $item = $arguments['item'] ?? null;
+
+                        if (is_array($rows) && is_string($item) && is_array($rows[$item] ?? null)) {
+                            $rows[$item]['salesperson'] = $data['salesperson'] ?? null;
+                            $component->rawState($rows);
+                        }
+                    }),
+            ])
             ->table([
                 TableColumn::make(__('demo::demo.columns.product'))->markAsRequired(),
                 TableColumn::make(__('demo::demo.columns.quantity'))->width('8rem')->alignEnd(),
@@ -121,7 +161,27 @@ final class DataGridDemo extends Page
                     ->money('GTQ')
                     ->placeholder('—'),
                 Hidden::make('note'),
+                Hidden::make('salesperson'),
             ]);
+    }
+
+    /**
+     * @param  array<mixed>  $arguments
+     */
+    private static function productName(DataGrid $grid, array $arguments): string
+    {
+        return FakeProducts::find(self::rowState($grid, $arguments)['product_id'] ?? null)['name'] ?? '';
+    }
+
+    /**
+     * @param  array<mixed>  $arguments
+     * @return array<string, mixed>
+     */
+    private static function rowState(DataGrid $grid, array $arguments): array
+    {
+        $item = $arguments['item'] ?? null;
+
+        return is_string($item) ? $grid->getRawItemState($item) : [];
     }
 
     public static function adjustmentsGrid(): DataGrid
@@ -132,11 +192,25 @@ final class DataGridDemo extends Page
             ->addActionLabel(__('demo::demo.actions.add_adjustment'))
             ->table([
                 TableColumn::make(__('demo::demo.columns.reason'))->markAsRequired(),
-                TableColumn::make(__('demo::demo.columns.amount'))->width('10rem')->alignEnd(),
+                TableColumn::make(__('demo::demo.columns.kind'))->width('9rem'),
+                TableColumn::make(__('demo::demo.columns.status'))->width('9rem'),
+                TableColumn::make(__('demo::demo.columns.date'))->width('11rem'),
+                TableColumn::make(__('demo::demo.columns.color'))->width('8rem'),
+                TableColumn::make(__('demo::demo.columns.amount'))->width('8rem')->alignEnd(),
                 TableColumn::make(__('demo::demo.columns.approved'))->width('7rem')->alignCenter(),
             ])
             ->schema([
                 TextInput::make('reason')->required(),
+                Radio::make('kind')->options([
+                    'credit' => __('demo::demo.kinds.credit'),
+                    'debit' => __('demo::demo.kinds.debit'),
+                ])->required(),
+                ToggleButtons::make('status')->options([
+                    'draft' => __('demo::demo.statuses.draft'),
+                    'sent' => __('demo::demo.statuses.sent'),
+                ]),
+                DatePicker::make('date')->minDate(now()->subYear())->maxDate(now()->addYear()),
+                ColorPicker::make('color'),
                 TextInput::make('amount')->numeric()->minValue(0)->step(0.01)->required(),
                 Toggle::make('approved'),
             ]);

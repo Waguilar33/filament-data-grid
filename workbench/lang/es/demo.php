@@ -13,6 +13,8 @@ return [
         'save' => 'Guardar',
         'edit_in_slide_over' => 'Editar en panel lateral',
         'add_sample_lines' => 'Agregar líneas de ejemplo',
+        'stock' => 'Existencias',
+        'salesperson' => 'Vendedor',
         'add_adjustment' => 'Agregar ajuste',
     ],
     'columns' => [
@@ -25,7 +27,21 @@ return [
         'total' => 'Total',
         'reason' => 'Motivo',
         'amount' => 'Monto',
+        'kind' => 'Tipo',
+        'status' => 'Estado',
+        'date' => 'Fecha',
+        'color' => 'Color',
+        'available' => 'Disponibles',
+        'salesperson' => 'Vendedor',
         'approved' => 'Aprobado',
+    ],
+    'kinds' => [
+        'credit' => 'Crédito',
+        'debit' => 'Débito',
+    ],
+    'statuses' => [
+        'draft' => 'Borrador',
+        'sent' => 'Enviado',
     ],
     'units' => [
         'box' => 'Caja',
