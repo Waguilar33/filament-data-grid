@@ -11,7 +11,7 @@ const context = await esbuild.context({
     entryPoints: entries,
     outdir: 'resources/dist',
     bundle: true,
-    minify: !isWatching,
+    minify: !isWatching && !process.argv.includes("--dev"),
     format: 'esm',
     platform: 'browser',
     target: ['es2022'],
