@@ -7,10 +7,10 @@ namespace Workbench\App\Catalog;
 final class FakeWarehouses
 {
     private const array STOCK = [
-        'z10-b6' => ['zone' => 'Zona 10', 'place' => 'Bodega 6', 'available' => 8],
-        'z10-b2' => ['zone' => 'Zona 10', 'place' => 'Bodega 2', 'available' => 0],
-        'z4-main' => ['zone' => 'Zona 4', 'place' => 'Principal', 'available' => 31],
-        'mix-shop' => ['zone' => 'Mixco', 'place' => 'Tienda', 'available' => 3],
+        'north-6' => ['zone' => 'North', 'place' => 'Aisle 6', 'available' => 8],
+        'north-2' => ['zone' => 'North', 'place' => 'Aisle 2', 'available' => 0],
+        'south-main' => ['zone' => 'South', 'place' => 'Main', 'available' => 31],
+        'east-shop' => ['zone' => 'East', 'place' => 'Shop', 'available' => 3],
     ];
 
     /**

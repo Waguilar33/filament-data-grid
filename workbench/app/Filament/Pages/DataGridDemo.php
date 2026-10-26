@@ -23,7 +23,7 @@ use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Str;
-use Waguilar33\FilamentDataGrid\DataGrid;
+use Waguilar\FilamentDataGrid\DataGrid;
 use Workbench\App\Catalog\FakeProducts;
 use Workbench\App\Catalog\FakeWarehouses;
 
@@ -54,7 +54,7 @@ final class DataGridDemo extends Page
     {
         $this->form->fill([
             'lines' => [
-                ['product_id' => 12, 'quantity' => 2, 'unit' => 'box', 'warehouse' => 'z10-b6', 'is_gift' => false, 'comment' => null, 'note' => 'seeded'],
+                ['product_id' => 12, 'quantity' => 2, 'unit' => 'box', 'warehouse' => 'north-6', 'is_gift' => false, 'comment' => null, 'note' => 'seeded'],
                 ['product_id' => 77, 'quantity' => 1.5, 'unit' => 'kg', 'warehouse' => null, 'is_gift' => true, 'comment' => 'Fragile', 'note' => null],
             ],
             'adjustments' => [
@@ -159,7 +159,7 @@ final class DataGridDemo extends Page
                     ->disabled(fn (Get $get): bool => blank($get('product_id'))),
                 TextEntry::make('total')
                     ->state(fn (Get $get): ?float => self::lineTotal($get))
-                    ->money('GTQ')
+                    ->money('USD')
                     ->placeholder('—'),
                 Hidden::make('note'),
                 Hidden::make('salesperson'),
