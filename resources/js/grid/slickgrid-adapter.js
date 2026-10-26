@@ -9,7 +9,7 @@ const ROW_HEIGHT = 44
 const FLEXIBLE_MIN_WIDTH = 240
 const ACTIONS_WIDTH = 56
 const MOVE_WIDTH = 36
-const INPUT_TYPES = ['text', 'number', 'select', 'date', 'modal']
+const EDITABLE_TYPES = ['text', 'number', 'select', 'toggle', 'date', 'modal']
 
 const toPixels = (width) => {
     if (!width) {
@@ -155,7 +155,7 @@ export function createGrid(
             cell.error ? 'fi-data-grid-cell-invalid' : '',
             cell.disabled ? 'fi-data-grid-cell-disabled' : '',
             ['toggle', 'modal'].includes(type) && !cell.disabled ? 'fi-data-grid-cell-clickable' : '',
-            INPUT_TYPES.includes(type) && !cell.disabled ? 'fi-data-grid-cell-input' : '',
+            EDITABLE_TYPES.includes(type) && !cell.disabled ? 'fi-data-grid-cell-editable' : '',
         ]
             .filter(Boolean)
             .join(' ')
