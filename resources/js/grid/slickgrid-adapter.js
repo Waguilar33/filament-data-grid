@@ -437,13 +437,14 @@ export function createGrid(
     resizeObserver.observe(element)
     element.querySelectorAll('.slick-header').forEach((header) => resizeObserver.observe(header))
 
-    grid.onColumnsResized.subscribe(() => {
-        grid.getColumns().forEach((column) => {
-            if (column.source && column.width !== column.fixedWidth && column.previousWidth !== column.width) {
-                userWidths.set(column.field, column.width)
-                column.fixedWidth = column.width
-            }
-        })
+    grid.onColumnsResized.subscribe((event, { triggeredByColumn }) => {
+        const column = grid.getColumns().find((candidate) => candidate.id === triggeredByColumn)
+
+        if (column?.source) {
+            userWidths.set(column.field, column.width)
+            column.fixedWidth = column.width
+        }
+
         markHorizontalOverflow()
     })
 

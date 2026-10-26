@@ -126,8 +126,9 @@ final class DataGridDemo extends Page
             ->schema([
                 Select::make('product_id')
                     ->searchable()
+                    ->allowHtml()
                     ->getSearchResultsUsing(fn (string $search): array => FakeProducts::search($search))
-                    ->getOptionLabelUsing(fn (mixed $value): ?string => FakeProducts::find($value)['name'] ?? null)
+                    ->getOptionLabelUsing(fn (mixed $value): ?string => e(FakeProducts::find($value)['name'] ?? ''))
                     ->required()
                     ->live()
                     ->afterStateUpdated(function (mixed $state, Set $set): void {

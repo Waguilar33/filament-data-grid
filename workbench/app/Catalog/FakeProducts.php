@@ -67,7 +67,11 @@ final class FakeProducts
 
         foreach (self::all() as $product) {
             if (mb_strtolower($product['sku']) === $needle || str_contains(mb_strtolower($product['name']), $needle)) {
-                $results[$product['id']] = "{$product['name']} · {$product['sku']}";
+                $results[$product['id']] = sprintf(
+                    '<div>%s</div><div style="font-size: 0.75rem; opacity: 0.65">%s</div>',
+                    e($product['name']),
+                    e($product['sku']),
+                );
             }
 
             if (count($results) >= $limit) {
