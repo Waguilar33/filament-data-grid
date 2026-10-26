@@ -79,6 +79,9 @@ export function createGrid(element, { payload, translations, isDarkMode, onCellC
             })
         }
 
+        columns[0].cssClass += ' fi-data-grid-first-column'
+        columns[columns.length - 1].cssClass += ' fi-data-grid-last-column'
+
         return columns
     }
 
@@ -138,7 +141,10 @@ export function createGrid(element, { payload, translations, isDarkMode, onCellC
             }
 
             return {
-                cssClasses: row?.isTrailingBlank ? 'fi-data-grid-row-trailing' : '',
+                cssClasses: [
+                    row?.isTrailingBlank ? 'fi-data-grid-row-trailing' : '',
+                    index === dataProvider.getLength() - 1 ? 'fi-data-grid-row-last' : '',
+                ].join(' '),
                 columns,
             }
         },
@@ -310,9 +316,8 @@ export function createGrid(element, { payload, translations, isDarkMode, onCellC
             }
 
             frozenLength = null
-            grid.updateRowCount()
+            grid.invalidate()
             grid.resizeCanvas()
-            grid.render()
         })
 
     grid.onBeforeCellEditorDestroy.subscribe(releaseFrozenLength)
