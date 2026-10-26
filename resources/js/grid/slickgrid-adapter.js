@@ -4,7 +4,7 @@ import { NativeSelectEditor, NumberEditor, SearchSelectEditor, TextEditor } from
 
 const ACTIONS_COLUMN = '__actions'
 const ROW_HEIGHT = 44
-const FLEXIBLE_MIN_WIDTH = 120
+const FLEXIBLE_MIN_WIDTH = 200
 const ACTIONS_WIDTH = 56
 
 const toPixels = (width) => {
@@ -219,7 +219,12 @@ export function createGrid(element, { payload, translations, isDarkMode, onCellC
         grid.resizeCanvas()
     }
 
-    const resizeObserver = new ResizeObserver(() => fitColumns())
+    let resizeFrame = null
+
+    const resizeObserver = new ResizeObserver(() => {
+        cancelAnimationFrame(resizeFrame)
+        resizeFrame = requestAnimationFrame(() => fitColumns())
+    })
     resizeObserver.observe(element)
     element.querySelectorAll('.slick-header').forEach((header) => resizeObserver.observe(header))
 
@@ -431,6 +436,7 @@ export function createGrid(element, { payload, translations, isDarkMode, onCellC
         },
 
         destroy() {
+            cancelAnimationFrame(resizeFrame)
             resizeObserver.disconnect()
             grid.destroy()
         },

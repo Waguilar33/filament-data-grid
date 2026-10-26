@@ -7,6 +7,7 @@ export default function dataGrid({ statePath, translations }) {
         grid: null,
         localChanges: new Map(),
         observers: [],
+        stopInterceptingMessages: null,
         wasEditingOnKeyDown: false,
 
         init() {
@@ -22,7 +23,7 @@ export default function dataGrid({ statePath, translations }) {
             this.observe(this.$refs.payload, ['data-payload'], () => this.applyPayload())
             this.observe(document.documentElement, ['class'], () => this.grid.setDarkMode(isDarkMode()))
 
-            this.$wire.$interceptMessage(({ onFinish }) => {
+            this.stopInterceptingMessages = this.$wire.$interceptMessage(({ onFinish }) => {
                 const sentChanges = new Map(this.localChanges)
 
                 onFinish(() =>
@@ -40,6 +41,7 @@ export default function dataGrid({ statePath, translations }) {
         },
 
         destroy() {
+            this.stopInterceptingMessages?.()
             this.observers.forEach((observer) => observer.disconnect())
             this.grid?.destroy()
         },

@@ -57,6 +57,7 @@ final readonly class DescribeColumn
             $component instanceof TextInput => [
                 'placeholder' => $component->getPlaceholder(),
                 'integer' => $component->isInteger(),
+                ...($type === CellEditorType::Number ? ['messages' => $this->numberMessages()] : []),
             ],
             $component instanceof Select => [
                 'placeholder' => $component->getPlaceholder(),
@@ -68,6 +69,19 @@ final readonly class DescribeColumn
             ],
             default => [],
         };
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function numberMessages(): array
+    {
+        return [
+            'numeric' => $this->text(__('validation.numeric')),
+            'integer' => $this->text(__('validation.integer')),
+            'min' => $this->text(__('validation.min.numeric')),
+            'max' => $this->text(__('validation.max.numeric')),
+        ];
     }
 
     private function componentLabel(Component $component): string|Htmlable|null
