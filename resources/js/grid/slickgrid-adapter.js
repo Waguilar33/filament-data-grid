@@ -112,7 +112,11 @@ export function createGrid(
                 selectable: false,
                 cssClass: 'fi-data-grid-cell fi-data-grid-actions-cell',
                 headerCssClass: 'fi-data-grid-header',
-                formatter: (rowIndex, cellIndex, value, column, item) => renderActions(rows.get(item.__key)?.actions),
+                formatter: (rowIndex, cellIndex, value, column, item) => {
+                    const template = payload.actionTemplates?.[rows.get(item.__key)?.actions]
+
+                    return renderActions(template?.replaceAll(payload.rowKeyPlaceholder, item.__key))
+                },
             })
         }
 

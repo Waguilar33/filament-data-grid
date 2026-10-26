@@ -22,7 +22,7 @@ final readonly class BuildGridPayload
     ) {}
 
     /**
-     * @return array{columns: list<array<string, mixed>>, rows: list<array<string, mixed>>, hasActions: bool, frozenColumns: int, reorderable: bool}
+     * @return array{columns: list<array<string, mixed>>, rows: list<array<string, mixed>>, hasActions: bool, actionTemplates: array<string, string>, rowKeyPlaceholder: string, frozenColumns: int, reorderable: bool}
      */
     public function handle(DataGrid $grid): array
     {
@@ -36,24 +36,28 @@ final readonly class BuildGridPayload
         $errors = $grid->getLivewire()->getErrorBag();
         $errors = $errors instanceof MessageBag ? $errors : new MessageBag;
         $rows = [];
+        $actionTemplates = [];
 
         foreach ($grid->getItems() as $key => $item) {
-            $rows[] = $this->describeRow($grid, (string) $key, $item, $errors);
+            $rows[] = $this->describeRow($grid, (string) $key, $item, $errors, $actionTemplates);
         }
 
         return [
             'columns' => $columns,
             'rows' => $rows,
             'hasActions' => $this->renderRowActions->hasActions($grid),
+            'actionTemplates' => $actionTemplates,
+            'rowKeyPlaceholder' => RenderRowActions::ROW_KEY_PLACEHOLDER,
             'frozenColumns' => min($grid->getFrozenColumns(), count($columns)),
             'reorderable' => $grid->isReorderableWithDragAndDrop(),
         ];
     }
 
     /**
+     * @param  array<string, string>  $actionTemplates
      * @return array<string, mixed>
      */
-    private function describeRow(DataGrid $grid, string $key, Schema $item, MessageBag $errors): array
+    private function describeRow(DataGrid $grid, string $key, Schema $item, MessageBag $errors, array &$actionTemplates): array
     {
         $cells = [];
 
@@ -69,7 +73,7 @@ final readonly class BuildGridPayload
             'state' => $state,
             'cells' => $cells,
             'isTrailingBlank' => $grid->isTrailingBlankRow($key),
-            'actions' => $this->renderRowActions->handle($grid, $key),
+            'actions' => $this->renderRowActions->template($grid, $key, $actionTemplates),
         ];
     }
 

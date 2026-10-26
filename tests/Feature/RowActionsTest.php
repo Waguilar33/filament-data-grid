@@ -39,8 +39,9 @@ it('renders a delete action per row and none on the trailing blank row', functio
         fn (): array => [DataGrid::make('lines')->trailingEmptyRow()->schema([TextInput::make('name')])],
     );
 
-    $rows = grid($component)->getGridPayload()['rows'];
+    $payload = grid($component)->getGridPayload();
 
-    expect($rows[0]['actions'])->toContain("mountAction('delete'")
-        ->and($rows[1]['actions'])->toBeNull();
+    expect(rowActionsHtml($payload, 0))->toContain("mountAction('delete'")
+        ->and(rowActionsHtml($payload, 1))->toBeNull()
+        ->and($payload['actionTemplates'])->toHaveCount(1);
 });

@@ -46,3 +46,17 @@ function rowKeys(Testable $component, string $name = 'lines'): array
 {
     return array_map(strval(...), array_keys($component->get("data.{$name}") ?? []));
 }
+
+/**
+ * @param  array<string, mixed>  $payload
+ */
+function rowActionsHtml(array $payload, int $row): ?string
+{
+    $id = $payload['rows'][$row]['actions'] ?? null;
+
+    if ($id === null) {
+        return null;
+    }
+
+    return str_replace($payload['rowKeyPlaceholder'], $payload['rows'][$row]['key'], $payload['actionTemplates'][$id]);
+}

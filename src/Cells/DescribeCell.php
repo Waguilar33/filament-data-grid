@@ -76,6 +76,8 @@ final readonly class DescribeCell
     {
         $entry->hiddenLabel();
 
-        return $entry instanceof HasEmbeddedView ? $entry->toEmbeddedHtml() : $entry->toHtml();
+        $html = $entry instanceof HasEmbeddedView ? $entry->toEmbeddedHtml() : $entry->toHtml();
+
+        return trim((string) preg_replace('/>\s+</', '> <', $html));
     }
 }

@@ -22,7 +22,7 @@ it('puts extra item actions and delete in a row menu', function (): void {
             ->schema([TextInput::make('name')]),
     ]);
 
-    $html = grid($component)->getGridPayload()['rows'][0]['actions'];
+    $html = rowActionsHtml(grid($component)->getGridPayload(), 0);
 
     expect($html)->toContain('fi-dropdown')
         ->toContain("mountAction('rename'")
