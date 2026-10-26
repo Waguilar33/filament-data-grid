@@ -5,10 +5,6 @@ const isWatching = process.argv.includes('--watch')
 const entries = [
     { in: 'resources/js/data-grid.js', out: 'data-grid' },
     { in: 'resources/css/data-grid.css', out: 'data-grid' },
-    { in: 'resources/js/spike/slickgrid.js', out: 'spike-slickgrid' },
-    { in: 'resources/js/spike/slickgrid.css', out: 'spike-slickgrid' },
-    { in: 'resources/js/spike/tabulator.js', out: 'spike-tabulator' },
-    { in: 'resources/js/spike/tabulator.css', out: 'spike-tabulator' },
 ]
 
 const context = await esbuild.context({
