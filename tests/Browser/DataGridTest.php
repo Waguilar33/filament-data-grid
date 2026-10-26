@@ -56,7 +56,7 @@ it('picks a product with the Filament select, recalculates the row and appends a
 
     $page->assertSeeIn(cell(2, 0).' .fi-select-input-value-label', 'Honey')
         ->assertScript('document.activeElement.matches(".fi-data-grid-editor-number")')
-        ->assertSeeIn(cell(2, 6), 'GTQ')
+        ->assertSeeIn(cell(2, 6), '$')
         ->assertPresent(cell(3, 0))
         ->assertNoJavaScriptErrors();
 });
@@ -211,4 +211,14 @@ it('marks editable cells apart from read-only cells', function (): void {
         ->assertAttributeDoesntContain(cell(0, 6), 'class', 'fi-data-grid-cell-editable')
         ->assertAttributeContains(cell(0, 4), 'class', 'fi-data-grid-cell-editable')
         ->assertAttributeDoesntContain(cell(2, 5), 'class', 'fi-data-grid-cell-editable');
+});
+
+it('starts editing a text cell by typing on it', function (): void {
+    visit('/demo/data-grid-demo')
+        ->click(cell(0, 1))
+        ->keys(cell(0, 1).' input', 'Escape')
+        ->keys(LINES.' .slick-cell.active', ['9', 'Enter'])
+        ->click('Save')
+        ->wait(1.5)
+        ->assertScript(savedState().'[0].quantity', 9);
 });

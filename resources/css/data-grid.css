@@ -1,4 +1,4 @@
-.fi-data-grid {
+:where(.fi-data-grid) {
     --fi-data-grid-border: var(--gray-200);
     --fi-data-grid-header-bg: var(--gray-50);
     --fi-data-grid-header-text: var(--gray-950);
@@ -18,7 +18,7 @@
     gap: calc(var(--spacing) * 2);
 }
 
-.dark .fi-data-grid {
+:where(.dark .fi-data-grid) {
     --fi-data-grid-border: color-mix(in oklab, #fff 10%, transparent);
     --fi-data-grid-header-bg: color-mix(in oklab, #fff 5%, transparent);
     --fi-data-grid-header-text: #fff;

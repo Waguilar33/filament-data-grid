@@ -514,6 +514,27 @@ export function createGrid(
         return true
     }
 
+    const startTyping = (rowIndex, cellIndex, character) => {
+        const { cell, type } = cellAt(rowIndex, cellIndex)
+
+        if (!['text', 'number'].includes(type) || !cell?.visible || cell.disabled) {
+            return false
+        }
+
+        grid.editActiveCell()
+
+        const input = grid.getCellEditor()?.input
+
+        if (!input) {
+            return false
+        }
+
+        input.value = character
+        input.setSelectionRange?.(character.length, character.length)
+
+        return true
+    }
+
     const openModalCell = (rowIndex, cellIndex) => {
         const { column, item, cell, type } = cellAt(rowIndex, cellIndex)
 
@@ -596,7 +617,13 @@ export function createGrid(
             return
         }
 
-        if (!editing && !hasModifier && event.key.length === 1 && event.key !== ' ' && openSelectCell(row, cell, event.key)) {
+        if (
+            !editing &&
+            !hasModifier &&
+            event.key.length === 1 &&
+            event.key !== ' ' &&
+            (openSelectCell(row, cell, event.key) || startTyping(row, cell, event.key))
+        ) {
             event.preventDefault()
             event.stopImmediatePropagation()
 
