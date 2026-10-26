@@ -203,3 +203,12 @@ it('shows the grid in Spanish', function (): void {
         ->assertSee('Seleccione una opción')
         ->assertNoJavaScriptErrors();
 });
+
+it('draws editable cells as inputs and leaves read-only cells plain', function (): void {
+    visit('/demo/data-grid-demo')
+        ->assertAttributeContains(cell(0, 1), 'class', 'fi-data-grid-cell-input')
+        ->assertAttributeContains(cell(0, 0), 'class', 'fi-data-grid-cell-input')
+        ->assertAttributeDoesntContain(cell(0, 6), 'class', 'fi-data-grid-cell-input')
+        ->assertAttributeDoesntContain(cell(0, 4), 'class', 'fi-data-grid-cell-input')
+        ->assertAttributeDoesntContain(cell(2, 5), 'class', 'fi-data-grid-cell-input');
+});
