@@ -37,6 +37,8 @@ npm install
 composer serve
 ```
 
+`composer install` comes before `npm run build`, because the bundle includes Filament's own select from `vendor/filament`.
+
 Open http://127.0.0.1:8000/demo/data-grid-demo. Use the header link to switch between English and Spanish.
 
 ## Develop
