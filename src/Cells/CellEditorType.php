@@ -9,7 +9,8 @@ enum CellEditorType: string
     case Text = 'text';
     case Number = 'number';
     case Select = 'select';
-    case Search = 'search';
     case Toggle = 'toggle';
+    case Date = 'date';
     case Entry = 'entry';
+    case Modal = 'modal';
 }

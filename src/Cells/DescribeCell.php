@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Waguilar33\FilamentDataGrid\Cells;
 
+use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Field;
+use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\ToggleButtons;
 use Filament\Infolists\Components\Entry;
 use Filament\Schemas\Components\Component;
 use Filament\Support\Components\Contracts\HasEmbeddedView;
@@ -14,7 +17,12 @@ use Illuminate\Support\MessageBag;
 
 final readonly class DescribeCell
 {
-    public function __construct(private ResolveCellEditorType $resolveEditorType) {}
+    public function __construct(
+        private ResolveCellEditorType $resolveEditorType,
+        private DescribeSelect $describeSelect,
+        private DescribeDate $describeDate,
+        private DescribeStateText $describeStateText,
+    ) {}
 
     /**
      * @return array<string, mixed>
@@ -55,18 +63,13 @@ final readonly class DescribeCell
                 'max' => $component->getMaxValue(),
                 'step' => $component->getStep(),
             ],
-            $component instanceof Select && $type === CellEditorType::Select => [
-                'options' => $component->getOptionsForJs(),
-                'label' => $this->optionLabel($component),
+            $component instanceof Select || $component instanceof Radio || $component instanceof ToggleButtons => $this->describeSelect->cell($component),
+            $component instanceof DateTimePicker => $this->describeDate->handle($component),
+            $component instanceof Field && $type === CellEditorType::Modal => [
+                'label' => $this->describeStateText->handle($component),
             ],
-            $component instanceof Select => ['label' => $this->optionLabel($component)],
             default => [],
         };
-    }
-
-    private function optionLabel(Select $select): ?string
-    {
-        return blank($select->getState()) ? null : $select->getOptionLabel(withDefault: false);
     }
 
     private function entryHtml(Entry $entry): string

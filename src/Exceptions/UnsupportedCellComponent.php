@@ -12,7 +12,7 @@ final class UnsupportedCellComponent extends LogicException
     public static function for(Component $component): self
     {
         return new self(sprintf(
-            'DataGrid cannot show [%s] as a cell yet. Supported cells: TextInput, Select, Toggle, Checkbox, Hidden and infolist entries.',
+            'DataGrid cells must be form fields or infolist entries, but [%s] was used.',
             $component::class,
         ));
     }

@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Waguilar33\FilamentDataGrid\Cells;
 
+use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Field;
+use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Repeater\TableColumn;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\ToggleButtons;
 use Filament\Infolists\Components\Entry;
 use Filament\Schemas\Components\Component;
 use Filament\Support\Enums\Alignment;
@@ -15,7 +18,11 @@ use Illuminate\Contracts\Support\Htmlable;
 
 final readonly class DescribeColumn
 {
-    public function __construct(private ResolveCellEditorType $resolveEditorType) {}
+    public function __construct(
+        private ResolveCellEditorType $resolveEditorType,
+        private DescribeDate $describeDate,
+        private DescribeSelect $describeSelect,
+    ) {}
 
     /**
      * @return array{field: string, label: string, alignment: string|null, width: string|null, required: bool, headerHidden: bool, editor: array<string, mixed>}
@@ -59,13 +66,17 @@ final readonly class DescribeColumn
                 'integer' => $component->isInteger(),
                 ...($type === CellEditorType::Number ? ['messages' => $this->numberMessages()] : []),
             ],
-            $component instanceof Select => [
+            $component instanceof Select, $component instanceof Radio, $component instanceof ToggleButtons => [
+                'select' => $this->describeSelect->column($component),
+            ],
+            $component instanceof DateTimePicker => [
                 'placeholder' => $component->getPlaceholder(),
-                'searchable' => $component->isSearchable(),
-                'searchDebounce' => $component->getSearchDebounce(),
-                'searchPrompt' => $this->text($component->getSearchPrompt()),
-                'noResultsMessage' => $this->text($component->getNoSearchResultsMessage()),
-                'searchingMessage' => $this->text($component->getSearchingMessage()),
+                'inputType' => $this->describeDate->inputType($component),
+                'internalFormat' => $component->getInternalFormat(),
+                'messages' => $this->dateMessages(),
+            ],
+            $component instanceof Field && $type === CellEditorType::Modal => [
+                'editLabel' => $this->text(__('filament-data-grid::data-grid.actions.edit_cell.label', ['label' => $this->text($component->getLabel())])),
             ],
             default => [],
         };
@@ -77,10 +88,22 @@ final readonly class DescribeColumn
     private function numberMessages(): array
     {
         return [
-            'numeric' => $this->text(__('validation.numeric')),
-            'integer' => $this->text(__('validation.integer')),
-            'min' => $this->text(__('validation.min.numeric')),
-            'max' => $this->text(__('validation.max.numeric')),
+            'numeric' => $this->text(__('filament-data-grid::data-grid.validation.numeric')),
+            'integer' => $this->text(__('filament-data-grid::data-grid.validation.integer')),
+            'min' => $this->text(__('filament-data-grid::data-grid.validation.min')),
+            'max' => $this->text(__('filament-data-grid::data-grid.validation.max')),
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function dateMessages(): array
+    {
+        return [
+            'date' => $this->text(__('filament-data-grid::data-grid.validation.date')),
+            'after_or_equal' => $this->text(__('filament-data-grid::data-grid.validation.after_or_equal')),
+            'before_or_equal' => $this->text(__('filament-data-grid::data-grid.validation.before_or_equal')),
         ];
     }
 

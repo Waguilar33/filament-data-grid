@@ -5,14 +5,20 @@ declare(strict_types=1);
 namespace Waguilar33\FilamentDataGrid;
 
 use Closure;
+use Filament\Actions\Action;
+use Filament\Forms\Components\Field;
 use Filament\Forms\Components\Repeater;
 use Filament\Schemas\Schema;
 use Filament\Support\Facades\FilamentAsset;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Js;
+use Waguilar33\FilamentDataGrid\Actions\BuildEditCellAction;
 use Waguilar33\FilamentDataGrid\Payload\BuildGridPayload;
 use Waguilar33\FilamentDataGrid\Rows\EnsureTrailingEmptyRow;
 use Waguilar33\FilamentDataGrid\Rows\IsRowBlank;
 use Waguilar33\FilamentDataGrid\Rows\ResolveRowFilledFields;
+
+use function Filament\Support\generate_icon_html;
 
 class DataGrid extends Repeater
 {
@@ -29,7 +35,9 @@ class DataGrid extends Repeater
     {
         parent::setUp();
 
-        $this->reorderable(false);
+        $this->registerActions([
+            fn (DataGrid $component): Action => $component->getEditCellAction(),
+        ]);
 
         $this->afterStateHydrated(static function (DataGrid $component): void {
             $component->hydrateItems();
@@ -137,6 +145,27 @@ class DataGrid extends Repeater
         return parent::dehydrateItems($state);
     }
 
+    public function getEditCellAction(): Action
+    {
+        return app(BuildEditCellAction::class)->handle($this->getEditCellActionName());
+    }
+
+    public function getEditCellActionName(): string
+    {
+        return 'editCell';
+    }
+
+    public function getRowField(string $key, string $field): ?Field
+    {
+        foreach ($this->getChildSchema($key)?->getComponents(withHidden: true) ?? [] as $component) {
+            if ($component instanceof Field && $component->getName() === $field) {
+                return $component;
+            }
+        }
+
+        return null;
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -156,7 +185,17 @@ class DataGrid extends Repeater
             'styleHref' => FilamentAsset::getStyleHref('data-grid', FilamentDataGridServiceProvider::PACKAGE),
             'config' => Js::from([
                 'statePath' => $this->getStatePath(),
+                'schemaComponent' => $this->getKey(),
+                'actions' => [
+                    'editCell' => $this->getEditCellActionName(),
+                    'reorder' => $this->getReorderActionName(),
+                ],
                 'translations' => __('filament-data-grid::data-grid'),
+                'icons' => [
+                    'reorder' => generate_icon_html(Heroicon::Bars2)?->toHtml(),
+                    'date' => generate_icon_html(Heroicon::Calendar)?->toHtml(),
+                    'edit' => generate_icon_html(Heroicon::PencilSquare)?->toHtml(),
+                ],
             ]),
         ])->render();
 
