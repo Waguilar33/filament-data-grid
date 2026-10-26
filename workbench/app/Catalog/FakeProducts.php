@@ -13,12 +13,12 @@ final class FakeProducts
     private const array SIZES = ['100 g', '250 g', '500 g', '1 kg', '330 ml', '1 l', '6-pack', '12-pack'];
 
     /**
-     * @var list<array{id: int, name: string, sku: string}>|null
+     * @var list<array{id: int, name: string, sku: string, price: float}>|null
      */
     private static ?array $products = null;
 
     /**
-     * @return list<array{id: int, name: string, sku: string}>
+     * @return list<array{id: int, name: string, sku: string, price: float}>
      */
     public static function all(int $count = 5000): array
     {
@@ -26,7 +26,7 @@ final class FakeProducts
     }
 
     /**
-     * @return list<array{id: int, name: string, sku: string}>
+     * @return list<array{id: int, name: string, sku: string, price: float}>
      */
     private static function generate(int $count): array
     {
@@ -42,9 +42,39 @@ final class FakeProducts
                     self::SIZES[intdiv($id, count(self::ADJECTIVES) * count(self::NOUNS)) % count(self::SIZES)],
                 ),
                 'sku' => sprintf('SKU-%05d', $id),
+                'price' => round((($id % 40) + 3) * 1.25, 2),
             ];
         }
 
         return $products;
+    }
+
+    /**
+     * @return array{id: int, name: string, sku: string, price: float}|null
+     */
+    public static function find(mixed $id): ?array
+    {
+        return is_numeric($id) ? (self::all()[(int) $id - 1] ?? null) : null;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public static function search(string $search, int $limit = 20): array
+    {
+        $needle = mb_strtolower(trim($search));
+        $results = [];
+
+        foreach (self::all() as $product) {
+            if (mb_strtolower($product['sku']) === $needle || str_contains(mb_strtolower($product['name']), $needle)) {
+                $results[$product['id']] = "{$product['name']} · {$product['sku']}";
+            }
+
+            if (count($results) >= $limit) {
+                break;
+            }
+        }
+
+        return $results;
     }
 }

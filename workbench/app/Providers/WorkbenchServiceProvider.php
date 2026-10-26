@@ -12,5 +12,6 @@ final class WorkbenchServiceProvider extends ServiceProvider
     public function boot(): void
     {
         View::addLocation(__DIR__.'/../../resources/views');
+        $this->loadTranslationsFrom(__DIR__.'/../../lang', 'demo');
     }
 }
