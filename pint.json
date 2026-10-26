@@ -1,7 +1,6 @@
 {
     "preset": "laravel",
     "rules": {
-        "declare_strict_types": true,
-        "final_class": true
+        "declare_strict_types": true
     }
 }
