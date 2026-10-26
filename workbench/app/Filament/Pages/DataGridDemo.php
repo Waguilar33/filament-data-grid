@@ -72,6 +72,7 @@ final class DataGridDemo extends Page
     {
         return DataGrid::make('lines')
             ->hiddenLabel()
+            ->frozenColumns()
             ->trailingEmptyRow(filledBy: 'product_id')
             ->table([
                 TableColumn::make(__('demo::demo.columns.product'))->markAsRequired(),

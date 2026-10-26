@@ -162,6 +162,10 @@
     font-variant-numeric: tabular-nums;
 }
 
+.fi-data-grid-canvas .fi-data-grid-frozen-edge {
+    border-inline-end: 1px solid var(--fi-data-grid-border);
+}
+
 .fi-data-grid-canvas .slick-cell.fi-align-center {
     justify-content: center;
 }

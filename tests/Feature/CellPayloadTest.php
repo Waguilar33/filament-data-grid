@@ -152,3 +152,15 @@ it('keeps hidden fields in the row state without a column', function (): void {
         ->and($payload['rows'][0]['state'])->toBe(['name' => 'a', 'reference' => 'ref-1'])
         ->and($component->instance()->form->getState()['lines'])->toBe([['name' => 'a', 'reference' => 'ref-1']]);
 });
+
+it('freezes the leading columns, capped at the number of columns', function (int $requested, int $frozen): void {
+    $component = mountLines([], fn (): array => [
+        DataGrid::make('lines')->frozenColumns($requested)->schema([TextInput::make('a'), TextInput::make('b')]),
+    ]);
+
+    expect(grid($component)->getGridPayload()['frozenColumns'])->toBe($frozen);
+})->with([
+    'none' => [0, 0],
+    'one' => [1, 1],
+    'more than there are' => [5, 2],
+]);

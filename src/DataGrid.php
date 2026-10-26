@@ -23,6 +23,8 @@ class DataGrid extends Repeater
      */
     protected array|Closure|null $trailingEmptyRowFilledBy = null;
 
+    protected int|Closure $frozenColumns = 0;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -44,6 +46,20 @@ class DataGrid extends Repeater
         $this->trailingEmptyRowFilledBy = is_string($filledBy) ? [$filledBy] : $filledBy;
 
         return $this;
+    }
+
+    public function frozenColumns(int|Closure $count = 1): static
+    {
+        $this->frozenColumns = $count;
+
+        return $this;
+    }
+
+    public function getFrozenColumns(): int
+    {
+        $count = $this->evaluate($this->frozenColumns);
+
+        return is_int($count) ? max(0, $count) : 0;
     }
 
     public function hasTrailingEmptyRow(): bool

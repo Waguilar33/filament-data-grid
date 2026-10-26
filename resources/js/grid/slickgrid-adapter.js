@@ -79,6 +79,11 @@ export function createGrid(element, { payload, translations, isDarkMode, onCellC
             })
         }
 
+        if (payload.frozenColumns > 0) {
+            columns[payload.frozenColumns - 1].cssClass += ' fi-data-grid-frozen-edge'
+            columns[payload.frozenColumns - 1].headerCssClass += ' fi-data-grid-frozen-edge'
+        }
+
         columns[0].cssClass += ' fi-data-grid-first-column'
         columns[columns.length - 1].cssClass += ' fi-data-grid-last-column'
 
@@ -174,6 +179,7 @@ export function createGrid(element, { payload, translations, isDarkMode, onCellC
 
     const grid = new SlickGrid(element, dataProvider, columnDefinitions(), {
         editable: true,
+        frozenColumn: payload.frozenColumns > 0 ? payload.frozenColumns - 1 : -1,
         editorLock: new SlickEditorLock(),
         autoEdit: true,
         autoCommitEdit: true,

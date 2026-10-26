@@ -22,7 +22,7 @@ final readonly class BuildGridPayload
     ) {}
 
     /**
-     * @return array{columns: list<array<string, mixed>>, rows: list<array<string, mixed>>, hasActions: bool}
+     * @return array{columns: list<array<string, mixed>>, rows: list<array<string, mixed>>, hasActions: bool, frozenColumns: int}
      */
     public function handle(DataGrid $grid): array
     {
@@ -46,6 +46,7 @@ final readonly class BuildGridPayload
             'columns' => $columns,
             'rows' => $rows,
             'hasActions' => $deleteAction !== null,
+            'frozenColumns' => min($grid->getFrozenColumns(), count($columns)),
         ];
     }
 

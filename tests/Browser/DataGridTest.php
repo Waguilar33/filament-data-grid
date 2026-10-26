@@ -99,3 +99,10 @@ it('shows the grid in Spanish', function (): void {
         ->assertSee('Seleccione una opción')
         ->assertNoJavaScriptErrors();
 });
+
+it('keeps frozen columns in place while the rest scrolls sideways', function (): void {
+    visit('/demo/data-grid-demo')
+        ->assertSeeIn(LINES.' .slick-pane-left .slick-header', 'Product')
+        ->assertDontSeeIn(LINES.' .slick-pane-left .slick-header', 'Quantity')
+        ->assertSeeIn(LINES.' .slick-pane-right .slick-header', 'Quantity');
+});
