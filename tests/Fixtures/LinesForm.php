@@ -5,14 +5,17 @@ declare(strict_types=1);
 namespace Waguilar33\FilamentDataGrid\Tests\Fixtures;
 
 use Closure;
+use Filament\Actions\Concerns\InteractsWithActions;
+use Filament\Actions\Contracts\HasActions;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Schemas\Schema;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
 
-final class LinesForm extends Component implements HasForms
+final class LinesForm extends Component implements HasActions, HasForms
 {
+    use InteractsWithActions;
     use InteractsWithForms;
 
     /** @var array<string, mixed> */
