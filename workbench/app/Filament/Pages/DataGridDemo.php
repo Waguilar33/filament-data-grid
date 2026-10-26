@@ -17,8 +17,10 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Str;
 use Waguilar33\FilamentDataGrid\DataGrid;
 use Workbench\App\Catalog\FakeProducts;
+use Workbench\App\Catalog\FakeWarehouses;
 
 /**
  * @property-read Schema $form
@@ -26,6 +28,12 @@ use Workbench\App\Catalog\FakeProducts;
 final class DataGridDemo extends Page
 {
     protected string $view = 'demo.data-grid';
+
+    /** @var array<string, mixed>|null */
+    public ?array $data = [];
+
+    /** @var array<string, mixed>|null */
+    public ?array $savedState = null;
 
     public static function getNavigationLabel(): string
     {
@@ -37,15 +45,15 @@ final class DataGridDemo extends Page
         return __('demo::demo.navigation');
     }
 
-    /** @var array<string, mixed>|null */
-    public ?array $data = [];
-
     public function mount(): void
     {
         $this->form->fill([
             'lines' => [
-                ['product_id' => 12, 'quantity' => 2, 'unit' => 'box', 'is_gift' => false, 'note' => 'seeded'],
-                ['product_id' => 77, 'quantity' => 1.5, 'unit' => 'kg', 'is_gift' => true, 'note' => null],
+                ['product_id' => 12, 'quantity' => 2, 'unit' => 'box', 'warehouse' => 'z10-b6', 'is_gift' => false, 'comment' => null, 'note' => 'seeded'],
+                ['product_id' => 77, 'quantity' => 1.5, 'unit' => 'kg', 'warehouse' => null, 'is_gift' => true, 'comment' => 'Fragile', 'note' => null],
+            ],
+            'adjustments' => [
+                ['reason' => 'Damaged box', 'amount' => 12.5, 'approved' => false],
             ],
         ]);
     }
@@ -54,7 +62,8 @@ final class DataGridDemo extends Page
     {
         return $schema
             ->components([
-                Section::make()->schema([self::linesGrid()]),
+                Section::make(__('demo::demo.sections.lines'))->schema([self::linesGrid()]),
+                Section::make(__('demo::demo.sections.adjustments'))->schema([self::adjustmentsGrid()]),
             ])
             ->statePath('data');
     }
@@ -68,7 +77,9 @@ final class DataGridDemo extends Page
                 TableColumn::make(__('demo::demo.columns.product'))->markAsRequired(),
                 TableColumn::make(__('demo::demo.columns.quantity'))->width('8rem')->alignEnd(),
                 TableColumn::make(__('demo::demo.columns.unit'))->width('9rem'),
+                TableColumn::make(__('demo::demo.columns.warehouse'))->width('14rem'),
                 TableColumn::make(__('demo::demo.columns.gift'))->width('5rem')->alignCenter(),
+                TableColumn::make(__('demo::demo.columns.comment'))->width('9rem'),
                 TableColumn::make(__('demo::demo.columns.total'))->width('8rem')->alignEnd(),
             ])
             ->schema([
@@ -96,12 +107,37 @@ final class DataGridDemo extends Page
                     ])
                     ->default('unit')
                     ->live(),
+                Select::make('warehouse')
+                    ->options(FakeWarehouses::options())
+                    ->searchable()
+                    ->disableOptionWhen(fn (string $value): bool => FakeWarehouses::isEmpty($value)),
                 Toggle::make('is_gift')->live(),
+                TextInput::make('comment')
+                    ->maxLength(40)
+                    ->disabled(fn (Get $get): bool => blank($get('product_id'))),
                 TextEntry::make('total')
                     ->state(fn (Get $get): ?float => self::lineTotal($get))
                     ->money('GTQ')
                     ->placeholder('—'),
                 Hidden::make('note'),
+            ]);
+    }
+
+    public static function adjustmentsGrid(): DataGrid
+    {
+        return DataGrid::make('adjustments')
+            ->hiddenLabel()
+            ->defaultItems(0)
+            ->addActionLabel(__('demo::demo.actions.add_adjustment'))
+            ->table([
+                TableColumn::make(__('demo::demo.columns.reason'))->markAsRequired(),
+                TableColumn::make(__('demo::demo.columns.amount'))->width('10rem')->alignEnd(),
+                TableColumn::make(__('demo::demo.columns.approved'))->width('7rem')->alignCenter(),
+            ])
+            ->schema([
+                TextInput::make('reason')->required(),
+                TextInput::make('amount')->numeric()->minValue(0)->step(0.01)->required(),
+                Toggle::make('approved'),
             ]);
     }
 
@@ -124,14 +160,42 @@ final class DataGridDemo extends Page
 
     public function save(): void
     {
-        $state = $this->form->getState();
+        $this->savedState = $this->form->getState();
 
-        $this->notifySaved($state['lines'] ?? []);
+        $this->notifySaved($this->savedState['lines'] ?? []);
+    }
+
+    public function addSampleLines(): void
+    {
+        $grid = $this->form->getComponent('lines');
+
+        if (! $grid instanceof DataGrid) {
+            return;
+        }
+
+        $rows = $grid->getRawState();
+        $rows = is_array($rows) ? $rows : [];
+        $trailingKey = array_key_last($rows);
+
+        if ($trailingKey !== null && $grid->isTrailingBlankRow($trailingKey)) {
+            unset($rows[$trailingKey]);
+        }
+
+        foreach ([101, 202] as $productId) {
+            $rows[(string) Str::uuid()] = ['product_id' => (string) $productId, 'quantity' => 1, 'unit' => 'unit', 'is_gift' => false];
+        }
+
+        $grid->rawState($rows);
+        $grid->ensureTrailingEmptyRow();
     }
 
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('addSampleLines')
+                ->label(__('demo::demo.actions.add_sample_lines'))
+                ->color('gray')
+                ->action(fn () => $this->addSampleLines()),
             Action::make('editInSlideOver')
                 ->label(__('demo::demo.actions.edit_in_slide_over'))
                 ->slideOver()
@@ -139,6 +203,10 @@ final class DataGridDemo extends Page
                 ->fillForm(fn (): array => ['lines' => [['product_id' => 5, 'quantity' => 3, 'unit' => 'kg']]])
                 ->schema([self::linesGrid()])
                 ->action(fn (array $data) => $this->notifySaved($data['lines'] ?? [])),
+            Action::make('switchLocale')
+                ->label(app()->getLocale() === 'es' ? 'English' : 'Español')
+                ->link()
+                ->url(fn (): string => self::getUrl(['locale' => app()->getLocale() === 'es' ? 'en' : 'es'])),
         ];
     }
 
