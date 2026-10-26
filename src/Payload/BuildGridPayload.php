@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Waguilar33\FilamentDataGrid\Payload;
 
-use Filament\Actions\Action;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater\TableColumn;
 use Filament\Schemas\Components\Component;
@@ -19,10 +18,11 @@ final readonly class BuildGridPayload
     public function __construct(
         private DescribeColumn $describeColumn,
         private DescribeCell $describeCell,
+        private RenderRowActions $renderRowActions,
     ) {}
 
     /**
-     * @return array{columns: list<array<string, mixed>>, rows: list<array<string, mixed>>, hasActions: bool, frozenColumns: int}
+     * @return array{columns: list<array<string, mixed>>, rows: list<array<string, mixed>>, hasActions: bool, frozenColumns: int, reorderable: bool}
      */
     public function handle(DataGrid $grid): array
     {
@@ -35,25 +35,25 @@ final readonly class BuildGridPayload
 
         $errors = $grid->getLivewire()->getErrorBag();
         $errors = $errors instanceof MessageBag ? $errors : new MessageBag;
-        $deleteAction = $grid->isDeletable() ? $grid->getAction($grid->getDeleteActionName()) : null;
         $rows = [];
 
         foreach ($grid->getItems() as $key => $item) {
-            $rows[] = $this->describeRow($grid, (string) $key, $item, $errors, $deleteAction);
+            $rows[] = $this->describeRow($grid, (string) $key, $item, $errors);
         }
 
         return [
             'columns' => $columns,
             'rows' => $rows,
-            'hasActions' => $deleteAction !== null,
+            'hasActions' => $this->renderRowActions->hasActions($grid),
             'frozenColumns' => min($grid->getFrozenColumns(), count($columns)),
+            'reorderable' => $grid->isReorderableWithDragAndDrop(),
         ];
     }
 
     /**
      * @return array<string, mixed>
      */
-    private function describeRow(DataGrid $grid, string $key, Schema $item, MessageBag $errors, ?Action $deleteAction): array
+    private function describeRow(DataGrid $grid, string $key, Schema $item, MessageBag $errors): array
     {
         $cells = [];
 
@@ -69,19 +69,8 @@ final readonly class BuildGridPayload
             'state' => $state,
             'cells' => $cells,
             'isTrailingBlank' => $grid->isTrailingBlankRow($key),
-            'actions' => $this->rowActionsHtml($grid, $key, $deleteAction),
+            'actions' => $this->renderRowActions->handle($grid, $key),
         ];
-    }
-
-    private function rowActionsHtml(DataGrid $grid, string $key, ?Action $deleteAction): ?string
-    {
-        if ($deleteAction === null || $grid->isTrailingBlankRow($key)) {
-            return null;
-        }
-
-        $rowDeleteAction = $deleteAction(['item' => $key]);
-
-        return $rowDeleteAction->isVisible() ? $rowDeleteAction->toHtml() : null;
     }
 
     /**
