@@ -10,7 +10,11 @@ const commitOnFocusLeave = (editor, element) => {
             return
         }
 
-        editor.args.grid.getEditorLock().commitCurrentEdit()
+        setTimeout(() => {
+            if (editor.args.grid.getCellEditor() === editor) {
+                editor.args.grid.getEditorLock().commitCurrentEdit()
+            }
+        })
     })
 }
 
@@ -190,6 +194,16 @@ export class SearchSelectEditor extends AutocompleterEditor {
         setTimeout(() => this.args.grid.navigateNext())
 
         return result
+    }
+
+    focus() {
+        if (this._inputElm.value === this._defaultTextValue) {
+            super.focus()
+
+            return
+        }
+
+        this._inputElm.focus()
     }
 
     loadValue(item) {

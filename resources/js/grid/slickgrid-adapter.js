@@ -225,11 +225,20 @@ export function createGrid(element, { payload, translations, isDarkMode, onCellC
         grid.resizeCanvas()
     }
 
+    function markHorizontalOverflow() {
+        const viewport = element.querySelector('.slick-viewport')
+
+        element.classList.toggle('fi-data-grid-overflows', viewport ? viewport.scrollWidth > viewport.clientWidth : false)
+    }
+
     let resizeFrame = null
 
     const resizeObserver = new ResizeObserver(() => {
         cancelAnimationFrame(resizeFrame)
-        resizeFrame = requestAnimationFrame(() => fitColumns())
+        resizeFrame = requestAnimationFrame(() => {
+            fitColumns()
+            markHorizontalOverflow()
+        })
     })
     resizeObserver.observe(element)
     element.querySelectorAll('.slick-header').forEach((header) => resizeObserver.observe(header))
@@ -362,6 +371,7 @@ export function createGrid(element, { payload, translations, isDarkMode, onCellC
     })
 
     fitColumns()
+    markHorizontalOverflow()
 
     return {
         isEditing: () => grid.getEditorLock().isActive(),
@@ -419,6 +429,16 @@ export function createGrid(element, { payload, translations, isDarkMode, onCellC
             }
 
             items[editedIndex] = editedItem
+
+            if (renderedLength !== items.length && !keepsTypedValue) {
+                frozenLength = null
+                grid.invalidate()
+                grid.resizeCanvas()
+                grid.setActiveCell(active.row, active.cell)
+                grid.editActiveCell()
+
+                return
+            }
 
             if (renderedLength !== items.length) {
                 frozenLength = renderedLength

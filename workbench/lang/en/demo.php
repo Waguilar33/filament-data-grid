@@ -6,6 +6,7 @@ return [
     'navigation' => 'Data grid',
     'sections' => [
         'lines' => 'Products',
+        'saved_state' => 'Last saved state',
         'adjustments' => 'Adjustments',
     ],
     'actions' => [

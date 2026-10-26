@@ -6,6 +6,7 @@ return [
     'navigation' => 'Tabla de datos',
     'sections' => [
         'lines' => 'Productos',
+        'saved_state' => 'Último estado guardado',
         'adjustments' => 'Ajustes',
     ],
     'actions' => [
