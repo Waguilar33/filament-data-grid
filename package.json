@@ -6,8 +6,10 @@
         "dev": "node bin/build.js --watch"
     },
     "devDependencies": {
+        "@floating-ui/dom": "^1.7.4",
         "@slickgrid-universal/common": "^10.11.3",
         "esbuild": "^0.28.2",
-        "playwright": "^1.64.1"
+        "playwright": "^1.64.1",
+        "sortablejs": "^1.15.6"
     }
 }

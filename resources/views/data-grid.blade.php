@@ -24,7 +24,7 @@
     id="{{ $grid->getId() }}"
     role="group"
     aria-labelledby="{{ $grid->getId() }}-label"
-    class="fi-data-grid"
+    class="fi-data-grid fi-fixed-positioning-context"
 >
     <div x-ref="payload" hidden data-payload="{{ json_encode($payload, JSON_THROW_ON_ERROR) }}"></div>
 

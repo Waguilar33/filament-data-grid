@@ -2,22 +2,30 @@ import { createGrid } from './grid/slickgrid-adapter.js'
 
 const isDarkMode = () => document.documentElement.classList.contains('dark')
 
-export default function dataGrid({ statePath, translations }) {
+export default function dataGrid({ statePath, schemaComponent, actions, translations, icons }) {
     return {
         grid: null,
         localChanges: new Map(),
+        appliedPayload: null,
         observers: [],
         stopInterceptingMessages: null,
         wasEditingOnKeyDown: false,
 
         init() {
+            this.appliedPayload = this.$refs.payload.dataset.payload
             this.grid = createGrid(this.$refs.grid, {
-                payload: this.readPayload(),
+                payload: JSON.parse(this.appliedPayload),
                 translations,
+                icons,
                 isDarkMode: isDarkMode(),
                 onCellChange: (rowKey, field, value, isLive) => this.writeCell(rowKey, field, value, isLive),
-                search: (cellKey, search) =>
-                    this.$wire.callSchemaComponentMethod(cellKey, 'getSearchResultsForJs', { search }),
+                callSchemaComponentMethod: (key, method, args) =>
+                    Livewire.fireAction(this.$wire.__instance, 'callSchemaComponentMethod', [key, method, args], {
+                        async: true,
+                    }),
+                onOpenCell: (rowKey, field) =>
+                    this.$wire.mountAction(actions.editCell, { item: rowKey, field }, { schemaComponent }),
+                onReorder: (keys) => this.$wire.mountAction(actions.reorder, { items: keys }, { schemaComponent }),
             })
 
             this.observe(this.$refs.payload, ['data-payload'], () => this.applyPayload())
@@ -28,13 +36,16 @@ export default function dataGrid({ statePath, translations }) {
 
                 onFinish(() =>
                     queueMicrotask(() => {
+                        let cleared = false
+
                         sentChanges.forEach((value, cell) => {
                             if (this.localChanges.get(cell) === value) {
                                 this.localChanges.delete(cell)
+                                cleared = true
                             }
                         })
 
-                        this.applyPayload()
+                        this.applyPayload(cleared)
                     }),
                 )
             })
@@ -56,12 +67,15 @@ export default function dataGrid({ statePath, translations }) {
             }
         },
 
-        readPayload() {
-            return JSON.parse(this.$refs.payload.dataset.payload)
-        },
+        applyPayload(force = false) {
+            const payload = this.$refs.payload.dataset.payload
 
-        applyPayload() {
-            this.grid.setPayload(this.readPayload(), this.localChanges)
+            if (!force && payload === this.appliedPayload) {
+                return
+            }
+
+            this.appliedPayload = payload
+            this.grid.setPayload(JSON.parse(payload), this.localChanges)
         },
 
         writeCell(rowKey, field, value, isLive) {

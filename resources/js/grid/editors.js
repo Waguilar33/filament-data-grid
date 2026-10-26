@@ -1,12 +1,6 @@
-import { AutocompleterEditor } from '@slickgrid-universal/common'
-
 const commitOnFocusLeave = (editor, element) => {
     element.addEventListener('focusout', (event) => {
         if (editor.args.container.contains(event.relatedTarget)) {
-            return
-        }
-
-        if (event.relatedTarget?.closest?.('.fi-data-grid-autocomplete')) {
             return
         }
 
@@ -128,104 +122,94 @@ export class NumberEditor extends InputEditor {
     }
 }
 
-export class NativeSelectEditor {
-    constructor(args) {
-        this.args = args
-        this.field = args.column.field
-        this.options = args.column.editor
-        this.select = document.createElement('select')
-        this.select.className = 'fi-data-grid-editor-select'
+const DATE_INPUT_LENGTH = { date: 10, 'datetime-local': 16, time: 5 }
 
-        const placeholder = new Option(this.options.placeholder ?? '', '')
-        this.select.append(placeholder)
+export class DateEditor extends InputEditor {
+    configure(input) {
+        input.type = this.options.inputType
+        input.classList.add('fi-data-grid-editor-date')
 
-        for (const option of this.options.choices ?? []) {
-            const element = new Option(option.label, option.value)
-            element.disabled = Boolean(option.isDisabled)
-            this.select.append(element)
+        if (this.options.step) {
+            input.step = String(this.options.step)
         }
 
-        this.select.addEventListener('change', () => args.grid.getEditorLock().commitCurrentEdit())
-        args.container.append(this.select)
-        commitOnFocusLeave(this, this.select)
-        this.select.focus()
-    }
+        if (this.options.min) {
+            input.min = this.options.min
+        }
 
-    destroy() {
-        this.select.remove()
-    }
-
-    focus() {
-        this.select.focus()
+        if (this.options.max) {
+            input.max = this.options.max
+        }
     }
 
     loadValue(item) {
         this.initialValue = blankToNull(item[this.field])
-        this.select.value = this.initialValue === null ? '' : String(this.initialValue)
+        this.input.value = this.toInputValue(this.initialValue)
     }
 
     serializeValue() {
-        return blankToNull(this.select.value)
-    }
-
-    applyValue(item, value) {
-        item[this.field] = value
+        return this.fromInputValue(this.input.value)
     }
 
     isValueChanged() {
-        return String(this.serializeValue() ?? '') !== String(this.initialValue ?? '')
+        return this.serializeValue() !== this.fromInputValue(this.toInputValue(this.initialValue))
     }
 
     validate() {
+        const { messages, label } = this.options
+        const replace = (message, value) =>
+            message.replaceAll(':attribute', label).replaceAll(':date', value)
+
+        if (this.input.validity.badInput) {
+            return { valid: false, msg: replace(messages.date, '') }
+        }
+
+        if (this.input.validity.rangeUnderflow) {
+            return { valid: false, msg: replace(messages.after_or_equal, this.options.min) }
+        }
+
+        if (this.input.validity.rangeOverflow) {
+            return { valid: false, msg: replace(messages.before_or_equal, this.options.max) }
+        }
+
         return { valid: true, msg: null }
     }
-}
 
-export class SearchSelectEditor extends AutocompleterEditor {
-    handleSelect(item) {
-        if (item?.isDisabled) {
-            return false
+    toInputValue(value) {
+        if (value === null) {
+            return ''
         }
 
-        this.columnEditor.rememberLabel?.(this.args.item, item.value, item.label)
+        const raw = String(value).replace(' ', 'T')
+        const type = this.options.inputType
+        const length = this.options.step ? DATE_INPUT_LENGTH[type] + 3 : DATE_INPUT_LENGTH[type]
 
-        const result = super.handleSelect(item)
-
-        setTimeout(() => this.args.grid.navigateNext())
-
-        return result
-    }
-
-    focus() {
-        if (this._inputElm.value === this._defaultTextValue) {
-            super.focus()
-
-            return
+        if (type === 'time') {
+            return (raw.includes('T') ? raw.split('T')[1] : raw).slice(0, length)
         }
 
-        this._inputElm.focus()
+        return raw.slice(0, length)
     }
 
-    loadValue(item) {
-        const value = blankToNull(item[this.columnDef.field])
-        const label = value === null ? '' : (this.columnEditor.currentLabel ?? String(value))
+    fromInputValue(value) {
+        if (value === '') {
+            return null
+        }
 
-        this._currentValue = value === null ? null : { value, label }
-        this._originalValue = this._currentValue
-        this._defaultTextValue = label
-        this._inputElm.value = label
-        this._inputElm.select()
-    }
+        const format = this.options.internalFormat
+        const [date, time = ''] = value.split('T')
 
-    serializeValue() {
-        return blankToNull(super.serializeValue())
-    }
+        if (this.options.inputType === 'time') {
+            return format.includes(':s') && value.length === 5 ? `${value}:00` : value
+        }
 
-    applyValue(item, value) {
-        item[this.columnDef.field] = blankToNull(value)
-    }
+        if (!format.includes('H')) {
+            return date
+        }
 
-    validate() {
-        return { valid: true, msg: '' }
+        const withMinutes = (time || '00:00').slice(0, 5)
+        const seconds = format.includes(':s') ? `:${(time.slice(6, 8) || '00')}` : ''
+
+        return `${date} ${withMinutes}${seconds}`
     }
 }
