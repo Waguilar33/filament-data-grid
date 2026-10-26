@@ -109,8 +109,8 @@ The grid chooses how to edit each cell from the component you put in the schema:
 | `Radio`, `ToggleButtons` | The same dropdown, listing their options. |
 | `Toggle`, `Checkbox` | A switch you click, or flip with Space. |
 | `DatePicker`, `DateTimePicker`, `TimePicker` | The browser's date or time input. It respects `minDate()`, `maxDate()` and `displayFormat()`. |
-| Any other field | Opens in a modal for that row. For example `ColorPicker`, `RichEditor` or your own custom field. |
-| An infolist entry (`TextEntry`, `IconEntry`, …) | Read-only. Rendered with Filament's own entry view, so `money()`, `badge()`, `color()` and the rest work. |
+| Any other field | Opens in a modal for that row. For example `ColorPicker`, `Textarea` or your own custom field. |
+| An infolist entry, such as `TextEntry` | Read-only. Rendered with Filament's own entry view, so formatting such as `money()` works. |
 
 Editable cells have the background of a Filament input, while read-only and disabled cells are one shade darker. That way users can see what they can change without guessing.
 
@@ -143,10 +143,11 @@ Use `hiddenHeaderLabel()` on the `TableColumn`, as with `Repeater`. Screen reade
 | Key | Action |
 | --- | --- |
 | Arrow keys | Move between cells. |
-| Typing | Start editing the active cell, or search its dropdown. |
-| Enter / F2 | Edit the active cell, or open its dropdown. |
-| Enter while editing | Save and move down a row. |
-| Shift + Enter while editing | Save and move up a row. |
+| Typing | Start editing a text or number cell, or search a dropdown. |
+| F2 | Edit the active cell. |
+| Enter on a dropdown or modal cell | Open it. |
+| Enter | Save and move down a row. |
+| Shift + Enter | Save and move up a row. |
 | Tab / Shift + Tab | Save and move right or left. |
 | Escape | Cancel the edit. It does not close a surrounding modal. |
 | Space | Flip a toggle. |
@@ -160,7 +161,7 @@ DataGrid::make('lines')
     ->trailingEmptyRow()
 ```
 
-The empty row is never validated or saved. By default, it becomes a real row when any editable field without a `default()` gets a value. You can choose which fields count by passing `filledBy`:
+The empty row is never validated or saved, and it doesn't count toward `minItems()` or `maxItems()`. Once the grid reaches `maxItems()`, no new empty row is added. By default, it becomes a real row when any editable field without a `default()` gets a value. You can choose which fields count by passing `filledBy`:
 
 ```php
 DataGrid::make('lines')
@@ -258,6 +259,7 @@ The server renders the rows, the cell descriptions and the row actions, and send
 - The whole grid is sent again on every update. 200 rows take about 47 ms on the server and 11 KB gzipped, which is fine for grids the size of an order. Grids with thousands of rows aren't a good fit yet.
 - Parent and child rows, such as grouped lines, aren't supported yet.
 - There are no footer totals yet. Show totals with an entry or a field outside the grid.
+- The compiled JavaScript is about 150 KB gzipped, because it includes parts of SlickGrid-Universal that the grid doesn't use. It is loaded only on pages with a grid.
 - The select dropdown is Filament's own JavaScript, copied into the plugin's build from Filament 5.10 and 5.11. Check the grid after upgrading Filament.
 
 ## Testing
@@ -297,7 +299,7 @@ Please review [our security policy](../../security/policy) on how to report secu
 - [William Aguilar](https://github.com/Waguilar33)
 - [All Contributors](../../contributors)
 
-The compiled assets include [SlickGrid-Universal](https://github.com/ghiscoding/slickgrid-universal), [Floating UI](https://github.com/floating-ui/floating-ui), [SortableJS](https://github.com/SortableJS/Sortable) and the select component from [Filament](https://github.com/filamentphp/filament), all MIT licensed.
+The compiled assets include [SlickGrid-Universal](https://github.com/ghiscoding/slickgrid-universal), [Floating UI](https://github.com/floating-ui/floating-ui), [SortableJS](https://github.com/SortableJS/Sortable) and the select component from [Filament](https://github.com/filamentphp/filament), all MIT licensed. Their license notices are in [`resources/dist/THIRD-PARTY-LICENSES.txt`](resources/dist/THIRD-PARTY-LICENSES.txt).
 
 ## License
 
