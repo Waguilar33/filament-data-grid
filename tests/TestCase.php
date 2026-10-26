@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Waguilar33\FilamentDataGrid\Tests;
+namespace Waguilar\FilamentDataGrid\Tests;
 
 use BladeUI\Heroicons\BladeHeroiconsServiceProvider;
 use BladeUI\Icons\BladeIconsServiceProvider;
@@ -19,7 +19,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\LivewireServiceProvider;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase as Orchestra;
-use Waguilar33\FilamentDataGrid\FilamentDataGridServiceProvider;
+use Waguilar\FilamentDataGrid\FilamentDataGridServiceProvider;
 use Workbench\App\Providers\Filament\DemoPanelProvider;
 use Workbench\App\Providers\WorkbenchServiceProvider;
 

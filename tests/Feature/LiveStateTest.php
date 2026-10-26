@@ -7,7 +7,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
-use Waguilar33\FilamentDataGrid\DataGrid;
+use Waguilar\FilamentDataGrid\DataGrid;
 
 it('runs afterStateUpdated for the edited row and re-renders its cells', function (): void {
     $component = mountLines(

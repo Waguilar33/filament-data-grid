@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Waguilar33\FilamentDataGrid\Payload;
+namespace Waguilar\FilamentDataGrid\Payload;
 
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater\TableColumn;
 use Filament\Schemas\Components\Component;
 use Filament\Schemas\Schema;
 use Illuminate\Support\MessageBag;
-use Waguilar33\FilamentDataGrid\Cells\DescribeCell;
-use Waguilar33\FilamentDataGrid\Cells\DescribeColumn;
-use Waguilar33\FilamentDataGrid\DataGrid;
+use Waguilar\FilamentDataGrid\Cells\DescribeCell;
+use Waguilar\FilamentDataGrid\Cells\DescribeColumn;
+use Waguilar\FilamentDataGrid\DataGrid;
 
 final readonly class BuildGridPayload
 {

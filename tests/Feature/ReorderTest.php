@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Filament\Actions\Testing\TestAction;
 use Filament\Forms\Components\TextInput;
-use Waguilar33\FilamentDataGrid\DataGrid;
+use Waguilar\FilamentDataGrid\DataGrid;
 
 it('reorders rows with the repeater reorder action', function (): void {
     $component = mountLines([['name' => 'a'], ['name' => 'b'], ['name' => 'c']], fn (): array => [

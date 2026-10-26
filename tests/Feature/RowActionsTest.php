@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Filament\Actions\Testing\TestAction;
 use Filament\Forms\Components\TextInput;
-use Waguilar33\FilamentDataGrid\DataGrid;
+use Waguilar\FilamentDataGrid\DataGrid;
 
 it('deletes a row by its key', function (): void {
     $component = mountLines(

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Waguilar33\FilamentDataGrid;
+namespace Waguilar\FilamentDataGrid;
 
 use Closure;
 use Filament\Actions\Action;
@@ -12,11 +12,11 @@ use Filament\Schemas\Schema;
 use Filament\Support\Facades\FilamentAsset;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Js;
-use Waguilar33\FilamentDataGrid\Actions\BuildEditCellAction;
-use Waguilar33\FilamentDataGrid\Payload\BuildGridPayload;
-use Waguilar33\FilamentDataGrid\Rows\EnsureTrailingEmptyRow;
-use Waguilar33\FilamentDataGrid\Rows\IsRowBlank;
-use Waguilar33\FilamentDataGrid\Rows\ResolveRowFilledFields;
+use Waguilar\FilamentDataGrid\Actions\BuildEditCellAction;
+use Waguilar\FilamentDataGrid\Payload\BuildGridPayload;
+use Waguilar\FilamentDataGrid\Rows\EnsureTrailingEmptyRow;
+use Waguilar\FilamentDataGrid\Rows\IsRowBlank;
+use Waguilar\FilamentDataGrid\Rows\ResolveRowFilledFields;
 
 use function Filament\Support\generate_icon_html;
 

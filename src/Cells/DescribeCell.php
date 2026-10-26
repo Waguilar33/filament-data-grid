@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Waguilar33\FilamentDataGrid\Cells;
+namespace Waguilar\FilamentDataGrid\Cells;
 
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Field;

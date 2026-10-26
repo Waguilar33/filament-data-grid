@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Waguilar33\FilamentDataGrid\Tests\Fixtures;
+namespace Waguilar\FilamentDataGrid\Tests\Fixtures;
 
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
@@ -12,7 +12,7 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Schemas\Schema;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
-use Waguilar33\FilamentDataGrid\DataGrid;
+use Waguilar\FilamentDataGrid\DataGrid;
 use Workbench\App\Models\DemoOrder;
 
 final class OrderForm extends Component implements HasActions, HasForms

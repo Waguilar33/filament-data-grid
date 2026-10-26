@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Filament\Actions\Testing\TestAction;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\TextInput;
-use Waguilar33\FilamentDataGrid\DataGrid;
+use Waguilar\FilamentDataGrid\DataGrid;
 
 it('edits a field that has no inline editor in a modal for its row', function (): void {
     $component = mountLines([['name' => 'a', 'color' => '#000000'], ['name' => 'b', 'color' => null]], fn (): array => [

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Waguilar33\FilamentDataGrid\Actions;
+namespace Waguilar\FilamentDataGrid\Actions;
 
 use Filament\Actions\Action;
 use Filament\Forms\Components\Field;
 use Filament\Support\Enums\Width;
-use Waguilar33\FilamentDataGrid\DataGrid;
+use Waguilar\FilamentDataGrid\DataGrid;
 
 final class BuildEditCellAction
 {

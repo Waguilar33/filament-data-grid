@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Waguilar33\FilamentDataGrid\Cells;
+namespace Waguilar\FilamentDataGrid\Cells;
 
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DateTimePicker;
@@ -14,7 +14,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Infolists\Components\Entry;
 use Filament\Schemas\Components\Component;
-use Waguilar33\FilamentDataGrid\Exceptions\UnsupportedCellComponent;
+use Waguilar\FilamentDataGrid\Exceptions\UnsupportedCellComponent;
 
 final class ResolveCellEditorType
 {

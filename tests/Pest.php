@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\View;
 use Livewire\Features\SupportTesting\Testable;
-use Waguilar33\FilamentDataGrid\DataGrid;
-use Waguilar33\FilamentDataGrid\Tests\Fixtures\LinesForm;
-use Waguilar33\FilamentDataGrid\Tests\TestCase;
+use Waguilar\FilamentDataGrid\DataGrid;
+use Waguilar\FilamentDataGrid\Tests\Fixtures\LinesForm;
+use Waguilar\FilamentDataGrid\Tests\TestCase;
 
 use function Pest\Livewire\livewire;
 

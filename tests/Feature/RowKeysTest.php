@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Filament\Forms\Components\TextInput;
 use Illuminate\Support\Str;
-use Waguilar33\FilamentDataGrid\DataGrid;
+use Waguilar\FilamentDataGrid\DataGrid;
 
 it('keys every row by a UUID after filling', function (): void {
     $component = mountLines(

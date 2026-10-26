@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\ToggleButtons;
 use Illuminate\Support\Arr;
-use Waguilar33\FilamentDataGrid\DataGrid;
+use Waguilar\FilamentDataGrid\DataGrid;
 
 dataset('translation files', [
     'package' => [__DIR__.'/../../resources/lang', 'data-grid.php'],

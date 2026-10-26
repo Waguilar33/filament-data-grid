@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Waguilar33\FilamentDataGrid\Exceptions;
+namespace Waguilar\FilamentDataGrid\Exceptions;
 
 use Filament\Schemas\Components\Component;
 use LogicException;

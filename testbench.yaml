@@ -1,7 +1,7 @@
 laravel: '@testbench'
 
 providers:
-  - Waguilar33\FilamentDataGrid\FilamentDataGridServiceProvider
+  - Waguilar\FilamentDataGrid\FilamentDataGridServiceProvider
   - Workbench\App\Providers\WorkbenchServiceProvider
   - Workbench\App\Providers\Filament\DemoPanelProvider
 

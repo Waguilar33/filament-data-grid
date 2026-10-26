@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Waguilar33\FilamentDataGrid\Rows;
+namespace Waguilar\FilamentDataGrid\Rows;
 
-use Waguilar33\FilamentDataGrid\DataGrid;
+use Waguilar\FilamentDataGrid\DataGrid;
 
 final class EnsureTrailingEmptyRow
 {

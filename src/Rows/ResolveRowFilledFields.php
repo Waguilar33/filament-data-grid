@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Waguilar33\FilamentDataGrid\Rows;
+namespace Waguilar\FilamentDataGrid\Rows;
 
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Field;

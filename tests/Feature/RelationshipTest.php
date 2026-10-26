@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Waguilar33\FilamentDataGrid\Tests\Fixtures\OrderForm;
+use Waguilar\FilamentDataGrid\Tests\Fixtures\OrderForm;
 use Workbench\App\Models\DemoOrder;
 
 use function Pest\Livewire\livewire;

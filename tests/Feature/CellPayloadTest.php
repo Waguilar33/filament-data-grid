@@ -11,10 +11,10 @@ use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
-use Waguilar33\FilamentDataGrid\Cells\CellEditorType;
-use Waguilar33\FilamentDataGrid\Cells\ResolveCellEditorType;
-use Waguilar33\FilamentDataGrid\DataGrid;
-use Waguilar33\FilamentDataGrid\Exceptions\UnsupportedCellComponent;
+use Waguilar\FilamentDataGrid\Cells\CellEditorType;
+use Waguilar\FilamentDataGrid\Cells\ResolveCellEditorType;
+use Waguilar\FilamentDataGrid\DataGrid;
+use Waguilar\FilamentDataGrid\Exceptions\UnsupportedCellComponent;
 
 /**
  * @return array<string, mixed>

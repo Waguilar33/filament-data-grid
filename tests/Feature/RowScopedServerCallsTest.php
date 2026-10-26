@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Utilities\Get;
-use Waguilar33\FilamentDataGrid\DataGrid;
+use Waguilar\FilamentDataGrid\DataGrid;
 
 it('runs a cell server method in the scope of its own row', function (): void {
     $component = mountLines(

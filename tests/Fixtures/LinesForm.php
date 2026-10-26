@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Waguilar33\FilamentDataGrid\Tests\Fixtures;
+namespace Waguilar\FilamentDataGrid\Tests\Fixtures;
 
 use Closure;
 use Filament\Actions\Concerns\InteractsWithActions;

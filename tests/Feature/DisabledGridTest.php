@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Waguilar33\FilamentDataGrid\DataGrid;
+use Waguilar\FilamentDataGrid\DataGrid;
 
 it('disables every cell and row action when the grid is disabled', function (): void {
     $component = mountLines([['name' => 'a', 'unit' => 'kg']], fn (): array => [

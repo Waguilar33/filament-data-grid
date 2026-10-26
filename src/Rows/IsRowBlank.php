@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Waguilar33\FilamentDataGrid\Rows;
+namespace Waguilar\FilamentDataGrid\Rows;
 
 final class IsRowBlank
 {

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Waguilar33\FilamentDataGrid\Payload;
+namespace Waguilar\FilamentDataGrid\Payload;
 
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Support\Icons\Heroicon;
-use Waguilar33\FilamentDataGrid\DataGrid;
+use Waguilar\FilamentDataGrid\DataGrid;
 
 final class RenderRowActions
 {
