@@ -6,6 +6,7 @@ use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Utilities\Set;
 use Waguilar33\FilamentDataGrid\DataGrid;
 
 function linesWithTrailingRow(): Closure
@@ -68,4 +69,25 @@ it('counts editable fields without a default as the ones that fill a row', funct
     ]);
 
     expect(grid($component)->getTrailingEmptyRowFilledBy())->toBe(['name']);
+});
+
+it('runs afterStateUpdated for a live field on the blank row', function (): void {
+    $component = mountLines([], fn (): array => [
+        DataGrid::make('lines')
+            ->trailingEmptyRow(filledBy: 'product_id')
+            ->schema([
+                Select::make('product_id')->options(['1' => 'Tea']),
+                Select::make('unit')
+                    ->options(['kg' => 'Kilogram', 'box' => 'Box'])
+                    ->live()
+                    ->afterStateUpdated(fn (Set $set) => $set('note', 'unit changed')),
+                Hidden::make('note'),
+            ]),
+    ]);
+
+    $trailing = rowKeys($component)[0];
+
+    $component->set("data.lines.{$trailing}.unit", 'box');
+
+    expect($component->get("data.lines.{$trailing}.note"))->toBe('unit changed');
 });

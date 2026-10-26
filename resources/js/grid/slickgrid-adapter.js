@@ -232,9 +232,11 @@ export function createGrid(element, { payload, translations, isDarkMode, onCellC
     }
 
     function markHorizontalOverflow() {
-        const viewport = element.querySelector('.slick-viewport')
+        const overflows = [...element.querySelectorAll('.slick-viewport')].some(
+            (viewport) => viewport.scrollWidth > viewport.clientWidth,
+        )
 
-        element.classList.toggle('fi-data-grid-overflows', viewport ? viewport.scrollWidth > viewport.clientWidth : false)
+        element.classList.toggle('fi-data-grid-overflows', overflows)
     }
 
     let resizeFrame = null
