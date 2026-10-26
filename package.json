@@ -1,0 +1,14 @@
+{
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "node bin/build.js",
+        "dev": "node bin/build.js --watch"
+    },
+    "devDependencies": {
+        "@slickgrid-universal/vanilla-bundle": "^10.11.3",
+        "esbuild": "^0.28.2",
+        "playwright": "^1.64.1",
+        "tabulator-tables": "^6.7.1"
+    }
+}
