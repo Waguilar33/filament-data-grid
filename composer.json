@@ -1,0 +1,16 @@
+{
+    "name": "waguilar33/filament-data-grid",
+    "description": "An editable data grid field for Filament, built on a JavaScript grid.",
+    "type": "library",
+    "license": "proprietary",
+    "require": {
+        "php": "^8.4",
+        "filament/filament": "^5.10"
+    },
+    "autoload": {
+        "psr-4": {
+            "Waguilar33\\FilamentDataGrid\\": "src/"
+        }
+    },
+    "minimum-stability": "stable"
+}
