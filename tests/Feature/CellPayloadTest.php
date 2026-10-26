@@ -9,7 +9,9 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
+use Waguilar33\FilamentDataGrid\Cells\CellEditorType;
 use Waguilar33\FilamentDataGrid\Cells\ResolveCellEditorType;
 use Waguilar33\FilamentDataGrid\DataGrid;
 use Waguilar33\FilamentDataGrid\Exceptions\UnsupportedCellComponent;
@@ -48,7 +50,7 @@ it('turns each component into a column with its editor', function (): void {
 
     expect(array_column($columns, 'field'))->toBe(['name', 'quantity', 'product_id', 'unit', 'active', 'total'])
         ->and(array_map(fn (array $column): string => $column['editor']['type'], $columns))
-        ->toBe(['text', 'number', 'search', 'select', 'toggle', 'entry'])
+        ->toBe(['text', 'number', 'select', 'select', 'toggle', 'entry'])
         ->and($columns[0]['required'])->toBeTrue()
         ->and($columns[1])->toMatchArray(['label' => 'Quantity', 'width' => '8rem', 'alignment' => 'end'])
         ->and($columns[1]['editor']['integer'])->toBeTrue();
@@ -137,8 +139,12 @@ it('renders infolist entries per row with Filament markup', function (): void {
         ->and(cellOf($grid, 1, 'total')['html'])->toContain('$5.00');
 });
 
-it('refuses components it cannot show as a cell', function (): void {
-    app(ResolveCellEditorType::class)->handle(ColorPicker::make('color'));
+it('edits fields it cannot show inline in a modal', function (): void {
+    expect(app(ResolveCellEditorType::class)->handle(ColorPicker::make('color')))->toBe(CellEditorType::Modal);
+});
+
+it('refuses layout components as cells', function (): void {
+    app(ResolveCellEditorType::class)->handle(Section::make());
 })->throws(UnsupportedCellComponent::class);
 
 it('keeps hidden fields in the row state without a column', function (): void {
