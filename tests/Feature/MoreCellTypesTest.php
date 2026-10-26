@@ -7,6 +7,7 @@ use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Schemas\Components\Utilities\Get;
 use Waguilar\FilamentDataGrid\DataGrid;
@@ -64,13 +65,14 @@ it('mirrors the select configuration Filament uses for the same field', function
 });
 
 it('edits dates with the row limits and shows them in the display format', function (): void {
-    $component = mountLines([['due' => '2026-10-26', 'at' => '2026-10-26 14:30:00']], fn (): array => [
+    $component = mountLines([['due' => '2026-10-26', 'at' => '2026-10-26 14:30:00', 'opens' => '09:15:00']], fn (): array => [
         DataGrid::make('lines')->schema([
             DatePicker::make('due')
                 ->minDate('2026-01-01')
                 ->maxDate(fn (Get $get): string => '2026-12-31')
                 ->displayFormat('d/m/Y'),
             DateTimePicker::make('at')->seconds(false),
+            TimePicker::make('opens')->seconds(false),
         ]),
     ]);
 
@@ -78,6 +80,7 @@ it('edits dates with the row limits and shows them in the display format', funct
 
     expect($payload['columns'][0]['editor'])->toMatchArray(['type' => 'date', 'inputType' => 'date', 'internalFormat' => 'Y-m-d'])
         ->and($payload['columns'][1]['editor'])->toMatchArray(['inputType' => 'datetime-local'])
+        ->and($payload['columns'][2]['editor'])->toMatchArray(['type' => 'date', 'inputType' => 'time'])
         ->and($payload['rows'][0]['cells']['due'])->toMatchArray(['min' => '2026-01-01', 'max' => '2026-12-31', 'label' => '26/10/2026'])
         ->and($payload['rows'][0]['cells']['at']['label'])->toBe('Oct 26, 2026 14:30');
 });
