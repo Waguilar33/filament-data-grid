@@ -1,16 +1,92 @@
 {
     "name": "waguilar33/filament-data-grid",
-    "description": "An editable data grid field for Filament, built on a JavaScript grid.",
+    "description": "An editable, spreadsheet-style data grid form field for Filament, with Filament form components as cells.",
+    "keywords": [
+        "waguilar33",
+        "laravel",
+        "filamentphp",
+        "filament",
+        "filament-plugin",
+        "filament-data-grid",
+        "data-grid",
+        "spreadsheet"
+    ],
+    "homepage": "https://github.com/Waguilar33/filament-data-grid",
+    "support": {
+        "issues": "https://github.com/Waguilar33/filament-data-grid/issues",
+        "source": "https://github.com/Waguilar33/filament-data-grid"
+    },
     "type": "library",
-    "license": "proprietary",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "William Aguilar",
+            "email": "waa2398@gmail.com",
+            "role": "Developer"
+        }
+    ],
     "require": {
         "php": "^8.4",
-        "filament/filament": "^5.10"
+        "filament/filament": "^5.10.2",
+        "illuminate/support": "^13.0",
+        "livewire/livewire": "^4.4.8",
+        "spatie/laravel-package-tools": "^1.92"
+    },
+    "require-dev": {
+        "larastan/larastan": "^3.13",
+        "laravel/pint": "^1.32",
+        "orchestra/testbench": "^11.3",
+        "pestphp/pest": "^5.3",
+        "pestphp/pest-plugin-browser": "^5.1",
+        "pestphp/pest-plugin-livewire": "^5.0"
     },
     "autoload": {
         "psr-4": {
-            "Waguilar33\\FilamentDataGrid\\": "src/"
+            "Waguilar\\FilamentDataGrid\\": "src/"
         }
     },
-    "minimum-stability": "stable"
+    "autoload-dev": {
+        "psr-4": {
+            "Waguilar\\FilamentDataGrid\\Tests\\": "tests/",
+            "Workbench\\App\\": "workbench/app/",
+            "Workbench\\Database\\Factories\\": "workbench/database/factories/",
+            "Workbench\\Database\\Seeders\\": "workbench/database/seeders/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Waguilar\\FilamentDataGrid\\FilamentDataGridServiceProvider"
+            ]
+        }
+    },
+    "scripts": {
+        "post-autoload-dump": [
+            "@clear",
+            "@prepare"
+        ],
+        "clear": "@php vendor/bin/testbench package:purge-skeleton --ansi",
+        "prepare": "@php vendor/bin/testbench package:discover --ansi",
+        "build": "@php vendor/bin/testbench workbench:build --ansi",
+        "serve": [
+            "Composer\\Config::disableProcessTimeout",
+            "@build",
+            "@php vendor/bin/testbench serve --ansi"
+        ],
+        "test": "vendor/bin/pest",
+        "analyse": "vendor/bin/phpstan analyse",
+        "format": "vendor/bin/pint",
+        "lint": [
+            "@php vendor/bin/pint --ansi",
+            "@php vendor/bin/phpstan analyse --verbose --ansi"
+        ]
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
 }
