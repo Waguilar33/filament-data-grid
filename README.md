@@ -5,7 +5,6 @@
   <img src="art/screenshot-light.png" alt="Filament Data Grid">
 </picture>
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/waguilar33/filament-data-grid.svg?style=flat-square&label=version)](https://packagist.org/packages/waguilar33/filament-data-grid)
 [![Tests](https://github.com/Waguilar33/filament-data-grid/actions/workflows/tests.yml/badge.svg)](https://github.com/Waguilar33/filament-data-grid/actions/workflows/tests.yml)
 [![PHPStan](https://github.com/Waguilar33/filament-data-grid/actions/workflows/phpstan.yml/badge.svg)](https://github.com/Waguilar33/filament-data-grid/actions/workflows/phpstan.yml)
 [![License](https://img.shields.io/github/license/Waguilar33/filament-data-grid.svg?style=flat-square&label=license)](LICENSE.md)
@@ -15,7 +14,7 @@ An editable, spreadsheet-style data grid for Filament forms. Rows are typed in p
 `DataGrid` is a form field that extends Filament's `Repeater`, and you build it the same way as `Repeater::make()->table()`. Its cells are your own Filament form components. Read-only cells are infolist entries. Their closures run on the server for each row, so `Get`, `Set`, `live()`, `afterStateUpdated()`, `disabled()`, `required()` and validation rules all work. Validation errors use `Repeater`'s keys, and row actions are Filament Actions.
 
 > [!WARNING]
-> This is a pre-release (`0.x`). The API may change before `v1.0.0`. Pin an exact version if you try it.
+> This plugin is under active development and has no release yet. Don't use it in production. Alpha releases will come first, and the API may change until `v1.0.0`.
 
 ## Requirements
 
