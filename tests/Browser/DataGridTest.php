@@ -16,7 +16,7 @@ function savedState(string $grid = 'lines'): string
     return sprintf('JSON.parse(document.querySelector("[data-saved-state]").textContent).%s', $grid);
 }
 
-function dragRow(string $handle, string $target): string
+function dragRow(string $handle, string $target, string $check = ''): string
 {
     return <<<JS
         () => {
@@ -34,7 +34,10 @@ function dragRow(string $handle, string $target): string
                 document.elementFromPoint(start.x + 4, y).dispatchEvent(new MouseEvent('mousemove', at(y)))
             }
 
+            const hit = document.elementFromPoint(start.x + 4, start.y + 4)?.className
             window.dispatchEvent(new MouseEvent('mouseup', at(endY)))
+
+            return { hit, start: start.y, endY, scrollY: window.scrollY, after: document.querySelector('{$check}')?.textContent?.trim() }
         }
         JS;
 }
@@ -160,7 +163,9 @@ it('adds rows with the add action and accepts rows pushed by the server', functi
 it('reorders rows by dragging the handle', function (): void {
     $page = visit('/demo/data-grid-demo')->waitForEvent('networkidle');
 
-    $page->script(dragRow(cell(0, 0, ADJUSTMENTS).' .fi-data-grid-move-handle', cell(1, 0, ADJUSTMENTS)));
+    $drag = $page->script(dragRow(cell(0, 0, ADJUSTMENTS).' .fi-data-grid-move-handle', cell(1, 0, ADJUSTMENTS), cell(0, 1, ADJUSTMENTS)));
+
+    expect($drag['after'] ?? null)->toBe('Late delivery', (string) json_encode($drag));
 
     $page->waitForEvent('networkidle')
         ->assertSeeIn(cell(0, 1, ADJUSTMENTS), 'Late delivery')
