@@ -16,10 +16,18 @@ function savedState(string $grid = 'lines'): string
     return sprintf('JSON.parse(document.querySelector("[data-saved-state]").textContent).%s', $grid);
 }
 
-function dragRow(string $handle, string $target, string $check = ''): string
+function dragRow(string $handle, string $target): string
 {
     return <<<JS
-        () => {
+        async () => {
+            const styled = () => [...document.styleSheets].some((sheet) => sheet.href?.includes('/data-grid.css'))
+
+            for (let tries = 0; ! styled() && tries < 50; tries++) {
+                await new Promise((resolve) => setTimeout(resolve, 100))
+            }
+
+            await new Promise(requestAnimationFrame)
+
             const handle = document.querySelector('{$handle}')
             const target = document.querySelector('{$target}').getBoundingClientRect()
             const start = handle.getBoundingClientRect()
@@ -34,18 +42,7 @@ function dragRow(string $handle, string $target, string $check = ''): string
                 document.elementFromPoint(start.x + 4, y).dispatchEvent(new MouseEvent('mousemove', at(y)))
             }
 
-            const root = handle.closest('.slick-viewport')?.parentElement?.parentElement
-            const diag = {
-                hit: String(document.elementFromPoint(start.x + 4, start.y + 10)?.closest('.slick-cell')?.className),
-                guide: document.querySelector('.slick-reorder-guide')?.style.top ?? 'none',
-                editing: document.querySelectorAll('.slick-cell.editable').length,
-                active: document.activeElement?.tagName + '.' + String(document.activeElement?.className).slice(0, 60),
-                canvasTop: handle.closest('.grid-canvas, .slick-canvas, [class*="canvas"]')?.getBoundingClientRect().top,
-                vh: window.innerHeight,
-            }
             window.dispatchEvent(new MouseEvent('mouseup', at(endY)))
-
-            return { ...diag, start: start.y, endY, after: document.querySelector('{$check}')?.textContent?.trim() }
         }
         JS;
 }
@@ -169,15 +166,12 @@ it('adds rows with the add action and accepts rows pushed by the server', functi
 });
 
 it('reorders rows by dragging the handle', function (): void {
-    $page = visit('/demo/data-grid-demo')->waitForEvent('networkidle');
+    $page = visit('/demo/data-grid-demo');
 
-    $drag = $page->script(dragRow(cell(0, 0, ADJUSTMENTS).' .fi-data-grid-move-handle', cell(1, 0, ADJUSTMENTS), cell(0, 1, ADJUSTMENTS)));
+    $page->script(dragRow(cell(0, 0, ADJUSTMENTS).' .fi-data-grid-move-handle', cell(1, 0, ADJUSTMENTS)));
 
-    fwrite(STDERR, json_encode($drag).PHP_EOL);
-    expect($drag['after'] ?? null)->toBe('Late delivery', (string) json_encode($drag));
-
-    $page->waitForEvent('networkidle')
-        ->assertSeeIn(cell(0, 1, ADJUSTMENTS), 'Late delivery')
+    $page->assertSeeIn(cell(0, 1, ADJUSTMENTS), 'Late delivery')
+        ->waitForEvent('networkidle')
         ->click('Save')
         ->wait(1.5)
         ->assertScript(savedState('adjustments').'[0].reason', 'Late delivery');
