@@ -158,11 +158,11 @@ it('adds rows with the add action and accepts rows pushed by the server', functi
 });
 
 it('reorders rows by dragging the handle', function (): void {
-    $page = visit('/demo/data-grid-demo');
+    $page = visit('/demo/data-grid-demo')->waitForEvent('networkidle');
 
     $page->script(dragRow(cell(0, 0, ADJUSTMENTS).' .fi-data-grid-move-handle', cell(1, 0, ADJUSTMENTS)));
 
-    $page->wait(1)
+    $page->waitForEvent('networkidle')
         ->assertSeeIn(cell(0, 1, ADJUSTMENTS), 'Late delivery')
         ->click('Save')
         ->wait(1.5)
