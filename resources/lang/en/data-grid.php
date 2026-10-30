@@ -19,6 +19,7 @@ return [
         'empty' => 'No results.',
         'expand' => 'Expand row',
         'collapse' => 'Collapse row',
+        'open_record' => 'Open',
         'no_children' => 'No lines.',
     ],
     'errors' => [

@@ -64,3 +64,10 @@ it('leaves search, filters and pagination to the table', function (): void {
         ->and($payload['filters'])->toBe([])
         ->and($payload['serverSide'])->toBeFalse();
 });
+
+it('sends each record its Filament record actions and a link to the record', function (): void {
+    $row = tableGridPayload(Livewire::test(DeliveryTableDemo::class))['rows'][0];
+
+    expect($row['actions'])->toContain('fi-data-grid-record-actions')->toContain('Deliver')->toContain('Reschedule')
+        ->and($row['link'])->toContain('href=')->toContain('delivery-route-demo#DLV-2026-0000001');
+});

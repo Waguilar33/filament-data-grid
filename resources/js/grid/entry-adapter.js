@@ -2,6 +2,10 @@ import { SlickGrid } from '@slickgrid-universal/common'
 import { escapeHtml } from './cells.js'
 
 const TOGGLE_COLUMN = '__toggle'
+const ACTIONS_COLUMN = '__actions'
+const LINK_COLUMN = '__link'
+const LINK_WIDTH = 44
+const ACTIONS_PADDING = 24
 const ROW_HEIGHT = 44
 const CHILD_HEADER_HEIGHT = 32
 const DEFAULT_CHILD_TABLE_PADDING = 15
@@ -202,7 +206,67 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
             })
         }
 
+        const actionsWidth = recordActionsWidth()
+
+        if (actionsWidth > 0) {
+            columns.push({
+                id: ACTIONS_COLUMN,
+                field: ACTIONS_COLUMN,
+                name: `<span class="fi-sr-only">${escapeHtml(translations.actions)}</span>`,
+                fixedWidth: actionsWidth,
+                width: actionsWidth,
+                resizable: false,
+                sortable: false,
+                focusable: false,
+                selectable: false,
+                cssClass: 'fi-data-grid-cell fi-data-grid-record-actions-cell fi-align-end',
+                headerCssClass: 'fi-data-grid-header',
+                formatter: (rowIndex, cellIndex, value, column, item) => (item.kind === 'parent' ? (item.row.actions ?? '') : ''),
+            })
+        }
+
+        if (payload.rows.some((row) => row.link)) {
+            columns.push({
+                id: LINK_COLUMN,
+                field: LINK_COLUMN,
+                name: `<span class="fi-sr-only">${escapeHtml(translations.open_record)}</span>`,
+                fixedWidth: LINK_WIDTH,
+                width: LINK_WIDTH,
+                resizable: false,
+                sortable: false,
+                focusable: false,
+                selectable: false,
+                cssClass: 'fi-data-grid-cell fi-data-grid-record-link-cell',
+                headerCssClass: 'fi-data-grid-header',
+                formatter: (rowIndex, cellIndex, value, column, item) => (item.kind === 'parent' ? (item.row.link ?? '') : ''),
+            })
+        }
+
         return columns
+    }
+
+    const recordActionsWidth = () => {
+        const actions = payload.rows.map((row) => row.actions).filter(Boolean)
+
+        if (actions.length === 0) {
+            return 0
+        }
+
+        const probe = document.createElement('div')
+        probe.className = 'fi-data-grid-record-actions-probe'
+        element.appendChild(probe)
+
+        const width = Math.max(
+            ...actions.map((html) => {
+                probe.innerHTML = html
+
+                return probe.firstElementChild?.scrollWidth ?? 0
+            }),
+        )
+
+        probe.remove()
+
+        return Math.ceil(width) + ACTIONS_PADDING
     }
 
     const childTablePadding = () => payload.childTablePadding ?? DEFAULT_CHILD_TABLE_PADDING
@@ -301,17 +365,26 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
     grid.onClick.subscribe((event, { row }) => {
         const item = visible[row]
 
-        if (item?.kind !== 'parent' || !hasChildren()) {
+        if (item?.kind !== 'parent') {
             return
         }
 
         const target = event.getNativeEvent?.()?.target ?? event.target
+        const isToggle = Boolean(target?.closest?.('.fi-data-grid-row-toggle'))
 
-        if (target?.closest?.('a, button:not(.fi-data-grid-row-toggle), input, select, textarea')) {
+        if (!isToggle && target?.closest?.('a, button, input, select, textarea, .fi-data-grid-record-actions')) {
             return
         }
 
-        toggle(item.row.key)
+        if (!isToggle && item.row.link) {
+            grid.getCellNode(row, grid.getColumnIndex(LINK_COLUMN))?.querySelector('a')?.click()
+
+            return
+        }
+
+        if (hasChildren()) {
+            toggle(item.row.key)
+        }
     })
 
     const fitColumns = () => {

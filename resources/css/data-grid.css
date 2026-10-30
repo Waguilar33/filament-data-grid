@@ -764,3 +764,42 @@
 .dark .fi-ta-header .fi-data-grid-heading-icon {
     color: var(--gray-500);
 }
+
+.fi-data-grid-record-actions-probe {
+    position: absolute;
+    visibility: hidden;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+.fi-data-grid-record-actions-probe .fi-data-grid-record-actions,
+.fi-data-grid-canvas .fi-data-grid-record-actions {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: calc(var(--spacing) * 3);
+    width: max-content;
+}
+
+.fi-data-grid-canvas .fi-data-grid-record-link-cell {
+    justify-content: center;
+    padding-inline: 0;
+}
+
+.fi-data-grid-record-link {
+    display: inline-flex;
+    color: var(--fi-data-grid-muted);
+}
+
+.fi-data-grid-record-link:hover {
+    color: var(--fi-data-grid-text);
+}
+
+.fi-data-grid-record-link .fi-icon {
+    width: calc(var(--spacing) * 5);
+    height: calc(var(--spacing) * 5);
+}
+
+.fi-data-grid-entry-grid .fi-data-grid-parent-row:has(.fi-data-grid-record-link) .slick-cell {
+    cursor: pointer;
+}

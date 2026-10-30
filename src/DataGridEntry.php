@@ -25,6 +25,7 @@ use Livewire\Attributes\Renderless;
 use Livewire\Component;
 use Traversable;
 use Waguilar\FilamentDataGrid\Entry\BuildEntryPayload;
+use Waguilar\FilamentDataGrid\Entry\DescribeTableRecord;
 use Waguilar\FilamentDataGrid\Entry\EntryFilters;
 use Waguilar\FilamentDataGrid\Entry\EntryPage;
 
@@ -53,6 +54,11 @@ class DataGridEntry extends RepeatableEntry
     protected bool $isTableContent = false;
 
     protected int|Closure $childTablePadding = 15;
+
+    /**
+     * @var array<string, array{actions: string|null, link: string|null}>
+     */
+    protected array $tableRecords = [];
 
     protected string|Htmlable|Closure|null $heading = null;
 
@@ -367,14 +373,32 @@ class DataGridEntry extends RepeatableEntry
     public function renderTableRecords(HasSchemas&HasTable&Component $livewire, iterable $records): Htmlable
     {
         $state = [];
+        $this->tableRecords = [];
+        $table = $livewire->getTable();
+        $describeRecord = app(DescribeTableRecord::class);
 
         foreach ($records instanceof Paginator ? $records->items() : $records as $key => $record) {
-            $state[$record instanceof Model ? $livewire->getTableRecordKey($record) : $key] = $record;
+            $recordKey = (string) ($record instanceof Model ? $livewire->getTableRecordKey($record) : $key);
+            $state[$recordKey] = $record;
+
+            if ($record instanceof Model) {
+                $this->tableRecords[$recordKey] = $describeRecord->handle($table, $record);
+            } elseif (is_array($record)) {
+                $this->tableRecords[$recordKey] = $describeRecord->handle($table, array_combine(array_map(strval(...), array_keys($record)), $record));
+            }
         }
 
         $this->state($state)->hiddenLabel();
 
         return Schema::make($livewire)->components([$this]);
+    }
+
+    /**
+     * @return array{actions: string|null, link: string|null}
+     */
+    public function getTableRecord(string $key): array
+    {
+        return $this->tableRecords[$key] ?? ['actions' => null, 'link' => null];
     }
 
     /**
@@ -401,6 +425,7 @@ class DataGridEntry extends RepeatableEntry
                 'schemaComponent' => $this->getKey(),
                 'translations' => [
                     ...__('filament-data-grid::data-grid.entry'),
+                    'actions' => __('filament-data-grid::data-grid.columns.actions'),
                     'pagination' => [
                         'overview_one' => trans_choice('filament::components/pagination.overview', 1, ['first' => ':first', 'last' => ':last', 'total' => ':total']),
                         'overview_many' => trans_choice('filament::components/pagination.overview', 2, ['first' => ':first', 'last' => ':last', 'total' => ':total']),
