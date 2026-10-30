@@ -2,9 +2,9 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
-## Unreleased
+## v1.0.0-beta.1 - 2026-10-30
 
-First preview. Not ready for production; the API may change before v1.0.0.
+First beta. You can install and use it, but the API may change before v1.0.0.
 
 - `DataGrid` form field that extends `Repeater`, with Filament form components as cells and infolist entries as read-only cells.
 - Text, number, select, radio, toggle buttons, toggle, checkbox and date cells edited in place; any other field opens in a modal.
