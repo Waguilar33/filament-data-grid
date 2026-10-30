@@ -8,6 +8,7 @@ use Filament\Actions\Action;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\EmbeddedTable;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
@@ -16,6 +17,7 @@ use Filament\Tables\Table;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use Waguilar\FilamentDataGrid\Support\IconHeading;
 use Workbench\App\Catalog\FakeDeliveries;
 
 final class DeliveryTableDemo extends Page implements HasTable
@@ -42,7 +44,7 @@ final class DeliveryTableDemo extends Page implements HasTable
     public function table(Table $table): Table
     {
         return $table
-            ->heading(__('demo::demo.route.sections.server'))
+            ->heading(IconHeading::make(__('demo::demo.route.sections.server'), Heroicon::OutlinedTruck))
             ->description(__('demo::demo.route.descriptions.server'))
             ->records(fn (?string $search, array $filters, int $page, int $recordsPerPage): LengthAwarePaginator => $this->deliveries($search, $filters, $page, $recordsPerPage))
             ->columns([TextColumn::make('delivery_number')->searchable()])
