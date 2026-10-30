@@ -42,7 +42,6 @@ return [
             'customer' => 'Customer',
             'warehouse' => 'Warehouse',
             'product' => 'Product',
-            'code' => 'Unit code',
             'requested' => 'Requested',
             'handed_over' => 'Handed over',
         ],

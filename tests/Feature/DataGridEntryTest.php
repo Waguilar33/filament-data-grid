@@ -16,6 +16,7 @@ use Waguilar\FilamentDataGrid\DataGridEntry;
 use Waguilar\FilamentDataGrid\Entry\EntryFilters;
 use Waguilar\FilamentDataGrid\Exceptions\UnsupportedFilter;
 use Waguilar\FilamentDataGrid\Tests\Fixtures\EntryPage;
+use Workbench\App\Models\DemoOrder;
 
 /**
  * @param  Closure(DataGridEntry): DataGridEntry|null  $configure
@@ -366,4 +367,45 @@ it('pads the child table by 15 pixels unless told otherwise', function (): void 
     expect(deliveriesPayload(mountDeliveries())['childTablePadding'])->toBe(15)
         ->and(deliveriesPayload(mountDeliveries(fn (DataGridEntry $entry): DataGridEntry => $entry->childTablePadding(8)))['childTablePadding'])->toBe(8)
         ->and(deliveriesPayload(mountDeliveries(fn (DataGridEntry $entry): DataGridEntry => $entry->childTablePadding(-4)))['childTablePadding'])->toBe(0);
+});
+
+it('sends no row height by default, so the browser sizes each row to its content', function (): void {
+    $payload = serverEntry(fn (DataGridEntry $entry): DataGridEntry => $entry->state(manyDeliveries(2)))->getGridPayload();
+
+    expect(array_column($payload['rows'], 'height'))->toBe([null, null]);
+});
+
+it('sends a fixed row height for every parent row', function (): void {
+    $payload = serverEntry(fn (DataGridEntry $entry): DataGridEntry => $entry->state(manyDeliveries(2))->rowHeight(60))->getGridPayload();
+
+    expect(array_column($payload['rows'], 'height'))->toBe([60, 60]);
+});
+
+it('picks a row height per row from its state and lets null fall back to content height', function (): void {
+    $entry = serverEntry(fn (DataGridEntry $entry): DataGridEntry => $entry
+        ->state(manyDeliveries(5))
+        ->serverSide()
+        ->paginated([2])
+        ->rowHeight(fn (array $state): ?int => $state['customer'] === 'Ana' ? 72 : null));
+
+    expect(array_column($entry->getGridPayload()['rows'], 'height'))->toBe([null, 72])
+        ->and(array_column($entry->getGridPage(null, 2, 2)['rows'], 'height'))->toBe([null, 72]);
+});
+
+it('passes an Eloquent row its attributes as the state for its row height', function (): void {
+    DemoOrder::create(['reference' => 'A-1']);
+    DemoOrder::create(['reference' => 'A-2']);
+
+    $payload = serverEntry(fn (DataGridEntry $entry): DataGridEntry => $entry
+        ->state(DemoOrder::query()->orderBy('id')->get())
+        ->rowHeight(fn (array $state): ?int => $state['reference'] === 'A-2' ? 80 : null))
+        ->getGridPayload();
+
+    expect(array_column($payload['rows'], 'height'))->toBe([null, 80]);
+});
+
+it('ignores row heights that are not positive whole numbers', function (): void {
+    $payload = serverEntry(fn (DataGridEntry $entry): DataGridEntry => $entry->state(manyDeliveries(1))->rowHeight(0))->getGridPayload();
+
+    expect($payload['rows'][0]['height'])->toBeNull();
 });

@@ -13,6 +13,7 @@ use Filament\Schemas\Components\Component;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\Alignment;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\MessageBag;
 use Waguilar\FilamentDataGrid\Cells\DescribeCell;
 use Waguilar\FilamentDataGrid\DataGridEntry;
@@ -105,6 +106,7 @@ final readonly class BuildEntryPayload
             'search' => $entry->isServerSide() ? '' : $this->searchText($entry, $item),
             'filterValues' => $entry->isServerSide() ? [] : $entry->getEntryFilters()->rawValues($item),
             'children' => $children === null ? [] : $this->describeChildren($children),
+            'height' => $entry->getRowHeight($entry->hasRowHeightPerRow() ? $this->rawState($item) : []),
             ...$entry->getTableRecord($key),
         ];
     }
@@ -127,6 +129,20 @@ final readonly class BuildEntryPayload
         }
 
         return $rows;
+    }
+
+    /**
+     * @return array<array-key, mixed>
+     */
+    private function rawState(Schema $item): array
+    {
+        $state = $item->getRecord() ?? $item->getConstantState();
+
+        return match (true) {
+            $state instanceof Model => $state->toArray(),
+            is_object($state) => get_object_vars($state),
+            default => $state,
+        };
     }
 
     private function childRowsEntry(Schema $schema): ?RepeatableEntry
