@@ -2,9 +2,12 @@ import { SlickEditorLock, SlickGrid, SlickRowMoveManager } from '@slickgrid-univ
 import { cellLabel, escapeHtml, headerHtml, isBlank, renderActions, renderCell } from './cells.js'
 import { DateEditor, NumberEditor, TextEditor } from './editors.js'
 import { mountSelectCell } from './select-cell.js'
+import { createChildRows } from './child-rows.js'
 
 const ACTIONS_COLUMN = '__actions'
 const MOVE_COLUMN = '__move'
+const TOGGLE_COLUMN = '__toggle'
+const TOGGLE_WIDTH = 44
 const ROW_HEIGHT = 44
 const FLEXIBLE_MIN_WIDTH = 240
 const ACTIONS_WIDTH = 56
@@ -27,6 +30,10 @@ const toPixels = (width) => {
 
 const EDITORS = { text: TextEditor, number: NumberEditor, date: DateEditor }
 
+const isPlaceholder = (item) => item?.__childOf !== undefined
+
+const INTERACTIVE = 'a, button, input, select, textarea, .fi-data-grid-row-actions, .fi-data-grid-select'
+
 const stripHtml = (html) => {
     const element = document.createElement('div')
     element.innerHTML = html ?? ''
@@ -36,13 +43,26 @@ const stripHtml = (html) => {
 
 export function createGrid(
     element,
-    { payload, translations, icons, isDarkMode, onCellChange, callSchemaComponentMethod, onOpenCell, onReorder },
+    { payload, translations, icons, isDarkMode, onCellChange, callSchemaComponentMethod, onOpenCell, onReorder, createChild },
 ) {
     let rows = new Map()
     let items = []
     let frozenLength = null
+    let pendingRowHeights = false
     const selects = new Map()
     const userWidths = new Map()
+    const expanded = new Set()
+    const seen = new Set()
+    const hadChildErrors = new Map()
+    const childRows = createChild
+        ? createChildRows(element, { createChild, onResize: () => refreshRowHeights(), onFocus: () => yieldFocus() })
+        : null
+
+    const hasChildRows = () => Boolean(payload.hasChildRows && childRows)
+
+    const isOpen = (key) => expanded.has(key) && Boolean(rows.get(key)?.child)
+
+    const frozenColumns = () => (hasChildRows() ? 0 : payload.frozenColumns)
 
     const selectKey = (rowKey, field) => `${rowKey}.${field}`
 
@@ -100,6 +120,23 @@ export function createGrid(
             })
         }
 
+        if (hasChildRows()) {
+            columns.unshift({
+                id: TOGGLE_COLUMN,
+                field: TOGGLE_COLUMN,
+                name: `<span class="fi-sr-only">${escapeHtml(translations.entry.expand)}</span>`,
+                fixedWidth: TOGGLE_WIDTH,
+                width: TOGGLE_WIDTH,
+                resizable: false,
+                sortable: false,
+                focusable: false,
+                selectable: false,
+                cssClass: 'fi-data-grid-cell fi-data-grid-toggle-cell',
+                headerCssClass: 'fi-data-grid-header',
+                formatter: (rowIndex, cellIndex, value, column, item) => formatToggle(item),
+            })
+        }
+
         if (payload.hasActions) {
             columns.push({
                 id: ACTIONS_COLUMN,
@@ -121,7 +158,7 @@ export function createGrid(
             })
         }
 
-        const frozenCount = payload.frozenColumns + (payload.reorderable && payload.frozenColumns > 0 ? 1 : 0)
+        const frozenCount = frozenColumns() + (payload.reorderable && frozenColumns() > 0 ? 1 : 0)
 
         if (frozenCount > 0) {
             columns[frozenCount - 1].cssClass += ' fi-data-grid-frozen-edge'
@@ -131,15 +168,30 @@ export function createGrid(
         columns[0].cssClass += ' fi-data-grid-first-column'
         columns[columns.length - 1].cssClass += ' fi-data-grid-last-column'
 
-        return columns
+        return columns.map((column) => {
+            const format = column.formatter
+
+            return { ...column, formatter: (...args) => (isPlaceholder(args[4]) ? '' : format(...args)) }
+        })
+    }
+
+    function formatToggle(item) {
+        if (!rows.get(item.__key)?.child) {
+            return ''
+        }
+
+        const isExpanded = isOpen(item.__key)
+        const label = isExpanded ? translations.entry.collapse : translations.entry.expand
+
+        return `<button type="button" class="fi-data-grid-row-toggle ${isExpanded ? 'fi-data-grid-row-toggle-expanded' : ''}" aria-expanded="${isExpanded ? 'true' : 'false'}" aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}">${icons.expand ?? ''}</button>`
     }
 
     const frozenColumnIndex = () => {
-        if (payload.frozenColumns <= 0) {
+        if (frozenColumns() <= 0) {
             return -1
         }
 
-        return payload.frozenColumns - 1 + (payload.reorderable ? 1 : 0)
+        return frozenColumns() - 1 + (payload.reorderable ? 1 : 0)
     }
 
     function formatCell(rowIndex, cellIndex, value, column, item) {
@@ -292,6 +344,18 @@ export function createGrid(
         getLength: () => frozenLength ?? items.length,
         getItem: (index) => items[index],
         getItemMetadata: (index) => {
+            const isLast = index === dataProvider.getLength() - 1
+
+            if (isPlaceholder(items[index])) {
+                return {
+                    height: childRows.height(items[index].__childOf),
+                    cssClasses: `fi-data-grid-child-placeholder ${isLast ? 'fi-data-grid-row-last' : ''}`,
+                    focusable: false,
+                    selectable: false,
+                    columns: { 0: { colspan: '*', editorClass: null } },
+                }
+            }
+
             const row = rows.get(items[index]?.__key)
             const columns = {}
 
@@ -306,15 +370,20 @@ export function createGrid(
             return {
                 cssClasses: [
                     row?.isTrailingBlank ? 'fi-data-grid-row-trailing' : '',
-                    index === dataProvider.getLength() - 1 ? 'fi-data-grid-row-last' : '',
+                    row?.child ? 'fi-data-grid-parent-row-expandable' : '',
+                    isOpen(row?.key) ? 'fi-data-grid-parent-row-expanded' : '',
+                    isLast ? 'fi-data-grid-row-last' : '',
                 ].join(' '),
                 columns,
             }
         },
     }
 
+    const withPlaceholders = (rowItems) =>
+        rowItems.flatMap((item) => (isOpen(item.__key) ? [item, { __childOf: item.__key }] : [item]))
+
     const buildItems = (localChanges) =>
-        payload.rows.map((row) => {
+        withPlaceholders(payload.rows.map((row) => {
             const item = { __key: row.key, ...row.state }
 
             for (const column of payload.columns) {
@@ -326,14 +395,44 @@ export function createGrid(
             }
 
             return item
-        })
+        }))
 
     const indexRows = () => {
         rows = new Map(payload.rows.map((row) => [row.key, row]))
+
+        payload.rows.forEach((row) => {
+            const errorsAppeared = row.hasChildErrors && (!seen.has(row.key) || !hadChildErrors.get(row.key))
+
+            if (!row.child) {
+                expanded.delete(row.key)
+            } else if (errorsAppeared || (!seen.has(row.key) && row.expanded)) {
+                expanded.add(row.key)
+            }
+
+            seen.add(row.key)
+            hadChildErrors.set(row.key, Boolean(row.hasChildErrors))
+        })
+
+        ;[...seen].filter((key) => !rows.has(key)).forEach((key) => {
+            seen.delete(key)
+            expanded.delete(key)
+            hadChildErrors.delete(key)
+        })
+    }
+
+    const syncChildren = (force = false) => {
+        if (!childRows) {
+            return false
+        }
+
+        childRows.setPadding(payload.childTablePadding)
+
+        return childRows.sync(hasChildRows() ? payload.rows.filter((row) => isOpen(row.key)) : [], force)
     }
 
     indexRows()
     items = buildItems()
+    syncChildren()
 
     const grid = new SlickGrid(element, dataProvider, columnDefinitions(), {
         editable: true,
@@ -346,6 +445,7 @@ export function createGrid(
         enableAsyncPostRender: false,
         autoHeight: true,
         rowHeight: ROW_HEIGHT,
+        enableVariableRowHeight: hasChildRows(),
         showHeaderRow: false,
         showTopPanel: false,
         showPreHeaderPanel: false,
@@ -381,11 +481,58 @@ export function createGrid(
             const from = moving[0]
             const [moved] = items.splice(from, 1)
             items.splice(insertBefore > from ? insertBefore - 1 : insertBefore, 0, moved)
+            items = withPlaceholders(items.filter((item) => !isPlaceholder(item)))
             grid.invalidate()
-            onReorder(items.map((item) => item.__key))
+            onReorder(items.filter((item) => !isPlaceholder(item)).map((item) => item.__key))
         },
     })
-    rowMoveManager.usabilityOverride((rowIndex, item) => payload.reorderable && !rows.get(item?.__key)?.isTrailingBlank)
+    rowMoveManager.usabilityOverride(
+        (rowIndex, item) => payload.reorderable && !isPlaceholder(item) && !rows.get(item?.__key)?.isTrailingBlank,
+    )
+
+    function positionChildren() {
+        childRows?.position((key, layerTop) => {
+            const index = items.findIndex((item) => item.__childOf === key)
+            const canvas = grid.getCanvasNode()
+
+            return index === -1 || !canvas ? null : canvas.getBoundingClientRect().top - layerTop + grid.getRowTop(index)
+        })
+    }
+
+    function refreshRowHeights() {
+        if (isBusy()) {
+            pendingRowHeights = true
+
+            return
+        }
+
+        pendingRowHeights = false
+        grid.invalidateRowHeights()
+        grid.updateRowCount()
+        grid.resizeCanvas()
+        positionChildren()
+    }
+
+    function yieldFocus() {
+        if (grid.getActiveCell() && grid.getEditorLock().commitCurrentEdit()) {
+            grid.resetActiveCell()
+        }
+    }
+
+    function toggleChildRow(key) {
+        grid.getEditorLock().commitCurrentEdit()
+
+        if (expanded.has(key)) {
+            expanded.delete(key)
+        } else {
+            expanded.add(key)
+        }
+
+        frozenLength = null
+        items = withPlaceholders(items.filter((item) => !isPlaceholder(item)))
+        syncChildren()
+        refreshRowHeights()
+    }
 
     let headerHeight = null
 
@@ -434,6 +581,7 @@ export function createGrid(
         resizeFrame = requestAnimationFrame(() => {
             fitColumns()
             markHorizontalOverflow()
+            positionChildren()
         })
     })
     resizeObserver.observe(element)
@@ -450,7 +598,10 @@ export function createGrid(
         markHorizontalOverflow()
     })
 
-    grid.onRendered.subscribe(() => destroyDetachedSelects())
+    grid.onRendered.subscribe(() => {
+        destroyDetachedSelects()
+        positionChildren()
+    })
 
     grid.onBeforeEditCell.subscribe((event, { item, column }) => {
         const cell = rows.get(item.__key)?.cells?.[column.field]
@@ -472,7 +623,18 @@ export function createGrid(
 
     const releaseFrozenLength = () =>
         queueMicrotask(() => {
-            if (frozenLength === null || isBusy()) {
+            if (isBusy()) {
+                return
+            }
+
+            if (pendingRowHeights) {
+                frozenLength = null
+                refreshRowHeights()
+
+                return
+            }
+
+            if (frozenLength === null) {
                 return
             }
 
@@ -574,7 +736,31 @@ export function createGrid(
         return true
     }
 
+    const toggleChildRowAt = (rowIndex, cellIndex, target) => {
+        const item = items[rowIndex]
+        const column = grid.getColumns()[cellIndex]
+
+        if (!rows.get(item?.__key)?.child) {
+            return false
+        }
+
+        const onToggle = Boolean(target?.closest?.('.fi-data-grid-row-toggle'))
+        const onReadOnlyCell = column?.id === TOGGLE_COLUMN || column?.source?.editor.type === 'entry'
+
+        if (!onToggle && (!onReadOnlyCell || target?.closest?.(INTERACTIVE))) {
+            return false
+        }
+
+        toggleChildRow(item.__key)
+
+        return true
+    }
+
     grid.onClick.subscribe((event, { row, cell }) => {
+        if (isPlaceholder(items[row]) || toggleChildRowAt(row, cell, event.target)) {
+            return
+        }
+
         if (event.target.closest?.('.fi-data-grid-row-actions, .fi-data-grid-select')) {
             return
         }
@@ -590,7 +776,11 @@ export function createGrid(
         }
 
         const active = grid.getActiveCell()
-        const target = active ? active.row + direction : -1
+        let target = active ? active.row + direction : -1
+
+        while (isPlaceholder(items[target])) {
+            target += direction
+        }
 
         if (target >= 0 && target < grid.getDataLength()) {
             grid.setActiveCell(target, active.cell)
@@ -637,16 +827,20 @@ export function createGrid(
 
     fitColumns()
     markHorizontalOverflow()
+    positionChildren()
 
     return {
-        isEditing: () => isBusy(),
+        isEditing: () => isBusy() || (childRows?.isEditing() ?? false),
 
-        setPayload(nextPayload, localChanges) {
+        childControllers: () => childRows?.controllers() ?? [],
+
+        setPayload(nextPayload, localChanges, force = false) {
             const columnsChanged = JSON.stringify(nextPayload.columns) !== JSON.stringify(payload.columns)
             const structureChanged =
                 nextPayload.reorderable !== payload.reorderable ||
                 nextPayload.hasActions !== payload.hasActions ||
-                nextPayload.frozenColumns !== payload.frozenColumns
+                nextPayload.frozenColumns !== payload.frozenColumns ||
+                Boolean(nextPayload.hasChildRows) !== Boolean(payload.hasChildRows)
             const editor = grid.getCellEditor()
             const active = grid.getActiveCell()
             const open = openSelect()
@@ -659,13 +853,17 @@ export function createGrid(
             indexRows()
             items = buildItems(localChanges)
 
+            const heightsChanged = syncChildren(force)
+
             if (columnsChanged || structureChanged) {
                 grid.getEditorLock().cancelCurrentEdit()
                 frozenLength = null
-                grid.setOptions({ frozenColumn: frozenColumnIndex() })
+                grid.setOptions({ frozenColumn: frozenColumnIndex(), enableVariableRowHeight: hasChildRows() })
                 grid.setColumns(columnDefinitions())
                 fitColumns()
+                grid.invalidateRowHeights()
                 grid.invalidate()
+                grid.resizeCanvas()
 
                 return
             }
@@ -679,11 +877,15 @@ export function createGrid(
                 }
 
                 frozenLength = null
+                pendingRowHeights = false
+                grid.invalidateRowHeights()
                 grid.invalidate()
                 grid.resizeCanvas()
 
                 return
             }
+
+            pendingRowHeights ||= heightsChanged
 
             const keepsTypedValue = editor ? editor.isValueChanged() : false
             const typedFieldValue = busyField ? busyItem[busyField] : undefined
@@ -734,9 +936,11 @@ export function createGrid(
         setDarkMode(isDark) {
             grid.setOptions({ darkMode: isDark })
             grid.invalidate()
+            childRows?.controllers().forEach((controller) => controller.setDarkMode(isDark))
         },
 
         destroy() {
+            childRows?.destroy()
             cancelAnimationFrame(resizeFrame)
             resizeObserver.disconnect()
             selects.forEach(({ select }) => select.destroy())

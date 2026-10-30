@@ -23,6 +23,7 @@ return [
     ],
     'errors' => [
         'row' => 'Fila :row',
+        'child_row' => ':label fila :row',
     ],
     'validation' => [
         'date' => 'El campo :attribute debe ser una fecha válida.',
