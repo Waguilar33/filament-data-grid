@@ -856,6 +856,7 @@
     float: none;
 }
 
+/* Filament's minmax(0, 1fr) entry grids and truncating badges make width: min-content report almost 0. */
 .fi-data-grid-canvas .fi-data-grid-width-probe * {
     min-width: min-content !important;
     max-width: none !important;

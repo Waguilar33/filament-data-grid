@@ -389,14 +389,30 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         ...row.children.map((cells) => probeRequest('', childCellClasses(column), cellContent(cells[index]))),
     ]
 
-    const flexibleChildColumns = () =>
-        payload.childColumns.flatMap((column, index) => (toPixels(column.width) === null ? [{ column, index }] : []))
+    const flexibleChildColumns = () => payload.childColumns.flatMap((column, index) => (column.width ? [] : [{ column, index }]))
 
-    const childTemplate = (spans, available) => {
+    const explicitChildWidths = (rowWidth) => {
+        const unresolved = payload.childColumns.filter((column) => column.width && toPixels(column.width) === null)
+        const resolved = []
+
+        if (unresolved.length > 0) {
+            const probe = document.createElement('div')
+            probe.className = 'fi-data-grid-width-probe'
+            probe.style.width = `${rowWidth}px`
+            probe.innerHTML = unresolved.map((column) => `<div style="width: ${column.width}"></div>`).join('')
+            element.appendChild(probe)
+            resolved.push(...[...probe.children].map((child) => Math.round(child.getBoundingClientRect().width)))
+            probe.remove()
+        }
+
+        return payload.childColumns.map((column) => (column.width ? (toPixels(column.width) ?? resolved.shift()) : null))
+    }
+
+    const childTemplate = (spans, available, explicitWidths) => {
         const widths = distribute(spans, available)
         let next = 0
 
-        return payload.childColumns.map((column) => `${toPixels(column.width) ?? widths[next++]}px`).join(' ')
+        return explicitWidths.map((width) => `${width ?? widths[next++]}px`).join(' ')
     }
 
     const layoutColumns = () => {
@@ -424,17 +440,24 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         const fixedWidth = sumOf(columns.map((column) => column.fixedWidth ?? 0))
         const available = Math.floor(element.getBoundingClientRect().width) - fixedWidth
         const childInset = (childTablePadding() + CHILD_TABLE_BORDER) * 2
-        const childFixedWidth = sumOf(payload.childColumns.map((column) => toPixels(column.width) ?? 0))
+        const fixedChildWidth = (rowWidth) => sumOf(explicitChildWidths(rowWidth).map((width) => width ?? 0))
         const childSpans = childRequestsByRow.map((requestsByColumn) => requestsByColumn.map(spanOf))
-        const childNeed = Math.max(0, ...childSpans.map((spans) => childInset + childFixedWidth + sumOf(spans.map((span) => span.min))))
+        const provisionalChildWidth = openRows.length > 0 ? fixedChildWidth(available + fixedWidth - childInset) : 0
+        const childNeed = Math.max(0, ...childSpans.map((spans) => childInset + provisionalChildWidth + sumOf(spans.map((span) => span.min))))
         const flexibleWidths = distribute(parentRequestsByColumn.map(spanOf), Math.max(available, childNeed - fixedWidth))
         let next = 0
         const widths = columns.map((column) => column.fixedWidth ?? flexibleWidths[next++])
-        const childAvailable = sumOf(widths) - childInset - childFixedWidth
         const changed = columns.some((column, index) => column.width !== widths[index])
 
         childTemplates.clear()
-        openRows.forEach((row, index) => childTemplates.set(row.key, childTemplate(childSpans[index], childAvailable)))
+
+        if (openRows.length > 0) {
+            const childRowWidth = sumOf(widths) - childInset
+            const explicitWidths = explicitChildWidths(childRowWidth)
+            const childAvailable = childRowWidth - sumOf(explicitWidths.map((width) => width ?? 0))
+
+            openRows.forEach((row, index) => childTemplates.set(row.key, childTemplate(childSpans[index], childAvailable, explicitWidths)))
+        }
 
         columnWidths = widths
         columns.forEach((column, index) => {

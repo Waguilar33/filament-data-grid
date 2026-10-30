@@ -341,13 +341,13 @@ A closure receives the row's `$state` (and `$record` for Eloquent rows) and retu
 
 ### Column widths
 
-Columns fit their content, the way an HTML table does. The browser measures the header and the cells of the rows on the current page, each at its widest (on one line) and at its narrowest (wrapped at every space, with each badge, icon and action kept whole):
+Columns fit their content, the way an HTML table does. The browser measures the header and the cells of the rows on the current page, each at its widest (on one line) and at its narrowest (wrapped wherever the text can break, such as at spaces and hyphens, with each badge, icon and action kept whole):
 
 - When every column fits on one line, each column gets its widest width, and the spare room goes to the columns in proportion to that width. Long text, such as a name or an address, gets most of it, and short columns, such as an icon or a date, stay narrow.
 - When they don't fit, text wraps: each column shrinks towards its narrowest width, in proportion to how much it can shrink.
 - When even the narrowest widths don't fit, the grid scrolls sideways. Badges, icons with text, record actions and header labels are never cut off.
 
-`TableColumn::width()` sets a fixed width in pixels or rem, which wins over the content and takes no spare room. The arrow, record action and record link columns size themselves. Each open child table sizes its own columns, from its header and its own rows, in the width the open row leaves it; the same rules apply, and `width()` on a child `TableColumn` wins there too. If a child table doesn't fit even at its narrowest, the parent columns widen to make room and the grid scrolls sideways.
+`TableColumn::width()` sets a fixed width in pixels or rem, which wins over the content and takes no spare room. A child column also takes any other CSS width, such as `30%` of the child table. The arrow, record action and record link columns size themselves. Each open child table sizes its own columns, from its header and its own rows, in the width the open row leaves it; the same rules apply, and `width()` on a child `TableColumn` wins there too. If a child table doesn't fit even at its narrowest, the parent columns widen to make room and the grid scrolls sideways.
 
 The browser measures again when the window or the grid resizes, the page, search, filters or data change, or a row opens.
 

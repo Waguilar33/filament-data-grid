@@ -284,6 +284,25 @@ it('shrinks columns towards their content and scrolls only when even that does n
         ->and($page->script(scrollsSideways(ROUTE)))->toBeTrue();
 });
 
+it('sizes the columns again for a search and for a page loaded from the server', function (): void {
+    $server = '[id="content.server_deliveries"]';
+    $page = visitRoute('?locale=es')->resize(1600, 900)->wait(0.5);
+    $customerWidth = $page->script(headerWidth(ROUTE, 'Cliente'));
+
+    $page->type(ROUTE.' .fi-ta-search-field input', 'karen')
+        ->wait(0.5)
+        ->assertSee('Se muestran de 1 a 2 de 2 resultados');
+
+    expect($page->script(headerWidth(ROUTE, 'Cliente')))->not->toBe($customerWidth)
+        ->and($page->script(clippedContentIn(ROUTE)))->toBe([]);
+
+    $page->click($server.' .fi-pagination-items [rel="next"]')
+        ->wait(1)
+        ->assertSeeIn($server.' .fi-pagination-overview', 'Se muestran de 11 a 20');
+
+    expect($page->script(clippedContentIn($server)))->toBe([]);
+});
+
 it('keeps an explicit column width', function (): void {
     $page = visitRoute()
         ->click(parentRow('DLV-2026-0000001').' .fi-data-grid-row-toggle')
