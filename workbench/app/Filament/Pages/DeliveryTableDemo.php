@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Workbench\App\Filament\Pages;
 
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Forms\Components\DatePicker;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -64,6 +65,11 @@ final class DeliveryTableDemo extends Page implements HasTable
             ])
             ->filtersTriggerAction(fn (Action $action): Action => $action->slideOver())
             ->recordActions([
+                ActionGroup::make([
+                    Action::make('edit')
+                        ->label(__('demo::demo.route.actions.edit'))
+                        ->action(fn (array $record) => Notification::make()->success()->title(__('demo::demo.route.actions.edited', ['number' => self::number($record)]))->send()),
+                ]),
                 Action::make('deliver')
                     ->label(__('demo::demo.route.actions.deliver'))
                     ->requiresConfirmation()

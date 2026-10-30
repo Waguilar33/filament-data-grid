@@ -463,14 +463,20 @@
     color-scheme: dark;
 }
 
-.fi-data-grid:has(.fi-data-grid-row-actions .fi-dropdown-panel:not([style*='display: none'])) {
+.fi-data-grid:has(.fi-data-grid-row-actions .fi-dropdown-panel:not([style*='display: none'])),
+.fi-data-grid:has(.fi-data-grid-record-actions .fi-dropdown-panel:not([style*='display: none'])) {
     position: relative;
     z-index: 30;
 }
 
 .fi-data-grid-canvas .slick-row:has(.fi-data-grid-row-actions .fi-dropdown-panel:not([style*='display: none'])),
+.fi-data-grid-canvas .slick-row:has(.fi-data-grid-record-actions .fi-dropdown-panel:not([style*='display: none'])),
 .fi-data-grid-canvas .slick-row:has(.fi-select-input-btn[aria-expanded='true']) {
     z-index: 30;
+}
+
+.fi-data-grid-canvas .fi-data-grid-record-actions-cell {
+    overflow: visible;
 }
 
 .fi-data-grid-canvas .fi-data-grid-actions-cell {

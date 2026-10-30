@@ -83,3 +83,25 @@ it('shows a tooltip on an icon-only cell', function (): void {
         ->wait(0.5)
         ->assertSee('Shipment');
 });
+
+it('opens a row action dropdown above the open row below it', function (): void {
+    $page = visitTable()
+        ->click(tableRow(1).' .fi-data-grid-row-toggle')
+        ->wait(0.5)
+        ->click(tableRow(0).' .fi-dropdown-trigger button')
+        ->wait(0.5);
+
+    $page->assertScript(<<<'JS'
+        () => {
+            const item = [...document.querySelectorAll('.fi-dropdown-panel .fi-dropdown-list-item')].find((element) => element.offsetParent !== null)
+            const box = item.getBoundingClientRect()
+
+            return item.contains(document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2))
+        }
+        JS, true);
+
+    $page->click('.fi-dropdown-list-item:has-text("Edit"):visible')
+        ->wait(1)
+        ->assertSee('Delivery DLV-2026-0000001 edited')
+        ->assertNoJavaScriptErrors();
+});
