@@ -1,15 +1,43 @@
 @php
-    $columnLabels = collect($payload['columns'])->pluck('label', 'field');
+    $rowErrors = fn (array $row, array $columns, string $location): array => collect($row['cells'])
+        ->filter(fn (array $cell): bool => filled($cell['error'] ?? null))
+        ->map(fn (array $cell, string $field): array => [
+            'location' => $location,
+            'column' => collect($columns)->pluck('label', 'field')[$field] ?? $field,
+            'message' => $cell['error'],
+        ])
+        ->values()
+        ->all();
+    $childErrors = function (array $child, string $parentLocation) use ($grid, $rowErrors): array {
+        $hasErrors = collect($child['payload']['rows'])
+            ->contains(fn (array $row): bool => collect($row['cells'])->contains(fn (array $cell): bool => filled($cell['error'] ?? null)));
+
+        if (! $hasErrors) {
+            return [];
+        }
+
+        $component = $grid->getLivewire()->getSchemaComponent($child['config']['schemaComponent']);
+        $label = $component !== null && method_exists($component, 'getLabel') ? $component->getLabel() : null;
+
+        return collect($child['payload']['rows'])
+            ->flatMap(fn (array $row, int $index): array => $rowErrors(
+                $row,
+                $child['payload']['columns'],
+                $parentLocation.' · '.(filled($label)
+                    ? __('filament-data-grid::data-grid.errors.child_row', ['label' => $label, 'row' => $index + 1])
+                    : __('filament-data-grid::data-grid.errors.row', ['row' => $index + 1])),
+            ))
+            ->all();
+    };
     $cellErrors = collect($payload['rows'])
-        ->flatMap(fn (array $row, int $index): array => collect($row['cells'])
-            ->filter(fn (array $cell): bool => filled($cell['error'] ?? null))
-            ->map(fn (array $cell, string $field): array => [
-                'row' => $index + 1,
-                'column' => $columnLabels[$field] ?? $field,
-                'message' => $cell['error'],
-            ])
-            ->values()
-            ->all());
+        ->flatMap(function (array $row, int $index) use ($payload, $rowErrors, $childErrors): array {
+            $location = __('filament-data-grid::data-grid.errors.row', ['row' => $index + 1]);
+
+            return [
+                ...$rowErrors($row, $payload['columns'], $location),
+                ...(filled($row['child'] ?? null) ? $childErrors($row['child'], $location) : []),
+            ];
+        });
     $addAction = $grid->getAction($grid->getAddActionName());
 @endphp
 
@@ -42,7 +70,7 @@
         <ul class="fi-data-grid-errors" role="alert">
             @foreach ($cellErrors as $error)
                 <li class="fi-fo-field-wrp-error-message">
-                    {{ __('filament-data-grid::data-grid.errors.row', ['row' => $error['row']]) }} · {{ $error['column'] }}: {{ $error['message'] }}
+                    {{ $error['location'] }} · {{ $error['column'] }}: {{ $error['message'] }}
                 </li>
             @endforeach
         </ul>

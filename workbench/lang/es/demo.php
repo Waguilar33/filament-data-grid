@@ -3,6 +3,27 @@
 declare(strict_types=1);
 
 return [
+    'dispatch' => [
+        'navigation' => 'Despacho',
+        'section' => 'Productos por despachar',
+        'description' => 'Abre un producto para elegir cuántas unidades salen de cada lugar, o para ingresar el código de cada unidad.',
+        'columns' => [
+            'product' => 'Producto',
+            'requested' => 'Solicitado',
+            'assigned' => 'Asignado',
+            'status' => 'Estado',
+            'place' => 'Lugar',
+            'available' => 'Disponible',
+            'quantity' => 'Cantidad',
+            'code' => 'Código de unidad',
+        ],
+        'statuses' => [
+            'complete' => 'Completo',
+            'partial' => 'Parcial',
+            'empty' => 'Sin asignar',
+        ],
+        'saved' => 'Despacho guardado',
+    ],
     'route' => [
         'table_navigation' => 'Tabla de entregas',
         'descriptions' => [

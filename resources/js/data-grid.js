@@ -1,5 +1,5 @@
-import { createGrid } from './grid/slickgrid-adapter.js'
-import { callInParallel, isDarkMode } from './grid/page.js'
+import { createGridController } from './grid/grid-controller.js'
+import { isDarkMode } from './grid/page.js'
 
 const afterEachRequest = (wire, startRequest) => {
     if (typeof Livewire.interceptMessage === 'function') {
@@ -20,59 +20,39 @@ const afterEachRequest = (wire, startRequest) => {
 
 export default function dataGrid({ statePath, schemaComponent, actions, translations, icons }) {
     return {
-        grid: null,
-        localChanges: new Map(),
-        appliedPayload: null,
+        controller: null,
         observers: [],
         stopInterceptingMessages: null,
         wasEditingOnKeyDown: false,
 
         init() {
-            this.appliedPayload = this.$refs.payload.dataset.payload
-            this.grid = createGrid(this.$refs.grid, {
-                payload: JSON.parse(this.appliedPayload),
+            this.controller = createGridController(this.$refs.grid, {
+                config: { statePath, schemaComponent, actions },
+                payload: this.$refs.payload.dataset.payload,
+                wire: this.$wire,
                 translations,
                 icons,
-                isDarkMode: isDarkMode(),
-                onCellChange: (rowKey, field, value, isLive) => this.writeCell(rowKey, field, value, isLive),
-                callSchemaComponentMethod: (key, method, args) =>
-                    callInParallel(this.$wire, 'callSchemaComponentMethod', [key, method, args]),
-                onOpenCell: (rowKey, field) =>
-                    this.$wire.mountAction(actions.editCell, { item: rowKey, field }, { schemaComponent }),
-                onReorder: (keys) => this.$wire.mountAction(actions.reorder, { items: keys }, { schemaComponent }),
             })
 
             this.$refs.grid.style.removeProperty('min-height')
             this.observe(this.$refs.payload, ['data-payload'], () => this.applyPayload())
-            this.observe(document.documentElement, ['class'], () => this.grid.setDarkMode(isDarkMode()))
+            this.observe(document.documentElement, ['class'], () => this.controller.setDarkMode(isDarkMode()))
 
             this.stopInterceptingMessages = afterEachRequest(this.$wire, () => {
-                const sentChanges = new Map(this.localChanges)
+                const settle = this.controller.beginRequest()
 
-                return () =>
-                    queueMicrotask(() => {
-                        let cleared = false
-
-                        sentChanges.forEach((value, cell) => {
-                            if (this.localChanges.get(cell) === value) {
-                                this.localChanges.delete(cell)
-                                cleared = true
-                            }
-                        })
-
-                        this.applyPayload(cleared)
-                    })
+                return () => queueMicrotask(() => this.applyPayload(settle()))
             })
         },
 
         destroy() {
             this.stopInterceptingMessages?.()
             this.observers.forEach((observer) => observer.disconnect())
-            this.grid?.destroy()
+            this.controller?.destroy()
         },
 
         rememberEditingState() {
-            this.wasEditingOnKeyDown = this.grid?.isEditing() ?? false
+            this.wasEditingOnKeyDown = this.controller?.isEditing() ?? false
         },
 
         stopEscapeWhileEditing(event) {
@@ -82,19 +62,7 @@ export default function dataGrid({ statePath, schemaComponent, actions, translat
         },
 
         applyPayload(force = false) {
-            const payload = this.$refs.payload.dataset.payload
-
-            if (!force && payload === this.appliedPayload) {
-                return
-            }
-
-            this.appliedPayload = payload
-            this.grid.setPayload(JSON.parse(payload), this.localChanges)
-        },
-
-        writeCell(rowKey, field, value, isLive) {
-            this.localChanges.set(`${rowKey}.${field}`, value)
-            this.$wire.$set(`${statePath}.${rowKey}.${field}`, value, isLive)
+            this.controller.apply(this.$refs.payload.dataset.payload, force)
         },
 
         observe(element, attributes, callback) {

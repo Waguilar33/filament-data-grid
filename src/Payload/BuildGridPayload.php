@@ -22,7 +22,7 @@ final readonly class BuildGridPayload
     ) {}
 
     /**
-     * @return array{columns: list<array<string, mixed>>, rows: list<array<string, mixed>>, hasActions: bool, actionTemplates: array<string, string>, rowKeyPlaceholder: string, frozenColumns: int, reorderable: bool}
+     * @return array{columns: list<array<string, mixed>>, rows: list<array<string, mixed>>, hasActions: bool, actionTemplates: array<string, string>, rowKeyPlaceholder: string, frozenColumns: int, reorderable: bool, hasChildRows: bool, childTablePadding: int}
      */
     public function handle(DataGrid $grid): array
     {
@@ -50,6 +50,8 @@ final readonly class BuildGridPayload
             'rowKeyPlaceholder' => RenderRowActions::ROW_KEY_PLACEHOLDER,
             'frozenColumns' => min($grid->getFrozenColumns(), count($columns)),
             'reorderable' => $grid->isReorderableWithDragAndDrop(),
+            'hasChildRows' => $this->childGrids($grid->getChildSchema()) !== [],
+            'childTablePadding' => $grid->getChildTablePadding(),
         ];
     }
 
@@ -67,14 +69,52 @@ final readonly class BuildGridPayload
 
         $rows = $grid->getRawState();
         $state = is_array($rows) && is_array($rows[$key] ?? null) ? $rows[$key] : [];
+        $isTrailingBlank = $grid->isTrailingBlankRow($key);
+        $child = $isTrailingBlank ? null : $this->visibleChildGrid($item);
 
         return [
             'key' => $key,
             'state' => $state,
             'cells' => $cells,
-            'isTrailingBlank' => $grid->isTrailingBlankRow($key),
+            'isTrailingBlank' => $isTrailingBlank,
             'actions' => $this->renderRowActions->template($grid, $key, $actionTemplates),
+            'child' => $child === null ? null : ['config' => $child->getGridConfig(), 'payload' => $this->handle($child)],
+            'hasChildErrors' => $child !== null && $this->hasErrorsUnder((string) $child->getStatePath(), $errors),
+            'expanded' => ! $isTrailingBlank && $grid->shouldExpandRow($key, $state),
         ];
+    }
+
+    private function visibleChildGrid(Schema $item): ?DataGrid
+    {
+        foreach ($this->childGrids($item) as $child) {
+            if ($child->isVisible()) {
+                return $child;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return list<DataGrid>
+     */
+    private function childGrids(?Schema $schema): array
+    {
+        return array_values(array_filter(
+            $schema?->getComponents(withHidden: true) ?? [],
+            fn (mixed $component): bool => $component instanceof DataGrid,
+        ));
+    }
+
+    private function hasErrorsUnder(string $statePath, MessageBag $errors): bool
+    {
+        foreach ($errors->keys() as $key) {
+            if (str_starts_with($key, "{$statePath}.")) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -88,7 +128,7 @@ final readonly class BuildGridPayload
 
         return array_values(array_filter(
             $schema->getComponents(withHidden: true),
-            fn (mixed $component): bool => $component instanceof Component && ! $component instanceof Hidden,
+            fn (mixed $component): bool => $component instanceof Component && ! $component instanceof Hidden && ! $component instanceof DataGrid,
         ));
     }
 

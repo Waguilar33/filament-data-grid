@@ -8,6 +8,8 @@ use Closure;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Field;
 use Filament\Forms\Components\Repeater;
+use Filament\Schemas\Components\Component;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\Facades\FilamentAsset;
 use Filament\Support\Icons\Heroicon;
@@ -31,6 +33,10 @@ class DataGrid extends Repeater
     protected array|Closure|null $trailingEmptyRowFilledBy = null;
 
     protected int|Closure $frozenColumns = 0;
+
+    protected int|Closure $childTablePadding = 15;
+
+    protected bool|Closure $shouldExpandRows = false;
 
     protected function setUp(): void
     {
@@ -106,6 +112,43 @@ class DataGrid extends Repeater
         $count = $this->evaluate($this->frozenColumns);
 
         return is_int($count) ? max(0, $count) : 0;
+    }
+
+    public function childTablePadding(int|Closure $pixels): static
+    {
+        $this->childTablePadding = $pixels;
+
+        return $this;
+    }
+
+    public function getChildTablePadding(): int
+    {
+        $pixels = $this->evaluate($this->childTablePadding);
+
+        return is_int($pixels) ? max(0, $pixels) : 15;
+    }
+
+    public function expandRowsWhen(bool|Closure $condition = true): static
+    {
+        $this->shouldExpandRows = $condition;
+
+        return $this;
+    }
+
+    /**
+     * @param  array<mixed>  $state
+     */
+    public function shouldExpandRow(string $key, array $state): bool
+    {
+        $rowComponent = $this->getChildSchema($key)?->getComponents(withHidden: true)[0] ?? null;
+
+        if (! $rowComponent instanceof Component) {
+            return (bool) $this->evaluate($this->shouldExpandRows, ['state' => $state]);
+        }
+
+        $get = $rowComponent->makeGetUtility();
+
+        return (bool) $this->evaluate($this->shouldExpandRows, ['state' => $state, 'get' => $get], [Get::class => $get]);
     }
 
     public function hasTrailingEmptyRow(): bool
@@ -212,6 +255,21 @@ class DataGrid extends Repeater
         return app(BuildGridPayload::class)->handle($this);
     }
 
+    /**
+     * @return array{statePath: ?string, schemaComponent: ?string, actions: array{editCell: string, reorder: string}}
+     */
+    public function getGridConfig(): array
+    {
+        return [
+            'statePath' => $this->getStatePath(),
+            'schemaComponent' => $this->getKey(),
+            'actions' => [
+                'editCell' => $this->getEditCellActionName(),
+                'reorder' => $this->getReorderActionName(),
+            ],
+        ];
+    }
+
     public function toEmbeddedHtml(): string
     {
         $this->ensureTrailingEmptyRow();
@@ -221,17 +279,13 @@ class DataGrid extends Repeater
             'payload' => $this->getGridPayload(),
             'alpineSrc' => FilamentAsset::getAlpineComponentSrc('data-grid', FilamentDataGridServiceProvider::PACKAGE),
             'config' => Js::from([
-                'statePath' => $this->getStatePath(),
-                'schemaComponent' => $this->getKey(),
-                'actions' => [
-                    'editCell' => $this->getEditCellActionName(),
-                    'reorder' => $this->getReorderActionName(),
-                ],
+                ...$this->getGridConfig(),
                 'translations' => __('filament-data-grid::data-grid'),
                 'icons' => [
                     'reorder' => generate_icon_html(Heroicon::Bars2)?->toHtml(),
                     'date' => generate_icon_html(Heroicon::Calendar)?->toHtml(),
                     'edit' => generate_icon_html(Heroicon::PencilSquare)?->toHtml(),
+                    'expand' => generate_icon_html(Heroicon::ChevronRight)?->toHtml(),
                 ],
             ]),
         ])->render();
