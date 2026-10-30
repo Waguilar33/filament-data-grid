@@ -1,6 +1,5 @@
 <div
     x-load
-    x-load-css="@js([$styleHref])"
     x-load-src="{{ $alpineSrc }}"
     x-data="filamentDataGridEntry({{ $config }})"
     wire:key="{{ $entry->getLivewireKey() }}.data-grid-entry"

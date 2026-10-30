@@ -1,12 +1,11 @@
 import { createEntryGrid } from './grid/entry-adapter.js'
-import { isDarkMode, whenStylesheetLoads } from './grid/page.js'
+import { isDarkMode } from './grid/page.js'
 
-export default function dataGridEntry({ translations, icons, styleHref }) {
+export default function dataGridEntry({ translations, icons }) {
     return {
         grid: null,
         appliedPayload: null,
         observers: [],
-        isDestroyed: false,
         isMounted: false,
         search: '',
         page: 1,
@@ -16,14 +15,6 @@ export default function dataGridEntry({ translations, icons, styleHref }) {
         last: 0,
 
         init() {
-            whenStylesheetLoads(styleHref).then(() => {
-                if (!this.isDestroyed) {
-                    this.mount()
-                }
-            })
-        },
-
-        mount() {
             this.appliedPayload = this.$refs.payload.dataset.payload
             this.grid = createEntryGrid(this.$refs.grid, {
                 payload: JSON.parse(this.appliedPayload),
@@ -41,7 +32,6 @@ export default function dataGridEntry({ translations, icons, styleHref }) {
         },
 
         destroy() {
-            this.isDestroyed = true
             this.observers.forEach((observer) => observer.disconnect())
             this.grid?.destroy()
         },

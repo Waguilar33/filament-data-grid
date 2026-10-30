@@ -73,15 +73,11 @@ class DataGridEntry extends RepeatableEntry
 
     public function toEmbeddedHtml(): string
     {
-        $styleHref = FilamentAsset::getStyleHref('data-grid', FilamentDataGridServiceProvider::PACKAGE);
-
         $html = view('filament-data-grid::data-grid-entry', [
             'entry' => $this,
             'payload' => $this->getGridPayload(),
             'alpineSrc' => FilamentAsset::getAlpineComponentSrc('data-grid-entry', FilamentDataGridServiceProvider::PACKAGE),
-            'styleHref' => $styleHref,
             'config' => Js::from([
-                'styleHref' => $styleHref,
                 'translations' => __('filament-data-grid::data-grid.entry'),
                 'icons' => [
                     'expand' => generate_icon_html(Heroicon::ChevronRight)?->toHtml(),

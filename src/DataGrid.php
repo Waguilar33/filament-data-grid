@@ -216,15 +216,11 @@ class DataGrid extends Repeater
     {
         $this->ensureTrailingEmptyRow();
 
-        $styleHref = FilamentAsset::getStyleHref('data-grid', FilamentDataGridServiceProvider::PACKAGE);
-
         $html = view('filament-data-grid::data-grid', [
             'grid' => $this,
             'payload' => $this->getGridPayload(),
             'alpineSrc' => FilamentAsset::getAlpineComponentSrc('data-grid', FilamentDataGridServiceProvider::PACKAGE),
-            'styleHref' => $styleHref,
             'config' => Js::from([
-                'styleHref' => $styleHref,
                 'statePath' => $this->getStatePath(),
                 'schemaComponent' => $this->getKey(),
                 'actions' => [

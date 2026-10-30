@@ -1,5 +1,5 @@
 import { createGrid } from './grid/slickgrid-adapter.js'
-import { isDarkMode, whenStylesheetLoads } from './grid/page.js'
+import { isDarkMode } from './grid/page.js'
 
 const callInParallel = (wire, method, args) =>
     typeof Livewire.fireAction === 'function'
@@ -23,7 +23,7 @@ const afterEachRequest = (wire, startRequest) => {
     })
 }
 
-export default function dataGrid({ statePath, schemaComponent, actions, translations, icons, styleHref }) {
+export default function dataGrid({ statePath, schemaComponent, actions, translations, icons }) {
     return {
         grid: null,
         localChanges: new Map(),
@@ -32,17 +32,7 @@ export default function dataGrid({ statePath, schemaComponent, actions, translat
         stopInterceptingMessages: null,
         wasEditingOnKeyDown: false,
 
-        isDestroyed: false,
-
         init() {
-            whenStylesheetLoads(styleHref).then(() => {
-                if (!this.isDestroyed) {
-                    this.mount()
-                }
-            })
-        },
-
-        mount() {
             this.appliedPayload = this.$refs.payload.dataset.payload
             this.grid = createGrid(this.$refs.grid, {
                 payload: JSON.parse(this.appliedPayload),
@@ -81,7 +71,6 @@ export default function dataGrid({ statePath, schemaComponent, actions, translat
         },
 
         destroy() {
-            this.isDestroyed = true
             this.stopInterceptingMessages?.()
             this.observers.forEach((observer) => observer.disconnect())
             this.grid?.destroy()

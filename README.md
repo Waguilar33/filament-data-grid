@@ -36,7 +36,7 @@ php artisan filament:assets
 
 If your app's `post-autoload-dump` scripts include `@php artisan filament:upgrade`, Filament runs this after every `composer update`. `filament:install` adds that script for you.
 
-You don't need to change your theme or your Vite config. The grid ships its own compiled JavaScript and CSS, and loads them only on pages that render a `DataGrid`.
+You don't need to change your theme or your Vite config. The grid ships its own compiled JavaScript and CSS. The JavaScript loads only on pages that render a grid. The stylesheet (about 3 KB gzipped) loads with every Filament page, so the grid never shifts the page when it appears.
 
 ## Basic usage
 
