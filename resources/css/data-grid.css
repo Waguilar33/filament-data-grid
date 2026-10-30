@@ -552,7 +552,7 @@
 .fi-data-grid-canvas .fi-data-grid-child-row-wrapper .slick-cell {
     align-items: flex-start;
     padding-block: 0;
-    padding-inline: 2.75rem calc(var(--spacing) * 3);
+    padding-inline: calc(var(--spacing) * 3);
     border-bottom: 0;
     background-color: var(--fi-data-grid-child-bg);
 }
@@ -562,7 +562,7 @@
 }
 
 .fi-data-grid-child-row {
-    --fi-data-grid-child-inset: calc(var(--spacing) * 2);
+    --fi-data-grid-child-inset: calc(var(--spacing) * 3);
 
     display: grid;
     align-items: center;
