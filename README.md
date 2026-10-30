@@ -252,7 +252,7 @@ DataGridEntry::make('deliveries')
 
 The state can be an array, a collection or a relationship, as with `RepeatableEntry`.
 
-- **Child rows** come from the first `RepeatableEntry` in the schema that has a `table()`. It doesn't take a column. Its rows open under their parent row, with their own column headers. Without one, the grid has no child rows.
+- **Child rows** come from the first `RepeatableEntry` in the schema that has a `table()`. It doesn't take a column. Its rows open under their parent row as a small table of their own, with its own column headers. Without one, the grid has no child rows. The child table sits 15 pixels in from every side of the open row; change that with `childTablePadding(8)`.
 - **Opening rows:** rows start closed. Click a row, or its arrow button, to open or close it. Several rows can be open at once.
 - **Search:** `searchable()` adds a search field that filters parent rows. A row's child rows stay with it. Pass a list of fields to search only those columns. The search matches the text the entries show, such as a badge's formatted label.
 - **Pagination:** `paginated([10, 25, 50])` pages parent rows and lets users pick the page size, with Filament's own pagination controls. Add `DataGridEntry::ALL_RECORDS` to offer "All", and use `defaultPaginationPageOption(25)` to start on another size. `paginated(10)` gives a fixed size, and `paginated()` uses 10, 25 and 50. Open child rows don't count toward the page size, so a parent row and its children are never split across pages.

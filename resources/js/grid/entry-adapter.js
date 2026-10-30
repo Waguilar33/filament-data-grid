@@ -3,6 +3,8 @@ import { escapeHtml } from './cells.js'
 
 const TOGGLE_COLUMN = '__toggle'
 const ROW_HEIGHT = 44
+const CHILD_HEADER_HEIGHT = 32
+const DEFAULT_CHILD_TABLE_PADDING = 15
 const TOGGLE_WIDTH = 44
 const FLEXIBLE_MIN_WIDTH = 160
 
@@ -203,6 +205,13 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         return columns
     }
 
+    const childTablePadding = () => payload.childTablePadding ?? DEFAULT_CHILD_TABLE_PADDING
+
+    const childRowHeight = (item) =>
+        (item.kind === 'child-header' ? CHILD_HEADER_HEIGHT : ROW_HEIGHT) +
+        (item.isFirst ? childTablePadding() : 0) +
+        (item.isLast ? childTablePadding() : 0)
+
     const dataProvider = {
         getLength: () => visible.length,
         getItem: (index) => visible[index],
@@ -227,6 +236,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
             }
 
             return {
+                height: childRowHeight(item),
                 cssClasses: `fi-data-grid-child-row-wrapper ${isLast ? 'fi-data-grid-row-last' : ''}`,
                 focusable: false,
                 selectable: false,
@@ -255,6 +265,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         enableColumnReorder: false,
         autoHeight: true,
         rowHeight: ROW_HEIGHT,
+        enableVariableRowHeight: true,
         showHeaderRow: false,
         showTopPanel: false,
         showPreHeaderPanel: false,
@@ -265,6 +276,10 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
     })
 
     element.classList.add('fi-data-grid-slick')
+
+    const applyChildTablePadding = () => element.style.setProperty('--fi-data-grid-child-inset', `${childTablePadding()}px`)
+
+    applyChildTablePadding()
 
     const redraw = () => {
         computeVisible()
@@ -387,6 +402,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
 
             payload = nextPayload
             indexRows()
+            applyChildTablePadding()
 
             if (columnsChanged) {
                 grid.setColumns(columnDefinitions())

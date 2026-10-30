@@ -485,6 +485,7 @@
 }
 
 :where(.fi-data-grid-entry-grid) {
+    --fi-data-grid-child-inset: 15px;
     --fi-data-grid-child-bg: var(--gray-50);
     --fi-data-grid-child-header-text: var(--gray-500);
     --fi-data-grid-row-hover-bg: color-mix(in oklab, var(--gray-50) 60%, transparent);
@@ -583,7 +584,7 @@
 .fi-data-grid-canvas .fi-data-grid-child-row-wrapper .slick-cell {
     align-items: flex-start;
     padding-block: 0;
-    padding-inline: calc(var(--spacing) * 3);
+    padding-inline: var(--fi-data-grid-child-inset);
     border-bottom: 0;
     background-color: var(--fi-data-grid-child-bg);
 }
@@ -593,8 +594,6 @@
 }
 
 .fi-data-grid-child-row {
-    --fi-data-grid-child-inset: calc(var(--spacing) * 3);
-
     display: grid;
     align-items: center;
     box-sizing: border-box;

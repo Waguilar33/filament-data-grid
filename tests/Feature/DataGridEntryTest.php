@@ -361,3 +361,9 @@ it('renders a heading, description and icon above the grid', function (): void {
         ->assertSee('Where each order stands')
         ->assertSeeHtml('fi-data-grid-entry-header-icon');
 });
+
+it('pads the child table by 15 pixels unless told otherwise', function (): void {
+    expect(deliveriesPayload(mountDeliveries())['childTablePadding'])->toBe(15)
+        ->and(deliveriesPayload(mountDeliveries(fn (DataGridEntry $entry): DataGridEntry => $entry->childTablePadding(8)))['childTablePadding'])->toBe(8)
+        ->and(deliveriesPayload(mountDeliveries(fn (DataGridEntry $entry): DataGridEntry => $entry->childTablePadding(-4)))['childTablePadding'])->toBe(0);
+});

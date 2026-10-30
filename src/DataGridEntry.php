@@ -52,6 +52,8 @@ class DataGridEntry extends RepeatableEntry
 
     protected bool $isTableContent = false;
 
+    protected int|Closure $childTablePadding = 15;
+
     protected string|Htmlable|Closure|null $heading = null;
 
     protected string|Htmlable|Closure|null $description = null;
@@ -331,6 +333,20 @@ class DataGridEntry extends RepeatableEntry
         }
 
         return $schemas;
+    }
+
+    public function childTablePadding(int|Closure $pixels): static
+    {
+        $this->childTablePadding = $pixels;
+
+        return $this;
+    }
+
+    public function getChildTablePadding(): int
+    {
+        $pixels = $this->evaluate($this->childTablePadding);
+
+        return is_int($pixels) ? max(0, $pixels) : 15;
     }
 
     public function isTableContent(): bool

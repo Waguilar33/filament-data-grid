@@ -11,6 +11,11 @@ function routeRow(int $row): string
     return sprintf('%s .slick-row[style*="top: %dpx"]', ROUTE, $row * 44);
 }
 
+function routeRowAt(int $top): string
+{
+    return sprintf('%s .slick-row[style*="top: %dpx"]', ROUTE, $top);
+}
+
 function visitRoute(string $query = ''): AwaitableWebpage
 {
     $page = visit('/demo/delivery-route-demo'.$query)->waitForEvent('networkidle');
@@ -38,12 +43,12 @@ it('shows parents collapsed and opens several of them', function (): void {
         ->assertAttribute(routeRow(0).' .fi-data-grid-row-toggle', 'aria-expanded', 'false')
         ->click(routeRow(0).' .fi-data-grid-row-toggle')
         ->assertAttribute(routeRow(0).' .fi-data-grid-row-toggle', 'aria-expanded', 'true')
-        ->assertSeeIn(routeRow(1), 'Product')
-        ->assertSeeIn(routeRow(2), 'Light Coffee 100 g')
-        ->assertSeeIn(routeRow(4), 'DLV-2026-0000002')
-        ->click(routeRow(4).' .slick-cell.l2')
-        ->assertSeeIn(routeRow(5), 'Product')
-        ->assertAttribute(routeRow(4).' .fi-data-grid-row-toggle', 'aria-expanded', 'true')
+        ->assertSeeIn(routeRowAt(44), 'Product')
+        ->assertSeeIn(routeRowAt(91), 'Light Coffee 100 g')
+        ->assertSeeIn(routeRowAt(194), 'DLV-2026-0000002')
+        ->click(routeRowAt(194).' .slick-cell.l2')
+        ->assertSeeIn(routeRowAt(238), 'Product')
+        ->assertAttribute(routeRowAt(194).' .fi-data-grid-row-toggle', 'aria-expanded', 'true')
         ->assertAttribute(routeRow(0).' .fi-data-grid-row-toggle', 'aria-expanded', 'true')
         ->click(routeRow(0).' .fi-data-grid-row-toggle')
         ->assertSeeIn(routeRow(1), 'DLV-2026-0000002')
@@ -84,9 +89,9 @@ it('shows badges and numbers from the entries', function (): void {
     visitRoute()
         ->assertSeeIn(routeRow(3).' .fi-badge', 'Partial')
         ->click(routeRow(3).' .fi-data-grid-row-toggle')
-        ->assertSeeIn(routeRow(4), 'Product')
-        ->assertPresent(routeRow(7).' .fi-badge')
-        ->assertSeeIn(routeRow(5), '5');
+        ->assertSeeIn(routeRowAt(176), 'Product')
+        ->assertSeeIn(routeRowAt(223), '5')
+        ->assertPresent(routeRowAt(311).' .fi-badge');
 });
 
 it('shows the grid in Spanish', function (): void {
