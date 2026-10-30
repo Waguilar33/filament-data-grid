@@ -463,6 +463,30 @@ Every element uses `fi-data-grid-*` hook classes and Filament's color variables,
 }
 ```
 
+## Icons
+
+Every icon the plugin draws goes through Filament's [icon aliases](https://filamentphp.com/docs/5.x/styling/icons#replacing-the-default-icons), so you can replace them in a service provider like any Filament icon:
+
+```php
+use Filament\Support\Facades\FilamentIcon;
+use Waguilar\FilamentDataGrid\View\DataGridIconAlias;
+
+FilamentIcon::register([
+    DataGridIconAlias::ROW_EXPAND => 'fal-sharp-chevron-right',
+]);
+```
+
+| Alias | Icon |
+| --- | --- |
+| `DataGridIconAlias::ROW_EXPAND` (`filament-data-grid::row.expand`) | The arrow that opens a row's child rows. |
+| `DataGridIconAlias::ROW_OPEN` (`filament-data-grid::row.open`) | The chevron that opens a record, inside a Filament table. |
+| `DataGridIconAlias::ROW_ACTIONS` (`filament-data-grid::row.actions`) | The row menu of the editable grid. |
+| `DataGridIconAlias::CELL_REORDER` (`filament-data-grid::cell.reorder`) | The drag handle. |
+| `DataGridIconAlias::CELL_DATE` (`filament-data-grid::cell.date`) | The calendar in date cells. |
+| `DataGridIconAlias::CELL_EDIT` (`filament-data-grid::cell.edit`) | The pencil in cells that open a modal. |
+
+The search, filter and pagination icons are Filament's own, under its table and pagination aliases.
+
 ## How it works
 
 The grid is drawn with [SlickGrid-Universal](https://github.com/ghiscoding/slickgrid-universal) inside a `wire:ignore` element. SlickGrid-Universal is bundled with the plugin, so your app doesn't install it.

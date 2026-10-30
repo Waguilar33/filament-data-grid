@@ -8,6 +8,7 @@ use Filament\Actions\BulkAction;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
+use Waguilar\FilamentDataGrid\View\DataGridIconAlias;
 
 use function Filament\Support\generate_href_html;
 use function Filament\Support\generate_icon_html;
@@ -62,7 +63,7 @@ final readonly class DescribeTableRecord
         }
 
         $href = generate_href_html($url, $table->shouldOpenRecordUrlInNewTab($record))->toHtml();
-        $icon = generate_icon_html(Heroicon::ChevronRight)?->toHtml() ?? '';
+        $icon = generate_icon_html(Heroicon::ChevronRight, DataGridIconAlias::ROW_OPEN)?->toHtml() ?? '';
         $label = e(__('filament-data-grid::data-grid.entry.open_record'));
 
         return sprintf('<a %s class="fi-data-grid-record-link" aria-label="%s" title="%s">%s</a>', $href, $label, $label, $icon);

@@ -6,8 +6,10 @@ namespace Waguilar\FilamentDataGrid\Payload;
 
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
+use Filament\Support\Facades\FilamentIcon;
 use Filament\Support\Icons\Heroicon;
 use Waguilar\FilamentDataGrid\DataGrid;
+use Waguilar\FilamentDataGrid\View\DataGridIconAlias;
 
 final class RenderRowActions
 {
@@ -44,7 +46,7 @@ final class RenderRowActions
 
         $html = ActionGroup::make([...$extraActions, ...($deleteAction ? [$deleteAction->grouped()] : [])])
             ->label(is_string($menuLabel) ? $menuLabel : null)
-            ->icon(Heroicon::EllipsisVertical)
+            ->icon(FilamentIcon::resolve(DataGridIconAlias::ROW_ACTIONS) ?? Heroicon::EllipsisVertical)
             ->iconButton()
             ->color('gray')
             ->dropdownPlacement('bottom-end')

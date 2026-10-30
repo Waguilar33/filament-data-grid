@@ -28,6 +28,7 @@ use Waguilar\FilamentDataGrid\Entry\BuildEntryPayload;
 use Waguilar\FilamentDataGrid\Entry\DescribeTableRecord;
 use Waguilar\FilamentDataGrid\Entry\EntryFilters;
 use Waguilar\FilamentDataGrid\Entry\EntryPage;
+use Waguilar\FilamentDataGrid\View\DataGridIconAlias;
 
 use function Filament\Support\generate_icon_html;
 
@@ -433,7 +434,7 @@ class DataGridEntry extends RepeatableEntry
                     ],
                 ],
                 'icons' => [
-                    'expand' => generate_icon_html(Heroicon::ChevronRight)?->toHtml(),
+                    'expand' => generate_icon_html(Heroicon::ChevronRight, DataGridIconAlias::ROW_EXPAND)?->toHtml(),
                 ],
             ]),
         ])->render();

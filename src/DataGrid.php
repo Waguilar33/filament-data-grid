@@ -20,6 +20,7 @@ use Waguilar\FilamentDataGrid\Rows\EnsureTrailingEmptyRow;
 use Waguilar\FilamentDataGrid\Rows\IsRowBlank;
 use Waguilar\FilamentDataGrid\Rows\LimitFilledRows;
 use Waguilar\FilamentDataGrid\Rows\ResolveRowFilledFields;
+use Waguilar\FilamentDataGrid\View\DataGridIconAlias;
 
 use function Filament\Support\generate_icon_html;
 
@@ -282,10 +283,10 @@ class DataGrid extends Repeater
                 ...$this->getGridConfig(),
                 'translations' => __('filament-data-grid::data-grid'),
                 'icons' => [
-                    'reorder' => generate_icon_html(Heroicon::Bars2)?->toHtml(),
-                    'date' => generate_icon_html(Heroicon::Calendar)?->toHtml(),
-                    'edit' => generate_icon_html(Heroicon::PencilSquare)?->toHtml(),
-                    'expand' => generate_icon_html(Heroicon::ChevronRight)?->toHtml(),
+                    'reorder' => generate_icon_html(Heroicon::Bars2, DataGridIconAlias::CELL_REORDER)?->toHtml(),
+                    'date' => generate_icon_html(Heroicon::Calendar, DataGridIconAlias::CELL_DATE)?->toHtml(),
+                    'edit' => generate_icon_html(Heroicon::PencilSquare, DataGridIconAlias::CELL_EDIT)?->toHtml(),
+                    'expand' => generate_icon_html(Heroicon::ChevronRight, DataGridIconAlias::ROW_EXPAND)?->toHtml(),
                 ],
             ]),
         ])->render();
