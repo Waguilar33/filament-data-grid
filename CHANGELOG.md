@@ -13,4 +13,5 @@ First preview. Not ready for production; the API may change before v1.0.0.
 - Frozen columns, drag reordering, row menu with extra item actions, and per-row validation errors.
 - Assets load only on pages that use the field.
 - English and Spanish translations.
+- `DataGridEntry`: a read-only grid whose rows open to show child rows, with search and pagination over parent rows.
 - Supports Filament 4 and 5, Laravel 11 to 13 and PHP 8.2+.

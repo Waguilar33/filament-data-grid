@@ -28,6 +28,7 @@ final class FilamentDataGridServiceProvider extends PackageServiceProvider
     {
         FilamentAsset::register([
             AlpineComponent::make('data-grid', __DIR__.'/../resources/dist/data-grid.js'),
+            AlpineComponent::make('data-grid-entry', __DIR__.'/../resources/dist/data-grid-entry.js'),
             Css::make('data-grid', __DIR__.'/../resources/dist/data-grid.css')->loadedOnRequest(),
         ], self::PACKAGE);
     }

@@ -3,6 +3,22 @@
 declare(strict_types=1);
 
 return [
+    'route' => [
+        'navigation' => 'Delivery route',
+        'columns' => [
+            'delivery' => 'Delivery',
+            'customer' => 'Customer',
+            'warehouse' => 'Warehouse',
+            'product' => 'Product',
+            'code' => 'Unit code',
+            'requested' => 'Requested',
+            'handed_over' => 'Handed over',
+        ],
+        'fill_statuses' => [
+            'complete' => 'Complete',
+            'partial' => 'Partial',
+        ],
+    ],
     'navigation' => 'Data grid',
     'sections' => [
         'lines' => 'Products',

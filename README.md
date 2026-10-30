@@ -213,6 +213,52 @@ DataGrid::make('lines')
     ->reorderable(false)
 ```
 
+## Read-only grid with child rows
+
+`DataGridEntry` is an infolist entry that shows rows in the same grid, read-only. Each row can open to show its own child rows, with their own columns. It extends Filament's `RepeatableEntry`, so you build it the same way as `RepeatableEntry::make()->table()`:
+
+```php
+use Filament\Infolists\Components\RepeatableEntry;
+use Filament\Infolists\Components\RepeatableEntry\TableColumn;
+use Filament\Infolists\Components\TextEntry;
+use Waguilar\FilamentDataGrid\DataGridEntry;
+
+DataGridEntry::make('deliveries')
+    ->state(fn (): array => $deliveries)
+    ->searchable(['delivery_number', 'customer'])
+    ->paginated(10)
+    ->table([
+        TableColumn::make('Delivery'),
+        TableColumn::make('Customer'),
+        TableColumn::make('Warehouse')->width('12rem'),
+    ])
+    ->schema([
+        TextEntry::make('delivery_number'),
+        TextEntry::make('customer'),
+        TextEntry::make('fill_status')->badge(),
+        RepeatableEntry::make('lines')
+            ->table([
+                TableColumn::make('Product'),
+                TableColumn::make('Requested')->alignEnd(),
+                TableColumn::make('Handed over')->alignEnd(),
+            ])
+            ->schema([
+                TextEntry::make('product'),
+                TextEntry::make('requested')->numeric(),
+                TextEntry::make('handed_over')->numeric(),
+            ]),
+    ])
+```
+
+The state can be an array, a collection or a relationship, as with `RepeatableEntry`.
+
+- **Child rows** come from the first `RepeatableEntry` in the schema that has a `table()`. It doesn't take a column. Its rows open under their parent row, with their own column headers. Without one, the grid has no child rows.
+- **Opening rows:** rows start closed. Click a row, or its arrow button, to open or close it. Several rows can be open at once.
+- **Search:** `searchable()` adds a search field that filters parent rows. A row's child rows stay with it. Pass a list of fields to search only those columns. The search matches the text the entries show, such as a badge's formatted label.
+- **Pagination:** `paginated(10)` shows 10 parent rows per page. Open child rows don't count toward the page size, so a parent row and its children are never split across pages.
+
+Search and pagination run in the browser over the rows the server sent, so they suit grids of up to a few hundred parent rows. Child rows have the same height as parent rows, so show extra details, such as a code badge, in a column of their own.
+
 ## Validation
 
 Validation runs on the server through Filament, using `Repeater`'s keys (`data.lines.{uuid}.quantity`). Invalid cells are outlined in red and show their message on hover. A summary below the grid lists each error by row and column:
@@ -256,7 +302,7 @@ The server renders the rows, the cell descriptions and the row actions, and send
 ## Limitations
 
 - The whole grid is sent again on every update. 200 rows take about 47 ms on the server and 11 KB gzipped, which is fine for grids the size of an order. Grids with thousands of rows aren't a good fit yet.
-- Parent and child rows, such as grouped lines, aren't supported yet.
+- Parent and child rows are read-only, in `DataGridEntry`. The editable `DataGrid` doesn't have them yet.
 - There are no footer totals yet. Show totals with an entry or a field outside the grid.
 - The compiled JavaScript is about 150 KB gzipped, because it includes parts of SlickGrid-Universal that the grid doesn't use. It is loaded only on pages with a grid.
 - The select dropdown is Filament's own JavaScript, copied into the plugin's build from Filament 5. The same build runs on Filament 4. Check the grid after upgrading Filament.
