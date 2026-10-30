@@ -868,3 +868,8 @@
     height: auto;
     margin-top: 0;
 }
+
+.fi-data-grid-canvas div.fi-in-text-item.fi-in-text-has-badges {
+    display: flex;
+    align-items: center;
+}

@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.3 - 2026-10-30
+
+- A single badge in a grid cell, such as a `TextEntry` badge with an icon, is now centred vertically. Filament lays it out on a text line, which left more space below it than above.
+
 ## v1.0.0-beta.2 - 2026-10-30
 
 - `expandedAbove()` and `expandedBelow()` show your own Filament components above and below the child table of an open `DataGridEntry` row.

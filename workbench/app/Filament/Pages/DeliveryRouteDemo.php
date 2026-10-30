@@ -98,7 +98,8 @@ final class DeliveryRouteDemo extends Page
                 TextEntry::make('fill_status')
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => __("demo::demo.route.fill_statuses.{$state}"))
-                    ->color(fn (string $state): string => $state === 'complete' ? 'success' : 'warning'),
+                    ->color(fn (string $state): string => $state === 'complete' ? 'success' : 'warning')
+                    ->icon(Heroicon::OutlinedCheckCircle),
                 IconEntry::make('kind')
                     ->icon(fn (string $state): Heroicon => $state === 'pickup' ? Heroicon::OutlinedHandRaised : Heroicon::OutlinedTruck)
                     ->tooltip(fn (string $state): string => __("demo::demo.route.kinds.{$state}"))
