@@ -15,6 +15,7 @@ concurrency:
 jobs:
   tests:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -44,6 +45,9 @@ jobs:
 
     name: P${{ matrix.php }} - L${{ matrix.laravel }} - F${{ matrix.filament }} - ${{ matrix.stability }}
 
+    env:
+      BROWSER_TESTS: ${{ matrix.browser != false && matrix.stability == 'prefer-stable' }}
+
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -68,7 +72,7 @@ jobs:
           composer config audit.block-insecure false
           composer require "laravel/framework:${{ matrix.laravel }}" "filament/filament:${{ matrix.filament }}" --no-interaction --no-update
           composer require --dev "orchestra/testbench:${{ matrix.testbench }}" "pestphp/pest:${{ matrix.pest }}" --no-interaction --no-update
-          if [ "${{ matrix.browser }}" != "false" ]; then
+          if [ "$BROWSER_TESTS" = "true" ]; then
             composer require --dev "pestphp/pest-plugin-browser:${{ matrix.browser }}" --no-interaction --no-update
           else
             composer remove --dev pestphp/pest-plugin-browser --no-interaction --no-update
@@ -79,7 +83,7 @@ jobs:
         run: composer show | grep -E '^(filament/filament|livewire/livewire|laravel/framework|pestphp/pest|orchestra/testbench) '
 
       - name: Install Playwright
-        if: matrix.browser != false
+        if: env.BROWSER_TESTS == 'true'
         run: |
           npm ci
           npx playwright install --with-deps chromium
@@ -88,10 +92,10 @@ jobs:
         run: vendor/bin/testbench workbench:build --ansi
 
       - name: Run tests
-        run: vendor/bin/pest --ci ${{ matrix.browser != false && 'tests' || 'tests/Feature' }}
+        run: vendor/bin/pest --ci ${{ env.BROWSER_TESTS == 'true' && 'tests' || 'tests/Feature' }}
 
       - name: Upload browser test screenshots
-        if: failure() && matrix.browser != false
+        if: failure() && env.BROWSER_TESTS == 'true'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: screenshots-${{ strategy.job-index }}
