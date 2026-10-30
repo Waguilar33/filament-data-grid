@@ -4,6 +4,7 @@ All notable changes to `filament-data-grid` will be documented in this file.
 
 ## Unreleased
 
+- `DataGridEntry` rows, parent and child, grow to fit their content, so wrapped text, several badges and an entry's `belowContent()` are no longer cut off. `rowHeight()` sets a fixed height for every parent row, or one per row from a closure.
 - Inside a Filament table, each parent row shows the table's `recordActions()` and, with `recordUrl()`, a chevron and a clickable row that open the record.
 
 ## v1.0.0-beta.1 - 2026-10-30

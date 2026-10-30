@@ -55,6 +55,8 @@ class DataGridEntry extends RepeatableEntry
 
     protected int|Closure $childTablePadding = 15;
 
+    protected int|Closure|null $rowHeight = null;
+
     /**
      * @var array<string, array{actions: string|null, link: string|null}>
      */
@@ -353,6 +355,28 @@ class DataGridEntry extends RepeatableEntry
         $pixels = $this->evaluate($this->childTablePadding);
 
         return is_int($pixels) ? max(0, $pixels) : 15;
+    }
+
+    public function rowHeight(int|Closure|null $height): static
+    {
+        $this->rowHeight = $height;
+
+        return $this;
+    }
+
+    public function hasRowHeightPerRow(): bool
+    {
+        return $this->rowHeight instanceof Closure;
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $state
+     */
+    public function getRowHeight(array $state = []): ?int
+    {
+        $height = $this->evaluate($this->rowHeight, ['state' => $state]);
+
+        return is_int($height) && $height > 0 ? $height : null;
     }
 
     public function isTableContent(): bool

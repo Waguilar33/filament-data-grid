@@ -319,7 +319,27 @@ The state can be an array, a collection or a relationship, as with `RepeatableEn
 - **Search:** `searchable()` adds a search field that filters parent rows. A row's child rows stay with it. Pass a list of fields to search only those columns. The search matches the text the entries show, such as a badge's formatted label.
 - **Pagination:** `paginated([10, 25, 50])` pages parent rows and lets users pick the page size, with Filament's own pagination controls. Add `DataGridEntry::ALL_RECORDS` to offer "All", and use `defaultPaginationPageOption(25)` to start on another size. `paginated(10)` gives a fixed size, and `paginated()` uses 10, 25 and 50. Open child rows don't count toward the page size, so a parent row and its children are never split across pages.
 
-Child rows have the same height as parent rows, so show extra details, such as a code badge, in a column of their own.
+### Row height
+
+Each parent and child row grows to fit its tallest cell, so text can wrap and an entry's `belowContent()`, such as a code badge under a product name, shows in full. A row is never shorter than 44 pixels, and the cells stay centred vertically:
+
+```php
+use Filament\Schemas\Components\Text;
+
+TextEntry::make('product')
+    ->belowContent(fn (?OrderLine $record): ?Text => filled($record?->code)
+        ? Text::make($record->code)->badge()->color('gray')
+        : null),
+```
+
+The browser measures each row once, at the current column widths, and measures again when the rows or the column widths change. To skip measuring, give every parent row the same height with `rowHeight(56)`, or pick it per row from the row's state, returning `null` to measure that row:
+
+```php
+DataGridEntry::make('deliveries')
+    ->rowHeight(fn (array $state): ?int => count($state['holds']) > 2 ? 72 : null)
+```
+
+Child rows are always measured. A fixed height doesn't make the content fit, so content taller than the row is cut off.
 
 ### Heading, description and icon
 

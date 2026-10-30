@@ -16,6 +16,53 @@ function routeRowAt(int $top): string
     return sprintf('%s .slick-row[style*="top: %dpx"]', ROUTE, $top);
 }
 
+function parentRow(string $deliveryNumber): string
+{
+    return sprintf('%s .fi-data-grid-parent-row:has-text("%s")', ROUTE, $deliveryNumber);
+}
+
+function childRow(string $product): string
+{
+    return sprintf('%s .fi-data-grid-child-row-wrapper:has-text("%s")', ROUTE, $product);
+}
+
+function rowHeight(string $text): string
+{
+    return sprintf(
+        '[...document.querySelectorAll(%s)].find((row) => row.textContent.includes(%s)).getBoundingClientRect().height',
+        json_encode(ROUTE.' .slick-row'),
+        json_encode($text),
+    );
+}
+
+function badgesFitTheirCells(string $text): string
+{
+    return sprintf(<<<'JS'
+        (() => {
+            const row = [...document.querySelectorAll(%s)].find((row) => row.textContent.includes(%s))
+            const badges = [...row.querySelectorAll('.fi-badge')]
+
+            return badges.length > 0 && badges.every((badge) => {
+                const inner = badge.getBoundingClientRect()
+                const outer = badge.closest('.fi-data-grid-child-cell, .slick-cell').getBoundingClientRect()
+
+                return inner.top >= outer.top && inner.bottom <= outer.bottom && inner.left >= outer.left && inner.right <= outer.right
+            })
+        })()
+        JS, json_encode(ROUTE.' .slick-row'), json_encode($text));
+}
+
+function rowsAreStacked(): string
+{
+    return sprintf(<<<'JS'
+        (() => {
+            const rows = [...document.querySelectorAll(%s)].sort((a, b) => a.offsetTop - b.offsetTop)
+
+            return rows.every((row, index) => index === 0 || row.offsetTop === rows[index - 1].offsetTop + rows[index - 1].offsetHeight)
+        })()
+        JS, json_encode(ROUTE.' .slick-row'));
+}
+
 function visitRoute(string $query = ''): AwaitableWebpage
 {
     $page = visit('/demo/delivery-route-demo'.$query)->waitForEvent('networkidle');
@@ -72,7 +119,7 @@ it('pages by parents, so open children never push a parent to the next page', fu
 
 it('searches parents and keeps their open children with them', function (): void {
     visitRoute()
-        ->click(routeRow(9).' .fi-data-grid-row-toggle')
+        ->click(parentRow('DLV-2026-0000010').' .fi-data-grid-row-toggle')
         ->type(ROUTE.' .fi-ta-search-field input', 'karen')
         ->wait(0.5)
         ->assertSee('Showing 1 to 2 of 2 results')
@@ -87,11 +134,46 @@ it('searches parents and keeps their open children with them', function (): void
 
 it('shows badges and numbers from the entries', function (): void {
     visitRoute()
-        ->assertSeeIn(routeRow(3).' .fi-badge', 'Partial')
-        ->click(routeRow(3).' .fi-data-grid-row-toggle')
-        ->assertSeeIn(routeRowAt(176), 'Product')
-        ->assertSeeIn(routeRowAt(223), '5')
-        ->assertPresent(routeRowAt(311).' .fi-badge');
+        ->assertSeeIn(parentRow('DLV-2026-0000004').' .fi-badge', 'Partial')
+        ->click(parentRow('DLV-2026-0000004').' .fi-data-grid-row-toggle')
+        ->assertSeeIn(childRow('Rustic Tea 100 g'), '5')
+        ->assertSeeIn(childRow('Wild Bread 100 g').' .fi-badge', 'U-0042');
+});
+
+it('grows a child row to fit the unit code under its product', function (): void {
+    visitRoute()
+        ->click(parentRow('DLV-2026-0000002').' .fi-data-grid-row-toggle')
+        ->assertSeeIn(childRow('Tropical Tea 100 g').' .fi-badge', 'U-0021')
+        ->assertScript(rowHeight('Fresh Tea 100 g'), 44)
+        ->assertScript(rowHeight('Tropical Tea 100 g').' > 44', true)
+        ->assertScript(badgesFitTheirCells('Tropical Tea 100 g'), true)
+        ->assertScript(rowsAreStacked(), true)
+        ->assertNoJavaScriptErrors();
+});
+
+it('grows a parent row whose badges wrap onto a second line', function (): void {
+    visitRoute()
+        ->assertScript(rowHeight('DLV-2026-0000001'), 44)
+        ->assertScript(rowHeight('DLV-2026-0000004').' > 44', true)
+        ->assertScript(badgesFitTheirCells('DLV-2026-0000004'), true)
+        ->assertScript(rowsAreStacked(), true)
+        ->assertNoJavaScriptErrors();
+});
+
+it('keeps rows stacked and badges inside their cells after the window is resized', function (): void {
+    visitRoute()
+        ->click(parentRow('DLV-2026-0000002').' .fi-data-grid-row-toggle')
+        ->resize(800, 900)
+        ->wait(0.5)
+        ->assertScript(rowsAreStacked(), true)
+        ->assertScript(badgesFitTheirCells('Tropical Tea 100 g'), true)
+        ->assertScript(badgesFitTheirCells('DLV-2026-0000004'), true)
+        ->resize(1600, 900)
+        ->wait(0.5)
+        ->assertScript(rowsAreStacked(), true)
+        ->assertScript(badgesFitTheirCells('Tropical Tea 100 g'), true)
+        ->assertScript(badgesFitTheirCells('DLV-2026-0000004'), true)
+        ->assertNoJavaScriptErrors();
 });
 
 it('shows the grid in Spanish', function (): void {

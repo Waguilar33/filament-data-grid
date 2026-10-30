@@ -9,6 +9,7 @@ use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\RepeatableEntry\TableColumn;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Text;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Filters\SelectFilter;
@@ -78,7 +79,7 @@ final class DeliveryRouteDemo extends Page
                 TableColumn::make(__('demo::demo.route.columns.customer')),
                 TableColumn::make(__('demo::demo.route.columns.warehouse'))->width('12rem'),
                 TableColumn::make(__('demo::demo.route.columns.kind'))->width('5rem')->alignCenter(),
-                TableColumn::make(__('demo::demo.route.columns.preparation'))->width('18rem'),
+                TableColumn::make(__('demo::demo.route.columns.preparation'))->width('12rem'),
             ])
             ->schema([
                 TextEntry::make('delivery_number')->weight('medium'),
@@ -98,17 +99,23 @@ final class DeliveryRouteDemo extends Page
                 RepeatableEntry::make('lines')
                     ->table([
                         TableColumn::make(__('demo::demo.route.columns.product')),
-                        TableColumn::make(__('demo::demo.route.columns.code'))->width('9rem'),
                         TableColumn::make(__('demo::demo.route.columns.requested'))->width('9rem')->alignEnd(),
                         TableColumn::make(__('demo::demo.route.columns.handed_over'))->width('11rem')->alignEnd(),
                     ])
                     ->schema([
-                        TextEntry::make('product'),
-                        TextEntry::make('code')->badge()->color('gray')->placeholder('—'),
+                        TextEntry::make('product')
+                            ->belowContent(fn (TextEntry $component): ?Text => self::unitCode($component)),
                         TextEntry::make('requested')->numeric(),
                         TextEntry::make('handed_over')->numeric(),
                     ]),
             ]);
+    }
+
+    private static function unitCode(TextEntry $entry): ?Text
+    {
+        $code = data_get($entry->getContainer()->getConstantState(), 'code');
+
+        return is_string($code) && $code !== '' ? Text::make($code)->badge()->color('gray') : null;
     }
 
     /**
