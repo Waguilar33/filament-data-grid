@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 final class SetDemoLocale
 {
-    private const array LOCALES = ['en', 'es'];
+    private const LOCALES = ['en', 'es'];
 
     /**
      * @param  Closure(Request): Response  $next

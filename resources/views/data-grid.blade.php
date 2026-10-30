@@ -14,22 +14,28 @@
 @endphp
 
 <div
-    x-load
-    x-load-css="@js([$styleHref])"
-    x-load-src="{{ $alpineSrc }}"
-    x-data="filamentDataGrid({{ $config }})"
-    x-on:keydown.capture="rememberEditingState()"
-    x-on:keydown.escape="stopEscapeWhileEditing($event)"
     wire:key="{{ $grid->getLivewireKey() }}.data-grid"
     id="{{ $grid->getId() }}"
     role="group"
     aria-labelledby="{{ $grid->getId() }}-label"
     class="fi-data-grid fi-fixed-positioning-context"
 >
-    <div x-ref="payload" hidden data-payload="{{ json_encode($payload, JSON_THROW_ON_ERROR) }}"></div>
+    <div
+        x-load
+        x-load-src="{{ $alpineSrc }}"
+        x-data="filamentDataGrid({{ $config }})"
+        x-on:keydown.capture="rememberEditingState()"
+        x-on:keydown.escape="stopEscapeWhileEditing($event)"
+    >
+        <div x-ref="payload" hidden data-payload="{{ json_encode($payload, JSON_THROW_ON_ERROR) }}"></div>
 
-    <div wire:ignore class="fi-data-grid-viewport">
-        <div x-ref="grid" class="fi-data-grid-canvas"></div>
+        <div wire:ignore class="fi-data-grid-viewport">
+            <div
+                x-ref="grid"
+                class="fi-data-grid-canvas"
+                style="min-height: calc(2.75rem + 1px + {{ count($payload['rows']) * 44 }}px)"
+            ></div>
+        </div>
     </div>
 
     @if ($cellErrors->isNotEmpty())

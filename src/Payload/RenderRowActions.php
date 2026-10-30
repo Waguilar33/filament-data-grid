@@ -11,7 +11,7 @@ use Waguilar\FilamentDataGrid\DataGrid;
 
 final class RenderRowActions
 {
-    public const string ROW_KEY_PLACEHOLDER = '__fi_data_grid_row_key__';
+    public const ROW_KEY_PLACEHOLDER = '__fi_data_grid_row_key__';
 
     public function hasActions(DataGrid $grid): bool
     {

@@ -220,7 +220,6 @@ class DataGrid extends Repeater
             'grid' => $this,
             'payload' => $this->getGridPayload(),
             'alpineSrc' => FilamentAsset::getAlpineComponentSrc('data-grid', FilamentDataGridServiceProvider::PACKAGE),
-            'styleHref' => FilamentAsset::getStyleHref('data-grid', FilamentDataGridServiceProvider::PACKAGE),
             'config' => Js::from([
                 'statePath' => $this->getStatePath(),
                 'schemaComponent' => $this->getKey(),

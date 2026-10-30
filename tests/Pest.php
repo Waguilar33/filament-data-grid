@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\View;
 use Livewire\Features\SupportTesting\Testable;
+use Livewire\Livewire;
 use Waguilar\FilamentDataGrid\DataGrid;
 use Waguilar\FilamentDataGrid\Tests\Fixtures\LinesForm;
 use Waguilar\FilamentDataGrid\Tests\TestCase;
-
-use function Pest\Livewire\livewire;
 
 pest()->extend(TestCase::class)->in('Feature', 'Browser');
 
@@ -27,7 +26,7 @@ function mountLines(array $lines, Closure $components): Testable
     LinesForm::$initialLines = $lines;
     LinesForm::$configureUsing = $components;
 
-    return livewire(LinesForm::class);
+    return Livewire::test(LinesForm::class);
 }
 
 function grid(Testable $component, string $name = 'lines'): DataGrid

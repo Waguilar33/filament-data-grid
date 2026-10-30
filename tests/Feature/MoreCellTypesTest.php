@@ -60,7 +60,7 @@ it('mirrors the select configuration Filament uses for the same field', function
         'isSearchable' => true,
         'isHtmlAllowed' => true,
         'hasDynamicSearchResults' => true,
-        'searchPrompt' => 'Start typing to search',
+        'searchPrompt' => __('filament-forms::components.select.search_prompt'),
     ])->and($payload['rows'][0]['cells']['product']['label'])->toBe('<strong>#7</strong>');
 });
 
