@@ -379,6 +379,7 @@ DataGridEntry::make('payment_methods')
 - Each parent row on the page gets its own component, mounted lazily: it loads the first time its row is opened and scrolled into view, then keeps its search, filters and page while the row is closed and reopened, and while the page around it re-renders.
 - The parent row grows and shrinks with the child table as it pages, filters or switches to "all", and moves the rows below it.
 - It works in a standalone `DataGridEntry` (browser mode) and in `toTableContent()`, where Filament pages the parents and the children follow. It can't be combined with `serverSide()`: pages loaded that way don't go through Livewire's render, so they can't mount components, and the grid throws `UnsupportedChildTable`.
+- Filament remembers a table's per-page choice in the session by component class, so every child table of the same class opens with the per-page the user last picked in any of them.
 - `childTable()` replaces a nested `RepeatableEntry` child table. `expandedAbove()` and `expandedBelow()` still show above and below it.
 
 ### Column widths

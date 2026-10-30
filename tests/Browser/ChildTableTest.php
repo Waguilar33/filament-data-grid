@@ -118,6 +118,23 @@ it('selects child records and runs a bulk action through its modal', function ()
         ->assertNoJavaScriptErrors();
 });
 
+it('drops the child tables of parents that Filament filters out, and mounts them again when they return', function (): void {
+    $page = openMethod(visitShift(), 0, 'cash');
+
+    $page->type('.fi-ta-header-toolbar .fi-ta-search-field input >> nth=0', 'card')->wait(2);
+
+    $page->assertCount(SHIFT_GRID.' .fi-data-grid-child-table-host', 1)
+        ->assertMissing(childTableHost('cash'))
+        ->assertNotPresent(SHIFT_GRID.' .fi-data-grid-parent-row-expanded')
+        ->assertScript("document.querySelector('".childTableHost('card')."').style.display", 'none');
+
+    $page->clear('.fi-ta-header-toolbar .fi-ta-search-field input >> nth=0')->wait(2);
+
+    openMethod($page, 0, 'cash')
+        ->assertSeeIn(childTableHost('cash'), 'R-1001')
+        ->assertNoJavaScriptErrors();
+});
+
 it('opens child tables in a standalone entry too', function (): void {
     $page = visitShift();
 

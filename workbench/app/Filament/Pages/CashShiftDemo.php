@@ -52,8 +52,12 @@ final class CashShiftDemo extends Page implements HasTable
         return $table
             ->heading(IconHeading::make(__('demo::demo.shift.sections.table'), Heroicon::OutlinedBanknotes))
             ->description(__('demo::demo.shift.descriptions.table'))
-            ->records(fn (): array => FakeCashShift::methods())
-            ->columns([TextColumn::make('key')])
+            ->records(fn (?string $search): array => array_filter(
+                FakeCashShift::methods(),
+                fn (string $key): bool => blank($search) || str_contains(mb_strtolower(__("demo::demo.shift.methods.{$key}")), mb_strtolower($search)),
+                ARRAY_FILTER_USE_KEY,
+            ))
+            ->columns([TextColumn::make('key')->searchable()])
             ->paginated(false)
             ->content(self::methods('methods')->toTableContent());
     }

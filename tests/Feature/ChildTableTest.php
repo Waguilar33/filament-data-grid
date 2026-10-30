@@ -25,7 +25,7 @@ it('mounts one lazy child table per parent row beside the grid', function (): vo
         ->toContain('x-intersect');
 });
 
-it('gives each parent its own child table component', function (): void {
+it('keys each child table by its parent row', function (): void {
     $html = Livewire::test(CashShiftDemo::class)->html();
 
     preg_match_all('/wire:key="([^"]*\.child-table\.[^"]*)"/', $html, $keys);
