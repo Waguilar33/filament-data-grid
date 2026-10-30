@@ -2,7 +2,7 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
-## v0.0.1 - Unreleased
+## Unreleased
 
 First preview. Not ready for production; the API may change before v1.0.0.
 
@@ -13,3 +13,4 @@ First preview. Not ready for production; the API may change before v1.0.0.
 - Frozen columns, drag reordering, row menu with extra item actions, and per-row validation errors.
 - Assets load only on pages that use the field.
 - English and Spanish translations.
+- Supports Filament 4 and 5, Laravel 11 to 13 and PHP 8.2+.

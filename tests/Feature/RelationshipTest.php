@@ -2,17 +2,16 @@
 
 declare(strict_types=1);
 
+use Livewire\Livewire;
 use Waguilar\FilamentDataGrid\Tests\Fixtures\OrderForm;
 use Workbench\App\Models\DemoOrder;
-
-use function Pest\Livewire\livewire;
 
 it('loads, edits and saves rows through a relationship', function (): void {
     $order = DemoOrder::create(['reference' => 'A-1']);
     $tea = $order->lines()->create(['product' => 'Tea', 'quantity' => 2, 'sort' => 0]);
     $order->lines()->create(['product' => 'Coffee', 'quantity' => 1, 'sort' => 1]);
 
-    $component = livewire(OrderForm::class, ['order' => $order]);
+    $component = Livewire::test(OrderForm::class, ['order' => $order]);
     $keys = rowKeys($component);
 
     expect($keys)->toBe(["record-{$tea->id}", 'record-'.($tea->id + 1)]);

@@ -6,11 +6,11 @@ namespace Workbench\App\Catalog;
 
 final class FakeProducts
 {
-    private const array ADJECTIVES = ['Fresh', 'Organic', 'Roasted', 'Smoked', 'Spicy', 'Sweet', 'Classic', 'Premium', 'Light', 'Golden', 'Wild', 'Crispy', 'Creamy', 'Tropical', 'Rustic'];
+    private const ADJECTIVES = ['Fresh', 'Organic', 'Roasted', 'Smoked', 'Spicy', 'Sweet', 'Classic', 'Premium', 'Light', 'Golden', 'Wild', 'Crispy', 'Creamy', 'Tropical', 'Rustic'];
 
-    private const array NOUNS = ['Coffee', 'Tea', 'Cheese', 'Bread', 'Honey', 'Salsa', 'Chocolate', 'Granola', 'Jam', 'Tortilla', 'Butter', 'Olive Oil', 'Pasta', 'Rice', 'Beans', 'Yogurt', 'Juice', 'Cookies', 'Nuts', 'Vinegar'];
+    private const NOUNS = ['Coffee', 'Tea', 'Cheese', 'Bread', 'Honey', 'Salsa', 'Chocolate', 'Granola', 'Jam', 'Tortilla', 'Butter', 'Olive Oil', 'Pasta', 'Rice', 'Beans', 'Yogurt', 'Juice', 'Cookies', 'Nuts', 'Vinegar'];
 
-    private const array SIZES = ['100 g', '250 g', '500 g', '1 kg', '330 ml', '1 l', '6-pack', '12-pack'];
+    private const SIZES = ['100 g', '250 g', '500 g', '1 kg', '330 ml', '1 l', '6-pack', '12-pack'];
 
     /**
      * @var list<array{id: int, name: string, sku: string, price: float}>|null

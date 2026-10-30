@@ -18,9 +18,9 @@ An editable, spreadsheet-style data grid for Filament forms. Rows are typed in p
 
 ## Requirements
 
-- PHP 8.4+
-- Laravel 13+
-- Filament 5.10.2+
+- PHP 8.2+
+- Laravel 11, 12 or 13
+- Filament 4.15.2+ or 5.10.2+
 
 ## Installation
 
@@ -259,7 +259,7 @@ The server renders the rows, the cell descriptions and the row actions, and send
 - Parent and child rows, such as grouped lines, aren't supported yet.
 - There are no footer totals yet. Show totals with an entry or a field outside the grid.
 - The compiled JavaScript is about 150 KB gzipped, because it includes parts of SlickGrid-Universal that the grid doesn't use. It is loaded only on pages with a grid.
-- The select dropdown is Filament's own JavaScript, copied into the plugin's build from Filament 5.10 and 5.11. Check the grid after upgrading Filament.
+- The select dropdown is Filament's own JavaScript, copied into the plugin's build from Filament 5. The same build runs on Filament 4. Check the grid after upgrading Filament.
 
 ## Testing
 

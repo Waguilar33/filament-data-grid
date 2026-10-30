@@ -2,6 +2,28 @@ import { createGrid } from './grid/slickgrid-adapter.js'
 
 const isDarkMode = () => document.documentElement.classList.contains('dark')
 
+const callInParallel = (wire, method, args) =>
+    typeof Livewire.fireAction === 'function'
+        ? Livewire.fireAction(wire.__instance, method, args, { async: true })
+        : wire[method](...args)
+
+const afterEachRequest = (wire, startRequest) => {
+    if (typeof wire.$interceptMessage === 'function') {
+        return wire.$interceptMessage(({ onFinish }) => onFinish(startRequest()))
+    }
+
+    return Livewire.hook('commit', ({ component, succeed, fail }) => {
+        if (component.id !== wire.$id) {
+            return
+        }
+
+        const finish = startRequest()
+
+        succeed(finish)
+        fail(finish)
+    })
+}
+
 export default function dataGrid({ statePath, schemaComponent, actions, translations, icons }) {
     return {
         grid: null,
@@ -20,9 +42,7 @@ export default function dataGrid({ statePath, schemaComponent, actions, translat
                 isDarkMode: isDarkMode(),
                 onCellChange: (rowKey, field, value, isLive) => this.writeCell(rowKey, field, value, isLive),
                 callSchemaComponentMethod: (key, method, args) =>
-                    Livewire.fireAction(this.$wire.__instance, 'callSchemaComponentMethod', [key, method, args], {
-                        async: true,
-                    }),
+                    callInParallel(this.$wire, 'callSchemaComponentMethod', [key, method, args]),
                 onOpenCell: (rowKey, field) =>
                     this.$wire.mountAction(actions.editCell, { item: rowKey, field }, { schemaComponent }),
                 onReorder: (keys) => this.$wire.mountAction(actions.reorder, { items: keys }, { schemaComponent }),
@@ -31,10 +51,10 @@ export default function dataGrid({ statePath, schemaComponent, actions, translat
             this.observe(this.$refs.payload, ['data-payload'], () => this.applyPayload())
             this.observe(document.documentElement, ['class'], () => this.grid.setDarkMode(isDarkMode()))
 
-            this.stopInterceptingMessages = this.$wire.$interceptMessage(({ onFinish }) => {
+            this.stopInterceptingMessages = afterEachRequest(this.$wire, () => {
                 const sentChanges = new Map(this.localChanges)
 
-                onFinish(() =>
+                return () =>
                     queueMicrotask(() => {
                         let cleared = false
 
@@ -46,8 +66,7 @@ export default function dataGrid({ statePath, schemaComponent, actions, translat
                         })
 
                         this.applyPayload(cleared)
-                    }),
-                )
+                    })
             })
         },
 

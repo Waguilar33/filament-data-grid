@@ -12,9 +12,9 @@ use Spatie\LaravelPackageTools\PackageServiceProvider;
 
 final class FilamentDataGridServiceProvider extends PackageServiceProvider
 {
-    public const string NAME = 'filament-data-grid';
+    public const NAME = 'filament-data-grid';
 
-    public const string PACKAGE = 'waguilar33/filament-data-grid';
+    public const PACKAGE = 'waguilar33/filament-data-grid';
 
     public function configurePackage(Package $package): void
     {

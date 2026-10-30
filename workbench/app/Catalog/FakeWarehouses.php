@@ -6,7 +6,7 @@ namespace Workbench\App\Catalog;
 
 final class FakeWarehouses
 {
-    private const array STOCK = [
+    private const STOCK = [
         'north-6' => ['zone' => 'North', 'place' => 'Aisle 6', 'available' => 8],
         'north-2' => ['zone' => 'North', 'place' => 'Aisle 2', 'available' => 0],
         'south-main' => ['zone' => 'South', 'place' => 'Main', 'available' => 31],
