@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Pest\Browser\Api\AwaitableWebpage;
+
 const LINES = '[id="form.lines"]';
 
 const ADJUSTMENTS = '[id="form.adjustments"]';
@@ -19,15 +21,7 @@ function savedState(string $grid = 'lines'): string
 function dragRow(string $handle, string $target): string
 {
     return <<<JS
-        async () => {
-            const styled = () => [...document.styleSheets].some((sheet) => sheet.href?.includes('/data-grid.css'))
-
-            for (let tries = 0; ! styled() && tries < 50; tries++) {
-                await new Promise((resolve) => setTimeout(resolve, 100))
-            }
-
-            await new Promise(requestAnimationFrame)
-
+        () => {
             const handle = document.querySelector('{$handle}')
             const target = document.querySelector('{$target}').getBoundingClientRect()
             const start = handle.getBoundingClientRect()
@@ -47,13 +41,18 @@ function dragRow(string $handle, string $target): string
         JS;
 }
 
+function visitDemo(string $query = ''): AwaitableWebpage
+{
+    return visit('/demo/data-grid-demo'.$query)->waitForEvent('networkidle');
+}
+
 function openDropdownSearch(): string
 {
     return '.fi-dropdown-panel:not([style*="display: none"]) .fi-select-input-search-ctn input';
 }
 
 it('picks a product with the Filament select, recalculates the row and appends a blank row', function (): void {
-    $page = visit('/demo/data-grid-demo')
+    $page = visitDemo()
         ->assertSee('Creamy Coffee 100 g')
         ->assertPresent(cell(0, 0).' .fi-select-input-btn')
         ->click(cell(2, 0).' .fi-select-input-btn')
@@ -70,7 +69,7 @@ it('picks a product with the Filament select, recalculates the row and appends a
 });
 
 it('moves down with Enter and up with Shift+Enter while typing', function (): void {
-    visit('/demo/data-grid-demo')
+    visitDemo()
         ->click(cell(0, 1))
         ->keys(cell(0, 1).' input', ['3', 'Enter'])
         ->assertScript('document.activeElement.closest(".slick-row").style.top', '44px')
@@ -83,7 +82,7 @@ it('moves down with Enter and up with Shift+Enter while typing', function (): vo
 });
 
 it('opens a select cell from the keyboard and moves on after picking', function (): void {
-    visit('/demo/data-grid-demo')
+    visitDemo()
         ->click(cell(0, 1))
         ->keys(cell(0, 1).' input', 'Escape')
         ->keys(LINES.' .slick-cell.active', ['ArrowRight', 'Enter'])
@@ -95,7 +94,7 @@ it('opens a select cell from the keyboard and moves on after picking', function 
 });
 
 it('saves a value typed into a cell without pressing Enter', function (): void {
-    visit('/demo/data-grid-demo')
+    visitDemo()
         ->click(cell(0, 1))
         ->typeSlowly(cell(0, 1).' input', '7', 30)
         ->click('Save')
@@ -106,7 +105,7 @@ it('saves a value typed into a cell without pressing Enter', function (): void {
 });
 
 it('shows a server error on the cell of its row and keeps it after deleting another row', function (): void {
-    $page = visit('/demo/data-grid-demo')
+    $page = visitDemo()
         ->click(cell(1, 1))
         ->keys(cell(1, 1).' input', 'Backspace')
         ->click('Save')
@@ -122,7 +121,7 @@ it('shows a server error on the cell of its row and keeps it after deleting anot
 });
 
 it('opens row actions from the row menu', function (): void {
-    visit('/demo/data-grid-demo')
+    visitDemo()
         ->click(cell(0, 7).' .fi-dropdown-trigger button')
         ->click('Stock')
         ->wait(1)
@@ -133,7 +132,7 @@ it('opens row actions from the row menu', function (): void {
 it('searches inside a slide-over without closing it on Escape', function (): void {
     $slideOver = '.fi-modal-window [id$=".lines"]';
 
-    visit('/demo/data-grid-demo')
+    visitDemo()
         ->click('Edit in a slide-over')
         ->wait(1)
         ->click(cell(1, 0, $slideOver).' .fi-select-input-btn')
@@ -155,7 +154,7 @@ it('searches inside a slide-over without closing it on Escape', function (): voi
 });
 
 it('adds rows with the add action and accepts rows pushed by the server', function (): void {
-    visit('/demo/data-grid-demo')
+    visitDemo()
         ->click('Add adjustment')
         ->wait(1)
         ->assertPresent(cell(2, 1, ADJUSTMENTS))
@@ -166,7 +165,7 @@ it('adds rows with the add action and accepts rows pushed by the server', functi
 });
 
 it('reorders rows by dragging the handle', function (): void {
-    $page = visit('/demo/data-grid-demo');
+    $page = visitDemo();
 
     $page->script(dragRow(cell(0, 0, ADJUSTMENTS).' .fi-data-grid-move-handle', cell(1, 0, ADJUSTMENTS)));
 
@@ -178,7 +177,7 @@ it('reorders rows by dragging the handle', function (): void {
 });
 
 it('edits a date, a radio and a field without an inline editor', function (): void {
-    visit('/demo/data-grid-demo')
+    visitDemo()
         ->click(cell(1, 4, ADJUSTMENTS))
         ->type(cell(1, 4, ADJUSTMENTS).' input', '2026-11-15')
         ->keys(cell(1, 4, ADJUSTMENTS).' input', 'Enter')
@@ -199,21 +198,21 @@ it('edits a date, a radio and a field without an inline editor', function (): vo
 });
 
 it('keeps frozen columns in place while the rest scrolls sideways', function (): void {
-    visit('/demo/data-grid-demo')
+    visitDemo()
         ->assertSeeIn(LINES.' .slick-pane-left .slick-header', 'Product')
         ->assertDontSeeIn(LINES.' .slick-pane-left .slick-header', 'Quantity')
         ->assertSeeIn(LINES.' .slick-pane-right .slick-header', 'Quantity');
 });
 
 it('shows the grid in Spanish', function (): void {
-    visit('/demo/data-grid-demo?locale=es')
+    visitDemo('?locale=es')
         ->assertSee('Producto')
         ->assertSee('Seleccione una opción')
         ->assertNoJavaScriptErrors();
 });
 
 it('marks editable cells apart from read-only cells', function (): void {
-    visit('/demo/data-grid-demo')
+    visitDemo()
         ->assertAttributeContains(cell(0, 1), 'class', 'fi-data-grid-cell-editable')
         ->assertAttributeContains(cell(0, 0), 'class', 'fi-data-grid-cell-editable')
         ->assertAttributeDoesntContain(cell(0, 6), 'class', 'fi-data-grid-cell-editable')
@@ -222,7 +221,7 @@ it('marks editable cells apart from read-only cells', function (): void {
 });
 
 it('starts editing a text cell by typing on it', function (): void {
-    visit('/demo/data-grid-demo')
+    visitDemo()
         ->click(cell(0, 1))
         ->keys(cell(0, 1).' input', 'Escape')
         ->keys(LINES.' .slick-cell.active', ['9', 'Enter'])

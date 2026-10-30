@@ -37,7 +37,8 @@
         "laravel/pint": "^1.24",
         "orchestra/testbench": "^9.16 || ^10.0 || ^11.3",
         "pestphp/pest": "^3.8 || ^4.4.5 || ^5.3",
-        "pestphp/pest-plugin-browser": "^4.3.1 || ^5.1"
+        "pestphp/pest-plugin-browser": "^4.3.1 || ^5.1",
+        "symfony/polyfill-php84": "^1.31"
     },
     "autoload": {
         "psr-4": {
