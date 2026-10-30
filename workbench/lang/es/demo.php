@@ -42,7 +42,6 @@ return [
             'customer' => 'Cliente',
             'warehouse' => 'Bodega',
             'product' => 'Producto',
-            'code' => 'Código',
             'requested' => 'Solicitado',
             'handed_over' => 'Entregado por bodega',
         ],
