@@ -23,28 +23,6 @@ const afterEachRequest = (wire, startRequest) => {
     })
 }
 
-const callInParallel = (wire, method, args) =>
-    typeof Livewire.fireAction === 'function'
-        ? Livewire.fireAction(wire.__instance, method, args, { async: true })
-        : wire[method](...args)
-
-const afterEachRequest = (wire, startRequest) => {
-    if (typeof Livewire.interceptMessage === 'function') {
-        return wire.$interceptMessage(({ onFinish }) => onFinish(startRequest()))
-    }
-
-    return Livewire.hook('commit', ({ component, succeed, fail }) => {
-        if (component.id !== wire.$id) {
-            return
-        }
-
-        const finish = startRequest()
-
-        succeed(finish)
-        fail(finish)
-    })
-}
-
 export default function dataGrid({ statePath, schemaComponent, actions, translations, icons }) {
     return {
         grid: null,
