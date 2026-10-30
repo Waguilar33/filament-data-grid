@@ -28,7 +28,7 @@
     "require": {
         "php": "^8.2",
         "filament/filament": "^4.15.2 || ^5.10.2",
-        "illuminate/support": "^11.28 || ^12.0 || ^13.0",
+        "illuminate/support": "^11.47 || ^12.0.1 || ^13.32",
         "livewire/livewire": "^3.8.7 || ^4.4.8",
         "spatie/laravel-package-tools": "^1.92"
     },
@@ -36,8 +36,8 @@
         "larastan/larastan": "^3.0",
         "laravel/pint": "^1.24",
         "orchestra/testbench": "^9.16 || ^10.0 || ^11.3",
-        "pestphp/pest": "^3.0 || ^4.0 || ^5.3",
-        "pestphp/pest-plugin-browser": "^4.0 || ^5.1"
+        "pestphp/pest": "^3.8 || ^4.4.5 || ^5.3",
+        "pestphp/pest-plugin-browser": "^4.3.1 || ^5.1"
     },
     "autoload": {
         "psr-4": {

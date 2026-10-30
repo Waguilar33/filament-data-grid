@@ -8,7 +8,7 @@ const callInParallel = (wire, method, args) =>
         : wire[method](...args)
 
 const afterEachRequest = (wire, startRequest) => {
-    if (typeof wire.$interceptMessage === 'function') {
+    if (typeof Livewire.interceptMessage === 'function') {
         return wire.$interceptMessage(({ onFinish }) => onFinish(startRequest()))
     }
 

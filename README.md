@@ -19,7 +19,7 @@ An editable, spreadsheet-style data grid for Filament forms. Rows are typed in p
 ## Requirements
 
 - PHP 8.2+
-- Laravel 11, 12 or 13
+- Laravel 11.47+, 12 or 13.32+
 - Filament 4.15.2+ or 5.10.2+
 
 ## Installation
