@@ -43,6 +43,7 @@ final readonly class BuildEntryPayload
                 array_values($children?->getTableColumns() ?? []),
             ),
             'rows' => $this->rows($entry, $items),
+            'childTablePadding' => $entry->getChildTablePadding(),
             'serverSide' => $entry->isServerSide(),
             'total' => $total,
             'page' => $page,
