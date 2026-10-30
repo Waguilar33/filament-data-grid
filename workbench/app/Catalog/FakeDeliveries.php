@@ -17,7 +17,7 @@ final class FakeDeliveries
     }
 
     /**
-     * @return list<array{delivery_number: string, customer: string, fill_status: string, kind: string, holds: list<string>, lines: list<array{product: string, code: string|null, requested: int, handed_over: int}>}>
+     * @return list<array{delivery_number: string, customer: string, fill_status: string, kind: string, holds: list<string>, address: string, phone: string, route: string, notes: string|null, lines: list<array{product: string, code: string|null, requested: int, handed_over: int}>}>
      */
     public static function all(int $count = 23): array
     {
@@ -45,6 +45,10 @@ final class FakeDeliveries
                 'customer' => self::CUSTOMERS[$index % count(self::CUSTOMERS)],
                 'fill_status' => $isComplete ? 'complete' : 'partial',
                 'kind' => $index % 3 === 0 ? 'pickup' : 'shipment',
+                'address' => sprintf('%d %s Street, Suite %d', 100 + $index * 7, ['Oak', 'Maple', 'Cedar', 'Pine', 'Elm'][$index % 5], $index % 9 + 1),
+                'phone' => sprintf('+1 555 01%02d', $index % 100),
+                'route' => sprintf('R-%02d', $index % 6 + 1),
+                'notes' => $index % 4 === 0 ? 'Call before arriving; the loading bay closes at 4 pm.' : null,
                 'holds' => match ($index % 4) {
                     0 => ['awaiting_stock', 'awaiting_payment'],
                     1 => ['awaiting_stock'],

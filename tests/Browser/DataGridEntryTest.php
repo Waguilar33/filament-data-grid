@@ -90,12 +90,11 @@ it('shows parents collapsed and opens several of them', function (): void {
         ->assertAttribute(routeRow(0).' .fi-data-grid-row-toggle', 'aria-expanded', 'false')
         ->click(routeRow(0).' .fi-data-grid-row-toggle')
         ->assertAttribute(routeRow(0).' .fi-data-grid-row-toggle', 'aria-expanded', 'true')
-        ->assertSeeIn(routeRowAt(44), 'Product')
-        ->assertSeeIn(routeRowAt(91), 'Light Coffee 100 g')
-        ->assertSeeIn(routeRowAt(194), 'DLV-2026-0000002')
-        ->click(routeRowAt(194).' .slick-cell.l2')
-        ->assertSeeIn(routeRowAt(238), 'Product')
-        ->assertAttribute(routeRowAt(194).' .fi-data-grid-row-toggle', 'aria-expanded', 'true')
+        ->assertSeeIn(ROUTE.' .fi-data-grid-child-header', 'Product')
+        ->assertSeeIn(ROUTE.' .fi-data-grid-child-row-wrapper:has-text("Light Coffee 100 g")', 'Light Coffee 100 g')
+        ->click(parentRow('DLV-2026-0000002').' .slick-cell.l2')
+        ->assertScript(visibleRowCount('.fi-data-grid-child-header'), 2)
+        ->assertAttribute(parentRow('DLV-2026-0000002').' .fi-data-grid-row-toggle', 'aria-expanded', 'true')
         ->assertAttribute(routeRow(0).' .fi-data-grid-row-toggle', 'aria-expanded', 'true')
         ->click(routeRow(0).' .fi-data-grid-row-toggle')
         ->assertSeeIn(routeRow(1), 'DLV-2026-0000002')
@@ -124,7 +123,7 @@ it('searches parents and keeps their open children with them', function (): void
         ->wait(0.5)
         ->assertSee('Showing 1 to 2 of 2 results')
         ->assertSeeIn(routeRow(0), 'DLV-2026-0000010')
-        ->assertSeeIn(routeRow(1), 'Product')
+        ->assertSeeIn(ROUTE.' .fi-data-grid-child-header', 'Product')
         ->assertScript(visibleRowCount('.fi-data-grid-parent-row'), 2)
         ->type(ROUTE.' .fi-ta-search-field input', 'nobody')
         ->wait(0.5)
@@ -227,5 +226,21 @@ it('filters rows with Filament filters in the browser and on the server', functi
         ->click($server.' .fi-data-grid-filters-reset')
         ->wait(1)
         ->assertSeeIn($server.' .fi-pagination-overview', 'Showing 1 to 10 of 240 results')
+        ->assertNoJavaScriptErrors();
+});
+
+it('shows the details above and the notes below the child table of an open row', function (): void {
+    visitRoute()
+        ->click(ROUTE.' .slick-row:has-text("DLV-2026-0000004") .fi-data-grid-row-toggle')
+        ->wait(0.5)
+        ->assertSeeIn(ROUTE.' .fi-data-grid-child-slot-above', '128 Elm Street, Suite 5')
+        ->assertSeeIn(ROUTE.' .fi-data-grid-child-slot-above', 'R-05')
+        ->assertSeeIn(ROUTE.' .fi-data-grid-child-slot-below', 'Call before arriving')
+        ->assertScript(sprintf('document.querySelector(%s).getBoundingClientRect().height >= document.querySelector(%s).scrollHeight', json_encode(ROUTE.' .fi-data-grid-child-slot-above'), json_encode(ROUTE.' .fi-data-grid-child-slot-above')), true)
+        ->click(ROUTE.' .slick-row:has-text("DLV-2026-0000004") .fi-data-grid-row-toggle')
+        ->click(ROUTE.' .slick-row:has-text("DLV-2026-0000001") .fi-data-grid-row-toggle')
+        ->wait(0.5)
+        ->assertPresent(ROUTE.' .fi-data-grid-child-slot-above')
+        ->assertMissing(ROUTE.' .fi-data-grid-child-slot-below')
         ->assertNoJavaScriptErrors();
 });

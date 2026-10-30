@@ -7,6 +7,7 @@ namespace Waguilar\FilamentDataGrid;
 use BackedEnum;
 use Closure;
 use Filament\Infolists\Components\RepeatableEntry;
+use Filament\Schemas\Components\Component as SchemaComponent;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Filament\Support\Components\Attributes\ExposedLivewireMethod;
@@ -55,6 +56,16 @@ class DataGridEntry extends RepeatableEntry
     protected bool $isTableContent = false;
 
     protected int|Closure $childTablePadding = 15;
+
+    /**
+     * @var array<SchemaComponent|Htmlable>|Closure|null
+     */
+    protected array|Closure|null $expandedAbove = null;
+
+    /**
+     * @var array<SchemaComponent|Htmlable>|Closure|null
+     */
+    protected array|Closure|null $expandedBelow = null;
 
     protected int|Closure|null $rowHeight = null;
 
@@ -363,6 +374,68 @@ class DataGridEntry extends RepeatableEntry
         $this->rowHeight = $height;
 
         return $this;
+    }
+
+    /**
+     * @param  array<SchemaComponent|Htmlable>|Closure|null  $components
+     */
+    public function expandedAbove(array|Closure|null $components): static
+    {
+        $this->expandedAbove = $components;
+
+        return $this;
+    }
+
+    /**
+     * @param  array<SchemaComponent|Htmlable>|Closure|null  $components
+     */
+    public function expandedBelow(array|Closure|null $components): static
+    {
+        $this->expandedBelow = $components;
+
+        return $this;
+    }
+
+    public function renderExpandedAbove(Schema $item): ?string
+    {
+        return $this->renderExpandedSlot($this->expandedAbove, $item);
+    }
+
+    public function renderExpandedBelow(Schema $item): ?string
+    {
+        return $this->renderExpandedSlot($this->expandedBelow, $item);
+    }
+
+    /**
+     * @param  array<SchemaComponent|Htmlable>|Closure|null  $slot
+     */
+    private function renderExpandedSlot(array|Closure|null $slot, Schema $item): ?string
+    {
+        if ($slot === null) {
+            return null;
+        }
+
+        $record = $item->getRecord();
+        $state = $record instanceof Model ? $record->toArray() : $item->getConstantState();
+        $components = $this->evaluate($slot, [
+            'record' => $record ?? $state,
+            'state' => $state,
+        ], [
+            Model::class => $record,
+        ]);
+
+        if (! is_array($components) || $components === []) {
+            return null;
+        }
+
+        $components = array_values(array_map(
+            fn (SchemaComponent|Htmlable $component): SchemaComponent|Htmlable => $component instanceof SchemaComponent ? $component->getClone() : $component,
+            array_filter($components, fn (mixed $component): bool => $component instanceof SchemaComponent || $component instanceof Htmlable),
+        ));
+
+        $html = trim($item->getClone()->components($components)->toHtml());
+
+        return $html === '' ? null : $html;
     }
 
     public function hasRowHeightPerRow(): bool

@@ -106,6 +106,8 @@ final readonly class BuildEntryPayload
             'search' => $entry->isServerSide() ? '' : $this->searchText($entry, $item),
             'filterValues' => $entry->isServerSide() ? [] : $entry->getEntryFilters()->rawValues($item),
             'children' => $children === null ? [] : $this->describeChildren($children),
+            'above' => $entry->renderExpandedAbove($item),
+            'below' => $entry->renderExpandedBelow($item),
             'height' => $entry->getRowHeight($entry->hasRowHeightPerRow() ? $this->rawState($item) : []),
             ...$entry->getTableRecord($key),
         ];
