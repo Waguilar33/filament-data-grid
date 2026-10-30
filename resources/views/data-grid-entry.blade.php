@@ -168,6 +168,7 @@
                 </div>
             @endif
 
+            <div class="fi-data-grid-entry-body">
             <div
                 wire:ignore
                 class="fi-data-grid-entry-content"
@@ -297,6 +298,9 @@
                     </ol>
                 </nav>
             @endif
+            </div>
+
+            @include('filament-data-grid::child-tables')
             </div>
         </div>
     </div>

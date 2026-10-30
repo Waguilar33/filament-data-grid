@@ -98,7 +98,7 @@ const childCellHtml = (cell, column, isHeader) => {
     return `<div class="${classes}" role="cell">${cellContent(cell)}</div>`
 }
 
-export function createEntryGrid(element, { payload, translations, icons, isDarkMode, onChange }) {
+export function createEntryGrid(element, { payload, translations, icons, isDarkMode, onChange, childTables = null }) {
     let rows = []
     let visible = []
     let search = ''
@@ -112,9 +112,11 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
     const intrinsicWidths = new Map()
     const childTemplates = new Map()
 
-    const hasChildTable = () => payload.childColumns.length > 0
+    const hasNativeChildTable = () => Boolean(payload.childTable && childTables)
 
-    const canExpand = (row) => hasChildTable() || Boolean(row.above) || Boolean(row.below)
+    const hasChildTable = () => !hasNativeChildTable() && payload.childColumns.length > 0
+
+    const canExpand = (row) => hasNativeChildTable() || hasChildTable() || Boolean(row.above) || Boolean(row.below)
 
     const hasChildren = () => payload.rows.some(canExpand)
 
@@ -179,7 +181,9 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
                 group.push({ kind: 'child-slot', slot: 'above', row })
             }
 
-            if (hasChildTable()) {
+            if (hasNativeChildTable()) {
+                group.push({ kind: 'child-table', row, tableStart: true, tableEnd: true })
+            } else if (hasChildTable()) {
                 if (row.children.length === 0) {
                     group.push({ kind: 'child-empty', row, tableStart: true, tableEnd: true })
                 } else {
@@ -237,6 +241,10 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
 
         if (item.kind === 'child-slot') {
             return `<div class="fi-data-grid-child-slot fi-data-grid-child-slot-${item.slot} ${edges}">${item.slot === 'above' ? item.row.above : item.row.below}</div>`
+        }
+
+        if (item.kind === 'child-table') {
+            return `<div class="fi-data-grid-child-table-placeholder ${edges}"></div>`
         }
 
         if (item.kind === 'child-empty') {
@@ -539,8 +547,20 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
 
     const parentRowHeight = (item) => item.row.height ?? measuredHeights.get(measureKey(item)) ?? ROW_HEIGHT
 
+    const contentHeight = (item) => {
+        if (item.kind === 'child-header') {
+            return CHILD_HEADER_HEIGHT
+        }
+
+        if (item.kind === 'child-table') {
+            return childTables.height(item.row.key)
+        }
+
+        return measuredHeights.get(measureKey(item)) ?? (item.kind === 'child-slot' ? 0 : ROW_HEIGHT)
+    }
+
     const childRowHeight = (item) =>
-        (item.kind === 'child-header' ? CHILD_HEADER_HEIGHT : (measuredHeights.get(measureKey(item)) ?? (item.kind === 'child-slot' ? 0 : ROW_HEIGHT))) +
+        contentHeight(item) +
         (item.isFirst ? childTablePadding() : 0) +
         (item.isLast ? childTablePadding() : 0)
 
@@ -620,12 +640,46 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
 
     applyChildTablePadding()
 
+    const openChildTables = () => visible.filter((item) => item.kind === 'child-table')
+
+    const positionChildTables = () => {
+        if (!hasNativeChildTable() || !grid) {
+            return
+        }
+
+        const items = openChildTables()
+
+        childTables.position((key, layerTop) => {
+            const item = items.find((candidate) => candidate.row.key === key)
+            const canvas = grid.getCanvasNode()
+
+            if (!item || !canvas) {
+                return null
+            }
+
+            return canvas.getBoundingClientRect().top - layerTop + grid.getRowTop(visible.indexOf(item)) + (item.isFirst ? childTablePadding() : 0)
+        })
+    }
+
+    const syncChildTables = () => {
+        if (hasNativeChildTable()) {
+            childTables.sync(
+                openChildTables().map((item) => item.row.key),
+                childTablePadding(),
+            )
+        }
+    }
+
     const redraw = () => {
         computeVisible()
+        syncChildTables()
         grid.invalidateRowHeights()
         grid.updateRowCount()
         grid.resizeCanvas()
+        positionChildTables()
     }
+
+    grid.onRendered.subscribe(positionChildTables)
 
     const toggle = (key) => {
         if (expanded.has(key)) {
@@ -738,12 +792,14 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
 
         toggle,
 
+        redraw,
+
         setPayload(nextPayload) {
             const hadToggles = hasChildren()
             const columnsChanged =
                 JSON.stringify(nextPayload.columns) !== JSON.stringify(payload.columns) ||
                 JSON.stringify(nextPayload.childColumns) !== JSON.stringify(payload.childColumns) ||
-                hadToggles !== nextPayload.rows.some((row) => nextPayload.childColumns.length > 0 || Boolean(row.above) || Boolean(row.below))
+                hadToggles !== nextPayload.rows.some((row) => Boolean(nextPayload.childTable) || nextPayload.childColumns.length > 0 || Boolean(row.above) || Boolean(row.below))
 
             payload = nextPayload
             measuredHeights.clear()
