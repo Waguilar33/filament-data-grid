@@ -14,7 +14,7 @@ An editable, spreadsheet-style data grid for Filament forms. Rows are typed in p
 `DataGrid` is a form field that extends Filament's `Repeater`, and you build it the same way as `Repeater::make()->table()`. Its cells are your own Filament form components. Read-only cells are infolist entries. Their closures run on the server for each row, so `Get`, `Set`, `live()`, `afterStateUpdated()`, `disabled()`, `required()` and validation rules all work. Validation errors use `Repeater`'s keys, and row actions are Filament Actions.
 
 > [!WARNING]
-> This plugin is under active development and has no release yet. Don't use it in production. Alpha releases will come first, and the API may change until `v1.0.0`.
+> This plugin is in beta. You can install and use it, but its API may change before `v1.0.0`.
 
 ## Requirements
 
@@ -25,7 +25,15 @@ An editable, spreadsheet-style data grid for Filament forms. Rows are typed in p
 ## Installation
 
 ```bash
-composer require waguilar33/filament-data-grid
+composer require waguilar33/filament-data-grid:"^1.0@beta"
+```
+
+Until the package is on Packagist, add the GitHub repository to your app's `composer.json` first:
+
+```json
+"repositories": [
+    { "type": "vcs", "url": "https://github.com/Waguilar33/filament-data-grid" }
+]
 ```
 
 Publish the plugin's assets:
