@@ -314,6 +314,16 @@ public function table(Table $table): Table
 
 `toTableContent()` uses Filament's `content()` hook, so the table works the same as any other Filament table, with `query()` or `records()`. Define the grid's columns with `table()` and `schema()` as above. The table's `columns()` still decide what can be searched and sorted, but aren't shown. Leave `searchable()`, `filters()` and `paginated()` off the grid itself here, because the table does that work.
 
+To give the table's heading an icon, like a section's, pass the heading through `IconHeading`. It works on any Filament table, with or without the grid:
+
+```php
+use Waguilar\FilamentDataGrid\Support\IconHeading;
+
+$table
+    ->heading(IconHeading::make('Deliveries', Heroicon::OutlinedTruck))
+    ->description('Where each order on the route stands.')
+```
+
 ### Searching, filtering and paging it yourself
 
 By default, the server sends every row with the page, and search and pagination run in the browser. Results are instant and nothing goes back to the server, which suits grids of up to a few hundred parent rows whose size you know.

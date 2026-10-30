@@ -686,3 +686,29 @@
 .fi-data-grid-in-table .fi-data-grid-entry-content {
     border-radius: 0;
 }
+
+.fi-ta-header:has(.fi-data-grid-heading-icon) {
+    position: relative;
+    padding-inline-start: calc(var(--spacing) * 13);
+}
+
+.fi-ta-header .fi-data-grid-heading-icon {
+    position: absolute;
+    inset-inline-start: calc(var(--spacing) * 4);
+    top: calc(var(--spacing) * 4);
+    color: var(--gray-400);
+}
+
+@media (min-width: 40rem) {
+    .fi-ta-header:has(.fi-data-grid-heading-icon) {
+        padding-inline-start: calc(var(--spacing) * 15);
+    }
+
+    .fi-ta-header .fi-data-grid-heading-icon {
+        inset-inline-start: calc(var(--spacing) * 6);
+    }
+}
+
+.dark .fi-ta-header .fi-data-grid-heading-icon {
+    color: var(--gray-500);
+}
