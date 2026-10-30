@@ -13,7 +13,17 @@ function routeRow(int $row): string
 
 function visitRoute(string $query = ''): AwaitableWebpage
 {
-    return visit('/demo/delivery-route-demo'.$query)->waitForEvent('networkidle');
+    $page = visit('/demo/delivery-route-demo'.$query)->waitForEvent('networkidle');
+
+    $page->script(<<<'JS'
+        async () => {
+            for (let tries = 0; !document.querySelector('.fi-data-grid-canvas .slick-header') && tries < 100; tries++) {
+                await new Promise((resolve) => setTimeout(resolve, 50))
+            }
+        }
+        JS);
+
+    return $page;
 }
 
 function visibleRowCount(string $selector): string
