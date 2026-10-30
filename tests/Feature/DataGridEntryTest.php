@@ -9,6 +9,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
@@ -16,6 +17,7 @@ use Waguilar\FilamentDataGrid\DataGridEntry;
 use Waguilar\FilamentDataGrid\Entry\EntryFilters;
 use Waguilar\FilamentDataGrid\Exceptions\UnsupportedFilter;
 use Waguilar\FilamentDataGrid\Tests\Fixtures\EntryPage;
+use Workbench\App\Livewire\ShiftMovementsTable;
 use Workbench\App\Models\DemoOrder;
 
 /**
@@ -74,6 +76,7 @@ function deliveriesPayload(Testable $component): array
 
 afterEach(function (): void {
     EntryPage::$configureUsing = null;
+    EntryPage::$record = null;
 });
 
 it('turns the entries into columns and the table repeatable entry into child rows', function (): void {
@@ -426,4 +429,34 @@ it('sends no slots unless they are set', function (): void {
 
     expect($row['above'])->toBeNull()
         ->and($row['below'])->toBeNull();
+});
+
+it('hands array rows, not the page record, to per-row closures on a page with a record', function (): void {
+    EntryPage::$record = (new class extends Model {})->forceFill(['id' => 7, 'opened_by' => 'Ana']);
+    $seen = [];
+    $see = function (string $hook) use (&$seen): Closure {
+        return function (array|Model $record, array $state) use ($hook, &$seen): mixed {
+            $seen[$hook][] = [$record, $state];
+
+            return $hook === 'height' ? 40 : [];
+        };
+    };
+
+    EntryPage::$configureUsing = fn (): array => [
+        DataGridEntry::make('deliveries')
+            ->state([['number' => 'DLV-1'], ['number' => 'DLV-2']])
+            ->rowHeight(fn (array $state) => $see('height')($state, $state))
+            ->expandedBelow($see('below'))
+            ->childTable(ShiftMovementsTable::class, $see('child'))
+            ->schema([TextEntry::make('number')]),
+    ];
+
+    Livewire::test(EntryPage::class)->html();
+
+    expect($seen)->toHaveKeys(['height', 'below', 'child']);
+
+    foreach ($seen as $calls) {
+        expect(array_map(fn (array $call): array => [$call[0]['number'] ?? null, $call[1]['number'] ?? null], $calls))
+            ->toContain(['DLV-1', 'DLV-1'], ['DLV-2', 'DLV-2']);
+    }
 });

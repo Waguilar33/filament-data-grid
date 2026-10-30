@@ -160,7 +160,7 @@ final readonly class EntryFilters
     private function rawValue(Schema $item, BaseFilter $filter): mixed
     {
         $attribute = $filter instanceof SelectFilter ? $filter->getAttribute() : (string) $filter->getName();
-        $source = $item->getRecord() ?? $item->getConstantState();
+        $source = $item->getRecord(withParentComponentRecord: false) ?? $item->getConstantState();
 
         return data_get($source, $attribute);
     }

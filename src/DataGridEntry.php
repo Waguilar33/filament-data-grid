@@ -424,7 +424,7 @@ class DataGridEntry extends RepeatableEntry
             return null;
         }
 
-        $record = $item->getRecord();
+        $record = $item->getRecord(withParentComponentRecord: false);
         $state = $record instanceof Model ? $record->toArray() : $item->getConstantState();
         $components = $this->evaluate($slot, [
             'record' => $record ?? $state,
@@ -494,7 +494,7 @@ class DataGridEntry extends RepeatableEntry
 
     private function renderChildTable(string $component, string $key, Schema $item): string
     {
-        $record = $item->getRecord();
+        $record = $item->getRecord(withParentComponentRecord: false);
         $state = $record instanceof Model ? $record->toArray() : $item->getConstantState();
         $data = $this->evaluate($this->childTableData, [
             'record' => $record ?? $state,

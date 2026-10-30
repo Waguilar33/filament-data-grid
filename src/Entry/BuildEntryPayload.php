@@ -139,7 +139,7 @@ final readonly class BuildEntryPayload
      */
     private function rawState(Schema $item): array
     {
-        $state = $item->getRecord() ?? $item->getConstantState();
+        $state = $item->getRecord(withParentComponentRecord: false) ?? $item->getConstantState();
 
         return match (true) {
             $state instanceof Model => $state->toArray(),
