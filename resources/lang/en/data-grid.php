@@ -16,17 +16,10 @@ return [
         'actions' => 'Actions',
     ],
     'entry' => [
-        'search' => 'Search',
         'empty' => 'No results.',
         'expand' => 'Expand row',
         'collapse' => 'Collapse row',
         'no_children' => 'No lines.',
-        'pagination' => [
-            'label' => 'Pagination',
-            'overview' => 'Showing :first to :last of :total',
-            'previous' => 'Previous page',
-            'next' => 'Next page',
-        ],
     ],
     'errors' => [
         'row' => 'Row :row',

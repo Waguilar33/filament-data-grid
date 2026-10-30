@@ -52,15 +52,15 @@ it('shows parents collapsed and opens several of them', function (): void {
 
 it('pages by parents, so open children never push a parent to the next page', function (): void {
     visitRoute()
-        ->assertSee('Showing 1 to 10 of 23')
+        ->assertSee('Showing 1 to 10 of 23 results')
         ->assertScript(visibleRowCount('.fi-data-grid-parent-row'), 10)
         ->click(routeRow(0).' .fi-data-grid-row-toggle')
         ->assertScript(visibleRowCount('.fi-data-grid-parent-row'), 10)
-        ->click('.fi-data-grid-pagination-next')
-        ->assertSee('Showing 11 to 20 of 23')
+        ->click(ROUTE.' .fi-pagination-items [rel="next"]')
+        ->assertSee('Showing 11 to 20 of 23 results')
         ->assertSeeIn(routeRow(0), 'DLV-2026-0000011')
-        ->click('.fi-data-grid-pagination-next')
-        ->assertSee('Showing 21 to 23 of 23')
+        ->click(ROUTE.' .fi-pagination-items [rel="next"]')
+        ->assertSee('Showing 21 to 23 of 23 results')
         ->assertScript(visibleRowCount('.fi-data-grid-parent-row'), 3)
         ->assertNoJavaScriptErrors();
 });
@@ -68,13 +68,13 @@ it('pages by parents, so open children never push a parent to the next page', fu
 it('searches parents and keeps their open children with them', function (): void {
     visitRoute()
         ->click(routeRow(9).' .fi-data-grid-row-toggle')
-        ->type('.fi-data-grid-search input', 'karen')
+        ->type(ROUTE.' .fi-ta-search-field input', 'karen')
         ->wait(0.5)
-        ->assertSee('Showing 1 to 2 of 2')
+        ->assertSee('Showing 1 to 2 of 2 results')
         ->assertSeeIn(routeRow(0), 'DLV-2026-0000010')
         ->assertSeeIn(routeRow(1), 'Product')
         ->assertScript(visibleRowCount('.fi-data-grid-parent-row'), 2)
-        ->type('.fi-data-grid-search input', 'nobody')
+        ->type(ROUTE.' .fi-ta-search-field input', 'nobody')
         ->wait(0.5)
         ->assertSee('No results.')
         ->assertNoJavaScriptErrors();
@@ -91,6 +91,54 @@ it('shows badges and numbers from the entries', function (): void {
 
 it('shows the grid in Spanish', function (): void {
     visitRoute('?locale=es')
-        ->assertSee('Mostrando 1 a 10 de 23')
+        ->assertSee('Se muestran de 1 a 10 de 23 resultados')
         ->assertAttribute(routeRow(0).' .fi-data-grid-row-toggle', 'aria-label', 'Expandir fila');
+});
+
+it('loads pages and search results from the server and keeps them across re-renders', function (): void {
+    $server = '[id="content.server_deliveries"]';
+    $firstRow = $server.' .slick-row[style*="top: 0px"]';
+
+    $page = visitRoute()
+        ->assertSeeIn($server.' .fi-pagination-overview', 'Showing 1 to 10 of 240 results')
+        ->click($server.' .fi-pagination-items [rel="next"]')
+        ->wait(1)
+        ->assertSeeIn($server.' .fi-pagination-overview', 'Showing 11 to 20 of 240 results')
+        ->assertSeeIn($firstRow, 'DLV-2026-0000011')
+        ->type($server.' .fi-ta-search-field input', 'karen')
+        ->wait(1.5)
+        ->assertSeeIn($server.' .fi-pagination-overview', 'Showing 1 to 10 of 21 results')
+        ->click($server.' .fi-pagination-items [rel="next"]')
+        ->wait(1)
+        ->assertSeeIn($firstRow, 'DLV-2026-0000120');
+
+    $page->script('() => Livewire.all()[0].$wire.$refresh()');
+
+    $page->wait(1.5)
+        ->assertSeeIn($server.' .fi-pagination-overview', 'Showing 11 to 20 of 21 results')
+        ->assertSeeIn($firstRow, 'DLV-2026-0000120')
+        ->assertNoJavaScriptErrors();
+});
+
+it('filters rows with Filament filters in the browser and on the server', function (): void {
+    $server = '[id="content.server_deliveries"]';
+
+    visitRoute()
+        ->assertSeeIn(ROUTE.' .fi-data-grid-filters-trigger', '0')
+        ->click(ROUTE.' .fi-data-grid-filters-trigger')
+        ->select(ROUTE.' .fi-ta-filters select', 'partial')
+        ->click(ROUTE.' .fi-data-grid-filters-apply')
+        ->assertSeeIn(ROUTE.' .fi-pagination-overview', 'Showing 1 to 5 of 5 results')
+        ->assertSeeIn(ROUTE.' .fi-data-grid-filters-trigger', '1')
+        ->click($server.' .fi-data-grid-filters-trigger')
+        ->select($server.' .fi-ta-filters select', 'partial')
+        ->click($server.' .fi-data-grid-filter-option:has-text("Karen Ortiz") input')
+        ->click($server.' .fi-data-grid-filters-apply')
+        ->wait(1)
+        ->assertSeeIn($server.' .fi-pagination-overview', 'Showing 1 to 5 of 5 results')
+        ->click($server.' .fi-data-grid-filters-trigger')
+        ->click($server.' .fi-data-grid-filters-reset')
+        ->wait(1)
+        ->assertSeeIn($server.' .fi-pagination-overview', 'Showing 1 to 10 of 240 results')
+        ->assertNoJavaScriptErrors();
 });

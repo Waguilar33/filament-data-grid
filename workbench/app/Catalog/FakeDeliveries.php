@@ -9,6 +9,14 @@ final class FakeDeliveries
     private const CUSTOMERS = ['Ana Torres', 'Bruno Díaz', 'Carla Méndez', 'Diego Rojas', 'Elena Vargas', 'Felipe Castro', 'Gabriela Ruiz', 'Hugo Navarro', 'Inés Herrera', 'Julián Morales', 'Karen Ortiz'];
 
     /**
+     * @return list<string>
+     */
+    public static function customers(): array
+    {
+        return self::CUSTOMERS;
+    }
+
+    /**
      * @return list<array{delivery_number: string, customer: string, fill_status: string, lines: list<array{product: string, code: string|null, requested: int, handed_over: int}>}>
      */
     public static function all(int $count = 23): array

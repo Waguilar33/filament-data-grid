@@ -1,10 +1,5 @@
 import { createGrid } from './grid/slickgrid-adapter.js'
-import { isDarkMode } from './grid/page.js'
-
-const callInParallel = (wire, method, args) =>
-    typeof Livewire.fireAction === 'function'
-        ? Livewire.fireAction(wire.__instance, method, args, { async: true })
-        : wire[method](...args)
+import { callInParallel, isDarkMode } from './grid/page.js'
 
 const afterEachRequest = (wire, startRequest) => {
     if (typeof Livewire.interceptMessage === 'function') {

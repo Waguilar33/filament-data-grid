@@ -226,7 +226,7 @@ use Waguilar\FilamentDataGrid\DataGridEntry;
 DataGridEntry::make('deliveries')
     ->state(fn (): array => $deliveries)
     ->searchable(['delivery_number', 'customer'])
-    ->paginated(10)
+    ->paginated([10, 25, 50])
     ->table([
         TableColumn::make('Delivery'),
         TableColumn::make('Customer'),
@@ -255,9 +255,96 @@ The state can be an array, a collection or a relationship, as with `RepeatableEn
 - **Child rows** come from the first `RepeatableEntry` in the schema that has a `table()`. It doesn't take a column. Its rows open under their parent row, with their own column headers. Without one, the grid has no child rows.
 - **Opening rows:** rows start closed. Click a row, or its arrow button, to open or close it. Several rows can be open at once.
 - **Search:** `searchable()` adds a search field that filters parent rows. A row's child rows stay with it. Pass a list of fields to search only those columns. The search matches the text the entries show, such as a badge's formatted label.
-- **Pagination:** `paginated(10)` shows 10 parent rows per page. Open child rows don't count toward the page size, so a parent row and its children are never split across pages.
+- **Pagination:** `paginated([10, 25, 50])` pages parent rows and lets users pick the page size, with Filament's own pagination controls. Add `DataGridEntry::ALL_RECORDS` to offer "All", and use `defaultPaginationPageOption(25)` to start on another size. `paginated(10)` gives a fixed size, and `paginated()` uses 10, 25 and 50. Open child rows don't count toward the page size, so a parent row and its children are never split across pages.
 
-Search and pagination run in the browser over the rows the server sent, so they suit grids of up to a few hundred parent rows. Child rows have the same height as parent rows, so show extra details, such as a code badge, in a column of their own.
+Child rows have the same height as parent rows, so show extra details, such as a code badge, in a column of their own.
+
+### Heading, description and icon
+
+Like a section, the grid can have a heading, a description and an icon above it:
+
+```php
+DataGridEntry::make('deliveries')
+    ->heading('Deliveries')
+    ->description('Where each order on the route stands.')
+    ->icon(Heroicon::OutlinedTruck)
+```
+
+### Filters
+
+`filters()` takes Filament's own table filters. They appear behind the filter button next to the search field, with the same form, "Apply filters" and "Reset" as a Filament table:
+
+```php
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
+
+DataGridEntry::make('deliveries')
+    ->filters([
+        SelectFilter::make('fill_status')->options(['complete' => 'Complete', 'partial' => 'Partial']),
+        SelectFilter::make('customer')->multiple()->options($customers),
+        TernaryFilter::make('is_late'),
+    ])
+```
+
+The grid applies `SelectFilter` and `TernaryFilter` itself, by comparing each row's `attribute()` (the filter's name by default) with the chosen value. Any other filter, such as a plain `Filter` with a custom query, needs `records()`. As with Filament's custom data tables, `records()` receives the filter state as `$filters`, for example `['fill_status' => ['value' => 'partial'], 'customer' => ['values' => ['Ana']]]`, and applies it itself.
+
+### Inside a Filament table
+
+To let Filament handle searching, filtering and paging, build a normal Filament table and use the grid as its content. Filament keeps everything around the rows: the heading, search field, filters (in a dropdown, modal or slide-over), active filter chips, pagination, empty state and header actions. The grid draws only the current page of records, with child rows that open:
+
+```php
+use Filament\Tables\Table;
+use Waguilar\FilamentDataGrid\DataGridEntry;
+
+public function table(Table $table): Table
+{
+    return $table
+        ->query(Delivery::query())
+        ->columns([TextColumn::make('number')->searchable()])
+        ->filters([SelectFilter::make('fill_status')->options([...])])
+        ->filtersTriggerAction(fn (Action $action) => $action->slideOver())
+        ->content(
+            DataGridEntry::make('deliveries')
+                ->table([...])
+                ->schema([...])
+                ->toTableContent(),
+        );
+}
+```
+
+`toTableContent()` uses Filament's `content()` hook, so the table works the same as any other Filament table, with `query()` or `records()`. Define the grid's columns with `table()` and `schema()` as above. The table's `columns()` still decide what can be searched and sorted, but aren't shown. Leave `searchable()`, `filters()` and `paginated()` off the grid itself here, because the table does that work.
+
+### Searching, filtering and paging it yourself
+
+By default, the server sends every row with the page, and search and pagination run in the browser. Results are instant and nothing goes back to the server, which suits grids of up to a few hundred parent rows whose size you know.
+
+For larger or unknown sizes, make the entry server-side. The page then loads only the first page of rows, and each search, page or page size change asks the server for the rows it needs:
+
+```php
+DataGridEntry::make('deliveries')
+    ->serverSide()
+    ->state(fn (): array => $deliveries)
+```
+
+With only `state()`, the server still reads every row on each request, but renders and sends only the current page. To let your data source do the work, as with Filament's [custom data tables](https://filamentphp.com/docs/5.x/tables/custom-data), use `records()`. It receives the search, the page and the page size (`null` for "All"), and returns a `LengthAwarePaginator`, or an array or collection that the grid pages for you:
+
+```php
+use Illuminate\Pagination\LengthAwarePaginator;
+
+DataGridEntry::make('deliveries')
+    ->serverSide()
+    ->records(fn (?string $search, int $page, ?int $recordsPerPage): LengthAwarePaginator => Delivery::query()
+        ->when($search, fn ($query) => $query->where('number', 'like', "%{$search}%"))
+        ->paginate($recordsPerPage ?? PHP_INT_MAX, page: $page))
+```
+
+Search terms and page numbers come from the browser. As with Filament's custom data, `records()` must return only data the current user may see.
+
+To make every grid in your app server-side, set it once in a service provider. A grid can still opt out with `serverSide(false)`:
+
+```php
+DataGridEntry::configureUsing(fn (DataGridEntry $entry) => $entry->serverSide());
+```
 
 ## Validation
 

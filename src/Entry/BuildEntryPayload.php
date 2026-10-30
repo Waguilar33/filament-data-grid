@@ -22,9 +22,10 @@ final readonly class BuildEntryPayload
     public function __construct(private DescribeCell $describeCell) {}
 
     /**
-     * @return array{columns: list<array{field: string, label: string, alignment: string|null, width: string|null, headerHidden: bool}>, childColumns: list<array<string, mixed>>, rows: list<array<string, mixed>>, recordsPerPage: int|null}
+     * @param  array<array-key, Schema>  $items
+     * @return array<string, mixed>
      */
-    public function handle(DataGridEntry $entry): array
+    public function handle(DataGridEntry $entry, array $items, ?int $total, int $page): array
     {
         $template = $entry->getChildSchema();
         $tableColumns = array_values($entry->getTableColumns() ?? []);
@@ -35,49 +36,73 @@ final readonly class BuildEntryPayload
             $columns[] = $this->describeColumn($component, $tableColumns[$index] ?? null);
         }
 
-        $searchableFields = $entry->isSearchable()
-            ? ($entry->getSearchableFields() ?? array_column($columns, 'field'))
-            : [];
-        $rows = [];
-
-        foreach ($entry->getItems() as $key => $item) {
-            $rows[] = $this->describeRow((string) $key, $item, $children, $searchableFields);
-        }
-
         return [
             'columns' => $columns,
             'childColumns' => array_map(
                 fn (TableColumn $column): array => $this->describeTableColumn($column),
                 array_values($children?->getTableColumns() ?? []),
             ),
-            'rows' => $rows,
-            'recordsPerPage' => $entry->getRecordsPerPage(),
+            'rows' => $this->rows($entry, $items),
+            'serverSide' => $entry->isServerSide(),
+            'total' => $total,
+            'page' => $page,
+            'filters' => $entry->getEntryFilters()->describe(),
+            'recordsPerPageOptions' => $entry->getPaginationPageOptions(),
+            'recordsPerPage' => $entry->getDefaultPaginationPageOption(),
         ];
     }
 
     /**
-     * @param  list<string>  $searchableFields
-     * @return array<string, mixed>
+     * @param  array<array-key, Schema>  $items
+     * @return list<array<string, mixed>>
      */
-    private function describeRow(string $key, Schema $item, ?RepeatableEntry $childrenTemplate, array $searchableFields): array
+    public function rows(DataGridEntry $entry, array $items): array
     {
-        $cells = [];
-        $search = [];
-        $children = $childrenTemplate === null ? null : $this->childRowsEntry($item);
+        $rows = [];
+
+        foreach ($items as $key => $item) {
+            $rows[] = $this->describeRow($entry, (string) $key, $item);
+        }
+
+        return $rows;
+    }
+
+    public function searchText(DataGridEntry $entry, Schema $item): string
+    {
+        if (! $entry->isSearchable()) {
+            return '';
+        }
+
+        $fields = $entry->getSearchableFields();
+        $children = $this->childRowsEntry($item);
+        $texts = [];
 
         foreach ($this->cellComponents($item, $children) as $component) {
-            $field = $this->fieldName($component);
-            $cells[$field] = $this->describeCell->handle($component, new MessageBag);
-
-            if (in_array($field, $searchableFields, true)) {
-                $search[] = $this->searchText($component);
+            if ($fields === null || in_array($this->fieldName($component), $fields, true)) {
+                $texts[] = $this->componentSearchText($component);
             }
+        }
+
+        return mb_strtolower(implode(' ', array_filter($texts, fn (string $text): bool => $text !== '')));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function describeRow(DataGridEntry $entry, string $key, Schema $item): array
+    {
+        $cells = [];
+        $children = $this->childRowsEntry($item);
+
+        foreach ($this->cellComponents($item, $children) as $component) {
+            $cells[$this->fieldName($component)] = $this->describeCell->handle($component, new MessageBag);
         }
 
         return [
             'key' => $key,
             'cells' => $cells,
-            'search' => mb_strtolower(implode(' ', array_filter($search, fn (string $text): bool => $text !== ''))),
+            'search' => $entry->isServerSide() ? '' : $this->searchText($entry, $item),
+            'filterValues' => $entry->isServerSide() ? [] : $entry->getEntryFilters()->rawValues($item),
             'children' => $children === null ? [] : $this->describeChildren($children),
         ];
     }
@@ -161,7 +186,7 @@ final readonly class BuildEntryPayload
         return $component instanceof Entry ? $component->getName() : (string) $component->getKey(isAbsolute: false);
     }
 
-    private function searchText(Component $component): string
+    private function componentSearchText(Component $component): string
     {
         if (! $component instanceof Entry) {
             return '';

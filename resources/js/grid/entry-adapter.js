@@ -41,30 +41,64 @@ const childCellHtml = (cell, column, isHeader) => {
 export function createEntryGrid(element, { payload, translations, icons, isDarkMode, onChange }) {
     let rows = []
     let visible = []
-    let query = ''
-    let page = 1
+    let search = ''
+    let page = payload.page ?? 1
+    let recordsPerPage = payload.recordsPerPage ?? null
+    let filters = {}
     const expanded = new Set()
 
     const hasChildren = () => payload.childColumns.length > 0
 
-    const matches = () => (query === '' ? rows : rows.filter((row) => row.search.includes(query)))
+    const perPage = () => (typeof recordsPerPage === 'number' ? recordsPerPage : null)
 
-    const pageCountFor = (count) =>
-        payload.recordsPerPage ? Math.max(1, Math.ceil(count / payload.recordsPerPage)) : 1
+    const pageCountFor = (count) => (perPage() ? Math.max(1, Math.ceil(count / perPage())) : 1)
+
+    const matchesFilters = (row) =>
+        (payload.filters ?? []).every((filter) => {
+            const active = filters[filter.name]
+            const value = row.filterValues?.[filter.name]
+
+            if (active === undefined || active === null || active === '' || (Array.isArray(active) && active.length === 0)) {
+                return true
+            }
+
+            if (filter.type === 'ternary') {
+                return Boolean(value) === (active === true || active === 'true')
+            }
+
+            if (Array.isArray(active)) {
+                return active.map(String).includes(String(value))
+            }
+
+            return String(value) === String(active)
+        })
+
+    const currentPage = () => {
+        if (payload.serverSide) {
+            return { pageRows: rows, total: payload.total ?? rows.length }
+        }
+
+        const needle = search.toLowerCase()
+        const matching = rows.filter((row) => (needle === '' || row.search.includes(needle)) && matchesFilters(row))
+
+        page = Math.min(Math.max(1, page), pageCountFor(matching.length))
+
+        const start = perPage() ? (page - 1) * perPage() : 0
+
+        return {
+            pageRows: perPage() ? matching.slice(start, start + perPage()) : matching,
+            total: matching.length,
+        }
+    }
 
     const computeVisible = () => {
-        const matching = matches()
-        const pageCount = pageCountFor(matching.length)
-
-        page = Math.min(Math.max(1, page), pageCount)
-
-        const start = payload.recordsPerPage ? (page - 1) * payload.recordsPerPage : 0
-        const pageRows = payload.recordsPerPage ? matching.slice(start, start + payload.recordsPerPage) : matching
+        const { pageRows, total } = currentPage()
+        const start = perPage() ? (page - 1) * perPage() : 0
 
         visible = []
 
-        pageRows.forEach((row, index) => {
-            visible.push({ kind: 'parent', row, isLastParent: index === pageRows.length - 1 })
+        pageRows.forEach((row) => {
+            visible.push({ kind: 'parent', row })
 
             if (!expanded.has(row.key)) {
                 return
@@ -85,9 +119,10 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
 
         onChange?.({
             page,
-            pageCount,
-            total: matching.length,
-            first: matching.length === 0 ? 0 : start + 1,
+            pageCount: pageCountFor(total),
+            recordsPerPage,
+            total,
+            first: total === 0 ? 0 : start + 1,
             last: start + pageRows.length,
         })
     }
@@ -296,14 +331,50 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
     fitColumns()
 
     return {
-        search(value) {
-            query = String(value ?? '').trim().toLowerCase()
-            page = 1
-            redraw()
+        getQuery() {
+            return { search, page, recordsPerPage, filters }
         },
 
-        goToPage(number) {
-            page = number
+        setQuery(changes) {
+            if ('search' in changes && changes.search !== search) {
+                search = String(changes.search ?? '').trim()
+                page = 1
+
+                if (payload.serverSide) {
+                    expanded.clear()
+                }
+            }
+
+            if ('filters' in changes) {
+                filters = { ...changes.filters }
+                page = 1
+
+                if (payload.serverSide) {
+                    expanded.clear()
+                }
+            }
+
+            if ('recordsPerPage' in changes) {
+                recordsPerPage = changes.recordsPerPage
+                page = 1
+            }
+
+            if ('page' in changes) {
+                page = changes.page
+            }
+
+            if (!payload.serverSide) {
+                redraw()
+            }
+
+            return { search, page, recordsPerPage, filters }
+        },
+
+        setServerPage(result) {
+            payload = { ...payload, rows: result.rows, total: result.total }
+            page = result.page
+            recordsPerPage = result.recordsPerPage
+            indexRows()
             redraw()
         },
 

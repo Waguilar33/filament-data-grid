@@ -4,6 +4,15 @@ declare(strict_types=1);
 
 return [
     'route' => [
+        'table_navigation' => 'Delivery table',
+        'descriptions' => [
+            'browser' => 'Deliveries on this route, filtered in the browser.',
+            'server' => 'The same deliveries, loaded page by page from the server.',
+        ],
+        'sections' => [
+            'browser' => 'Rows sent to the browser',
+            'server' => 'Rows loaded from the server',
+        ],
         'navigation' => 'Delivery route',
         'columns' => [
             'delivery' => 'Delivery',
