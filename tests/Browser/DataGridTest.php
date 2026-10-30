@@ -43,7 +43,19 @@ function dragRow(string $handle, string $target): string
 
 function visitDemo(string $query = ''): AwaitableWebpage
 {
-    return visit('/demo/data-grid-demo'.$query)->waitForEvent('networkidle');
+    $page = visit('/demo/data-grid-demo'.$query)->waitForEvent('networkidle');
+
+    $page->script(<<<'JS'
+        async () => {
+            const isDrawn = () => [...document.querySelectorAll('.fi-data-grid-canvas')].every((canvas) => canvas.querySelector('.slick-header'))
+
+            for (let tries = 0; !isDrawn() && tries < 100; tries++) {
+                await new Promise((resolve) => setTimeout(resolve, 50))
+            }
+        }
+        JS);
+
+    return $page;
 }
 
 function openDropdownSearch(): string
