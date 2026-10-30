@@ -3,6 +3,27 @@
 declare(strict_types=1);
 
 return [
+    'dispatch' => [
+        'navigation' => 'Dispatch',
+        'section' => 'Products to dispatch',
+        'description' => 'Open a product to choose how many units leave each place, or to enter the code of each unit.',
+        'columns' => [
+            'product' => 'Product',
+            'requested' => 'Requested',
+            'assigned' => 'Assigned',
+            'status' => 'Status',
+            'place' => 'Place',
+            'available' => 'Available',
+            'quantity' => 'Quantity',
+            'code' => 'Unit code',
+        ],
+        'statuses' => [
+            'complete' => 'Complete',
+            'partial' => 'Partial',
+            'empty' => 'Not assigned',
+        ],
+        'saved' => 'Dispatch saved',
+    ],
     'route' => [
         'table_navigation' => 'Delivery table',
         'descriptions' => [

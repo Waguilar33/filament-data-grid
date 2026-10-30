@@ -213,6 +213,60 @@ DataGrid::make('lines')
     ->reorderable(false)
 ```
 
+## Editable child rows
+
+A `DataGrid` row can open to show an editable table of its own child rows. Put a nested `DataGrid` in the parent's schema. It doesn't take a column, and it is built like any other `DataGrid`:
+
+```php
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Repeater\TableColumn;
+use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Utilities\Get;
+use Waguilar\FilamentDataGrid\DataGrid;
+
+DataGrid::make('products')
+    ->addable(false)
+    ->deletable(false)
+    ->reorderable(false)
+    ->expandRowsWhen(fn (Get $get): bool => collect($get('places'))->sum('quantity') < $get('requested'))
+    ->table([
+        TableColumn::make('Product'),
+        TableColumn::make('Requested')->alignEnd(),
+        TableColumn::make('Assigned')->alignEnd(),
+    ])
+    ->schema([
+        Hidden::make('id'),
+        TextEntry::make('name'),
+        TextEntry::make('requested')->numeric(),
+        TextEntry::make('assigned')->state(fn (Get $get): float => collect($get('places'))->sum('quantity')),
+        DataGrid::make('places')
+            ->addable(false)
+            ->deletable(false)
+            ->reorderable(false)
+            ->table([
+                TableColumn::make('Place'),
+                TableColumn::make('Available')->alignEnd(),
+                TableColumn::make('Quantity')->alignEnd(),
+            ])
+            ->schema([
+                TextEntry::make('place'),
+                TextEntry::make('available')->numeric(),
+                TextInput::make('quantity')
+                    ->numeric()
+                    ->minValue(0)
+                    ->maxValue(fn (Get $get): mixed => $get('available'))
+                    ->live(),
+            ]),
+    ])
+```
+
+- **Which child grid:** a row shows the first nested `DataGrid` in its schema that is visible for that row. Use `visible()` to give different rows different child tables, such as quantities per place for some products and a code per unit for others. A row whose nested grids are all hidden has no child rows.
+- **State:** the nested grid's state lives inside its parent row, with `Repeater`'s nested keys: `data.products.{uuid}.places.{uuid}.quantity`. The parent row's closures see it through `Get`, so a parent cell such as `assigned` updates when a child cell changes.
+- **Validation:** errors use those nested keys. The invalid child cell shows its message, and its parent row is marked as having errors in its child rows.
+- **Opening rows:** `expandRowsWhen()` takes a boolean or a closure that runs for each row. The closure receives the row's raw state as `array $state`, and `Get $get` reads that row's fields. Rows are closed by default.
+- **Spacing:** the child table sits 15 pixels in from every side of the open row; change that with `childTablePadding(8)`.
+
 ## Read-only grid with child rows
 
 `DataGridEntry` is an infolist entry that shows rows in the same grid, read-only. Each row can open to show its own child rows, with their own columns. It extends Filament's `RepeatableEntry`, so you build it the same way as `RepeatableEntry::make()->table()`:
@@ -399,7 +453,6 @@ The server renders the rows, the cell descriptions and the row actions, and send
 ## Limitations
 
 - The whole grid is sent again on every update. 200 rows take about 47 ms on the server and 11 KB gzipped, which is fine for grids the size of an order. Grids with thousands of rows aren't a good fit yet.
-- Parent and child rows are read-only, in `DataGridEntry`. The editable `DataGrid` doesn't have them yet.
 - There are no footer totals yet. Show totals with an entry or a field outside the grid.
 - The compiled JavaScript is about 88 KB gzipped for `DataGrid` and 57 KB for `DataGridEntry`, most of it SlickGrid-Universal's grid. It loads only on pages with a grid.
 - The select dropdown is Filament's own JavaScript, copied into the plugin's build from Filament 5. The same build runs on Filament 4. Check the grid after upgrading Filament.
