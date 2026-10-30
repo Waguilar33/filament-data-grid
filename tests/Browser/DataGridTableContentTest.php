@@ -83,3 +83,18 @@ it('shows a tooltip on an icon-only cell', function (): void {
         ->wait(0.5)
         ->assertSee('Shipment');
 });
+
+it('fits the record actions and badges without a sideways scrollbar', function (): void {
+    $page = visitTable()->resize(1600, 900)->wait(0.5);
+
+    expect($page->script(clippedContentIn(TABLE_GRID)))->toBe([])
+        ->and($page->script(scrollsSideways(TABLE_GRID)))->toBeFalse()
+        ->and($page->script(headerWidth(TABLE_GRID, 'Type')))->toBeLessThan($page->script(headerWidth(TABLE_GRID, 'Customer')));
+});
+
+it('keeps the record actions whole when the columns no longer fit', function (): void {
+    $page = visitTable()->resize(480, 900)->wait(0.5);
+
+    expect($page->script(clippedContentIn(TABLE_GRID)))->toBe([])
+        ->and($page->script(scrollsSideways(TABLE_GRID)))->toBeTrue();
+});

@@ -262,3 +262,51 @@ it('centres badges vertically in their cells', function (): void {
     expect($gaps)->not->toBeEmpty()
         ->each->toBeLessThanOrEqual(1);
 });
+
+it('sizes columns to their content, without clipping or scrolling at a wide window', function (): void {
+    $page = visitRoute('?locale=es')->resize(1600, 900)->wait(0.5);
+
+    expect($page->script(clippedContentIn(ROUTE)))->toBe([])
+        ->and($page->script(scrollsSideways(ROUTE)))->toBeFalse()
+        ->and($page->script(headerWidth(ROUTE, 'Tipo')))->toBeLessThan($page->script(headerWidth(ROUTE, 'Cliente')))
+        ->and($page->script(headerWidth(ROUTE, 'Tipo')))->toBeLessThan($page->script(headerWidth(ROUTE, 'Entrega')));
+});
+
+it('shrinks columns towards their content and scrolls only when even that does not fit', function (): void {
+    $page = visitRoute('?locale=es')->resize(1024, 900)->wait(0.5);
+
+    expect($page->script(clippedContentIn(ROUTE)))->toBe([])
+        ->and($page->script(scrollsSideways(ROUTE)))->toBeFalse();
+
+    $page->resize(480, 900)->wait(0.5);
+
+    expect($page->script(clippedContentIn(ROUTE)))->toBe([])
+        ->and($page->script(scrollsSideways(ROUTE)))->toBeTrue();
+});
+
+it('keeps an explicit column width', function (): void {
+    $page = visitRoute()
+        ->click(parentRow('DLV-2026-0000001').' .fi-data-grid-row-toggle')
+        ->wait(0.5);
+
+    expect($page->script(headerWidth(ROUTE, 'Preparation')))->toBe(192)
+        ->and($page->script(sprintf('document.querySelector(%s).getBoundingClientRect().width', json_encode(ROUTE.' .fi-data-grid-child-header .fi-data-grid-child-cell:nth-child(2)'))))->toBe(144);
+});
+
+it('sizes the columns of each open child table to its own rows', function (): void {
+    $page = visitRoute()
+        ->resize(1600, 900)
+        ->click(parentRow('DLV-2026-0000001').' .fi-data-grid-row-toggle')
+        ->click(parentRow('DLV-2026-0000002').' .fi-data-grid-row-toggle')
+        ->wait(0.5);
+
+    $templates = $page->script(sprintf(
+        '() => [...document.querySelectorAll(%s)].sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top).map((header) => header.style.gridTemplateColumns)',
+        json_encode(ROUTE.' .fi-data-grid-child-header'),
+    ));
+
+    expect($templates)->toHaveCount(2)
+        ->and($templates[0])->not->toBe($templates[1])
+        ->and($templates)->each->toMatch('/^\d+px 144px \d+px$/')
+        ->and($page->script(clippedContentIn(ROUTE)))->toBe([]);
+});

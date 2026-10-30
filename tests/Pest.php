@@ -59,3 +59,39 @@ function rowActionsHtml(array $payload, int $row): ?string
 
     return str_replace($payload['rowKeyPlaceholder'], $payload['rows'][$row]['key'], $payload['actionTemplates'][$id]);
 }
+
+function clippedContentIn(string $scope): string
+{
+    return sprintf(<<<'JS'
+        () => [...document.querySelectorAll(%s)].flatMap((cell) => {
+            const box = cell.getBoundingClientRect()
+            const elements = [cell, ...cell.querySelectorAll('*')].filter((element) => !element.closest('.fi-sr-only') && element.getClientRects().length > 0)
+
+            return elements
+                .filter((element) => {
+                    const inner = element.getBoundingClientRect()
+                    const overflows = element.clientWidth > 0 && element.scrollWidth > element.clientWidth
+
+                    return overflows || inner.left < box.left - 0.5 || inner.right > box.right + 0.5
+                })
+                .map((element) => `${element.getAttribute('class')}: ${element.textContent.trim().slice(0, 40)}`)
+        })
+        JS, json_encode("{$scope} .slick-header-column, {$scope} .slick-cell, {$scope} .fi-data-grid-child-cell"));
+}
+
+function scrollsSideways(string $scope): string
+{
+    return sprintf(
+        '[...document.querySelectorAll(%s)].some((viewport) => viewport.scrollWidth > viewport.clientWidth)',
+        json_encode("{$scope} .slick-viewport"),
+    );
+}
+
+function headerWidth(string $scope, string $label): string
+{
+    return sprintf(
+        '[...document.querySelectorAll(%s)].find((header) => header.textContent.trim() === %s).getBoundingClientRect().width',
+        json_encode("{$scope} .slick-header-column"),
+        json_encode($label),
+    );
+}
