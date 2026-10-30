@@ -88,8 +88,8 @@ final class DeliveryRouteDemo extends Page
             ->table([
                 TableColumn::make(__('demo::demo.route.columns.delivery')),
                 TableColumn::make(__('demo::demo.route.columns.customer')),
-                TableColumn::make(__('demo::demo.route.columns.warehouse'))->width('12rem'),
-                TableColumn::make(__('demo::demo.route.columns.kind'))->width('5rem')->alignCenter(),
+                TableColumn::make(__('demo::demo.route.columns.warehouse')),
+                TableColumn::make(__('demo::demo.route.columns.kind'))->alignCenter(),
                 TableColumn::make(__('demo::demo.route.columns.preparation'))->width('12rem'),
             ])
             ->schema([
@@ -112,7 +112,7 @@ final class DeliveryRouteDemo extends Page
                     ->table([
                         TableColumn::make(__('demo::demo.route.columns.product')),
                         TableColumn::make(__('demo::demo.route.columns.requested'))->width('9rem')->alignEnd(),
-                        TableColumn::make(__('demo::demo.route.columns.handed_over'))->width('11rem')->alignEnd(),
+                        TableColumn::make(__('demo::demo.route.columns.handed_over'))->alignEnd(),
                     ])
                     ->schema([
                         TextEntry::make('product')

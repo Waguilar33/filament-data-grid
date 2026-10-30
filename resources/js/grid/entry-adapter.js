@@ -5,12 +5,13 @@ const TOGGLE_COLUMN = '__toggle'
 const ACTIONS_COLUMN = '__actions'
 const LINK_COLUMN = '__link'
 const LINK_WIDTH = 44
-const ACTIONS_PADDING = 24
 const ROW_HEIGHT = 44
 const CHILD_HEADER_HEIGHT = 32
 const DEFAULT_CHILD_TABLE_PADDING = 15
 const TOGGLE_WIDTH = 44
-const FLEXIBLE_MIN_WIDTH = 160
+const UNMEASURED_WIDTH = 160
+const CHILD_TABLE_BORDER = 1
+const INTRINSIC_WIDTHS = ['max-content', '0px']
 
 const toPixels = (width) => {
     if (!width) {
@@ -34,14 +35,67 @@ const headerLabel = (column) =>
 const childGridTemplate = (columns) =>
     columns.map((column) => (column.width ? column.width : 'minmax(0, 1fr)')).join(' ')
 
+const sumOf = (numbers) => numbers.reduce((sum, number) => sum + number, 0)
+
+const distribute = (spans, available) => {
+    const minSum = sumOf(spans.map((span) => span.min))
+    const maxSum = sumOf(spans.map((span) => span.max))
+
+    if (spans.length === 0 || minSum >= available) {
+        return spans.map((span) => span.min)
+    }
+
+    const widths = spans.map((span) =>
+        maxSum <= available
+            ? span.max + (maxSum > 0 ? ((available - maxSum) * span.max) / maxSum : (available - maxSum) / spans.length)
+            : span.max - ((maxSum - available) * (span.max - span.min)) / (maxSum - minSum),
+    )
+    const floored = widths.map(Math.floor)
+
+    for (let index = 0, remainder = available - sumOf(floored); remainder > 0; index = (index + 1) % floored.length, remainder--) {
+        floored[index]++
+    }
+
+    return floored
+}
+
+const contentBoxes = (node, range) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+        range.selectNodeContents(node)
+
+        return [...range.getClientRects()]
+    }
+
+    if (node.nodeType !== Node.ELEMENT_NODE || node.classList.contains('fi-sr-only')) {
+        return []
+    }
+
+    return [node.getBoundingClientRect(), ...[...node.childNodes].flatMap((child) => contentBoxes(child, range))]
+}
+
+const outerContentWidth = (cell, range) => {
+    const style = getComputedStyle(cell)
+    const padding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight)
+    const boxes = [...cell.childNodes].flatMap((child) => contentBoxes(child, range)).filter((box) => box.width > 0)
+    const content = boxes.length > 0 ? Math.max(...boxes.map((box) => box.right)) - Math.min(...boxes.map((box) => box.left)) : 0
+
+    return Math.ceil(Math.max(cell.getBoundingClientRect().width, content + padding))
+}
+
+const probeRequest = (wrapper, classes, content) => ({ key: `${wrapper}|${classes}|${content}`, wrapper, classes, content })
+
+const cellContent = (cell) => (cell && cell.visible !== false ? (cell.html ?? '') : '')
+
+const childCellClasses = (column) => `fi-data-grid-child-cell fi-align-${column.alignment ?? 'start'}`
+
 const childCellHtml = (cell, column, isHeader) => {
-    const classes = `fi-data-grid-child-cell fi-align-${column.alignment ?? 'start'}`
+    const classes = childCellClasses(column)
 
     if (isHeader) {
         return `<div class="${classes}" role="columnheader">${headerLabel(column)}</div>`
     }
 
-    return `<div class="${classes}" role="cell">${cell?.visible === false ? '' : (cell?.html ?? '')}</div>`
+    return `<div class="${classes}" role="cell">${cellContent(cell)}</div>`
 }
 
 export function createEntryGrid(element, { payload, translations, icons, isDarkMode, onChange }) {
@@ -55,6 +109,8 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
     const measuredHeights = new Map()
     let measuredWidths = null
     let columnWidths = []
+    const intrinsicWidths = new Map()
+    const childTemplates = new Map()
 
     const hasChildTable = () => payload.childColumns.length > 0
 
@@ -146,6 +202,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
             })
         })
 
+        layoutColumns()
         measureRows()
 
         onChange?.({
@@ -170,7 +227,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
     }
 
     const formatChildRow = (item) => {
-        const style = `grid-template-columns: ${childGridTemplate(payload.childColumns)}`
+        const style = `grid-template-columns: ${childTemplates.get(item.row.key) ?? childGridTemplate(payload.childColumns)}`
         const edges = [
             item.isFirst ? 'fi-data-grid-pad-top' : '',
             item.isLast ? 'fi-data-grid-pad-bottom' : '',
@@ -212,7 +269,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
             field: column.field,
             name: headerLabel(column),
             fixedWidth: toPixels(column.width),
-            width: toPixels(column.width) ?? FLEXIBLE_MIN_WIDTH,
+            width: toPixels(column.width) ?? UNMEASURED_WIDTH,
             resizable: false,
             sortable: false,
             focusable: false,
@@ -240,15 +297,13 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
             })
         }
 
-        const actionsWidth = recordActionsWidth()
-
-        if (actionsWidth > 0) {
+        if (payload.rows.some((row) => row.actions)) {
             columns.push({
                 id: ACTIONS_COLUMN,
                 field: ACTIONS_COLUMN,
                 name: `<span class="fi-sr-only">${escapeHtml(translations.actions)}</span>`,
-                fixedWidth: actionsWidth,
-                width: actionsWidth,
+                fixedWidth: UNMEASURED_WIDTH,
+                width: UNMEASURED_WIDTH,
                 resizable: false,
                 sortable: false,
                 focusable: false,
@@ -279,38 +334,141 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         return columns
     }
 
-    const recordActionsWidth = () => {
-        const actions = payload.rows.map((row) => row.actions).filter(Boolean)
+    const childTablePadding = () => payload.childTablePadding ?? DEFAULT_CHILD_TABLE_PADDING
 
-        if (actions.length === 0) {
-            return 0
+    const measureIntrinsicWidths = (requests) => {
+        const pending = [...new Map(requests.filter((request) => !intrinsicWidths.has(request.key)).map((request) => [request.key, request])).values()]
+
+        if (pending.length === 0) {
+            return
         }
 
         const probe = document.createElement('div')
-        probe.className = 'fi-data-grid-record-actions-probe'
+        probe.className = 'fi-data-grid-width-probe'
+        probe.innerHTML = pending
+            .map(
+                (request) =>
+                    `<div class="${request.wrapper}">${INTRINSIC_WIDTHS.map((width) => `<div class="${request.classes}" style="width: ${width}">${request.content}</div>`).join('')}</div>`,
+            )
+            .join('')
         element.appendChild(probe)
 
-        const width = Math.max(
-            ...actions.map((html) => {
-                probe.innerHTML = html
-
-                return probe.firstElementChild?.scrollWidth ?? 0
-            }),
-        )
+        const range = document.createRange()
+        const sizes = [...probe.children].map((wrapper) => [...wrapper.children].map((cell) => outerContentWidth(cell, range)))
 
         probe.remove()
+        pending.forEach((request, index) => {
+            const [max, min] = sizes[index]
 
-        return Math.ceil(width) + ACTIONS_PADDING
+            intrinsicWidths.set(request.key, { min: Math.min(min, max), max })
+        })
     }
 
-    const childTablePadding = () => payload.childTablePadding ?? DEFAULT_CHILD_TABLE_PADDING
+    const spanOf = (requests) =>
+        requests.reduce(
+            (span, request) => {
+                const size = intrinsicWidths.get(request.key)
 
-    const fittedWidths = (columns) => {
-        const fixed = columns.reduce((sum, column) => sum + (column.fixedWidth ?? 0), 0)
-        const flexibleCount = columns.filter((column) => !column.fixedWidth).length
-        const flexibleWidth = Math.max(FLEXIBLE_MIN_WIDTH, Math.floor((element.clientWidth - fixed) / Math.max(flexibleCount, 1)))
+                return { min: Math.max(span.min, size.min), max: Math.max(span.max, size.max) }
+            },
+            { min: 0, max: 0 },
+        )
 
-        return columns.map((column) => column.fixedWidth ?? flexibleWidth)
+    const parentRequests = (column, parents) => [
+        probeRequest('', `slick-header-column ${column.headerCssClass}`, column.name),
+        ...parents.map((item) => probeRequest('', `slick-cell ${column.cssClass} fi-data-grid-entry`, cellContent(item.row.cells[column.field]))),
+    ]
+
+    const actionsRequests = () =>
+        payload.rows
+            .filter((row) => row.actions)
+            .map((row) => probeRequest('', 'slick-cell fi-data-grid-cell fi-data-grid-record-actions-cell fi-align-end', row.actions))
+
+    const childRequests = (row, column, index) => [
+        probeRequest('fi-data-grid-child-header', childCellClasses(column), headerLabel(column)),
+        ...row.children.map((cells) => probeRequest('', childCellClasses(column), cellContent(cells[index]))),
+    ]
+
+    const flexibleChildColumns = () => payload.childColumns.flatMap((column, index) => (column.width ? [] : [{ column, index }]))
+
+    const explicitChildWidths = (rowWidth) => {
+        const unresolved = payload.childColumns.filter((column) => column.width && toPixels(column.width) === null)
+        const resolved = []
+
+        if (unresolved.length > 0) {
+            const probe = document.createElement('div')
+            probe.className = 'fi-data-grid-width-probe'
+            probe.style.width = `${rowWidth}px`
+            probe.innerHTML = unresolved.map((column) => `<div style="width: ${column.width}"></div>`).join('')
+            element.appendChild(probe)
+            resolved.push(...[...probe.children].map((child) => Math.round(child.getBoundingClientRect().width)))
+            probe.remove()
+        }
+
+        return payload.childColumns.map((column) => (column.width ? (toPixels(column.width) ?? resolved.shift()) : null))
+    }
+
+    const childTemplate = (spans, available, explicitWidths) => {
+        const widths = distribute(spans, available)
+        let next = 0
+
+        return explicitWidths.map((width) => `${width ?? widths[next++]}px`).join(' ')
+    }
+
+    const layoutColumns = () => {
+        if (element.clientWidth === 0) {
+            return false
+        }
+
+        const columns = currentColumns()
+        const parents = visible.filter((item) => item.kind === 'parent')
+        const openRows = hasChildTable() ? parents.map((item) => item.row).filter((row) => expanded.has(row.key) && row.children.length > 0) : []
+        const flexibleColumns = columns.filter((column) => column.fixedWidth === null)
+        const childColumns = flexibleChildColumns()
+        const parentRequestsByColumn = flexibleColumns.map((column) => parentRequests(column, parents))
+        const childRequestsByRow = openRows.map((row) => childColumns.map(({ column, index }) => childRequests(row, column, index)))
+        const actions = actionsRequests()
+
+        measureIntrinsicWidths([...parentRequestsByColumn.flat(), ...childRequestsByRow.flat(2), ...actions])
+
+        columns
+            .filter((column) => column.id === ACTIONS_COLUMN)
+            .forEach((column) => {
+                column.fixedWidth = spanOf(actions).max
+            })
+
+        const fixedWidth = sumOf(columns.map((column) => column.fixedWidth ?? 0))
+        const available = Math.floor(element.getBoundingClientRect().width) - fixedWidth
+        const childInset = (childTablePadding() + CHILD_TABLE_BORDER) * 2
+        const fixedChildWidth = (rowWidth) => sumOf(explicitChildWidths(rowWidth).map((width) => width ?? 0))
+        const childSpans = childRequestsByRow.map((requestsByColumn) => requestsByColumn.map(spanOf))
+        const provisionalChildWidth = openRows.length > 0 ? fixedChildWidth(available + fixedWidth - childInset) : 0
+        const childNeed = Math.max(0, ...childSpans.map((spans) => childInset + provisionalChildWidth + sumOf(spans.map((span) => span.min))))
+        const flexibleWidths = distribute(parentRequestsByColumn.map(spanOf), Math.max(available, childNeed - fixedWidth))
+        let next = 0
+        const widths = columns.map((column) => column.fixedWidth ?? flexibleWidths[next++])
+        const changed = columns.some((column, index) => column.width !== widths[index])
+
+        childTemplates.clear()
+
+        if (openRows.length > 0) {
+            const childRowWidth = sumOf(widths) - childInset
+            const explicitWidths = explicitChildWidths(childRowWidth)
+            const childAvailable = childRowWidth - sumOf(explicitWidths.map((width) => width ?? 0))
+
+            openRows.forEach((row, index) => childTemplates.set(row.key, childTemplate(childSpans[index], childAvailable, explicitWidths)))
+        }
+
+        columnWidths = widths
+        columns.forEach((column, index) => {
+            column.width = widths[index]
+        })
+
+        if (changed && grid) {
+            grid.setColumns(columns)
+        }
+
+        return changed
     }
 
     const measureKey = (item) =>
@@ -435,10 +593,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
     let grid = null
     const currentColumns = () => grid?.getColumns() ?? initialColumns
 
-    columnWidths = fittedWidths(initialColumns)
-    initialColumns.forEach((column, index) => {
-        column.width = columnWidths[index]
-    })
+    columnWidths = initialColumns.map((column) => column.width)
 
     indexRows()
     computeVisible()
@@ -508,21 +663,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
     })
 
     const fitColumns = () => {
-        const columns = grid.getColumns()
-        const widths = fittedWidths(columns)
-        const widthsChanged = columns.some((column, index) => column.width !== widths[index])
-
-        columnWidths = widths
-
-        if (widthsChanged) {
-            columns.forEach((column, index) => {
-                column.width = widths[index]
-            })
-
-            grid.setColumns(columns)
-        }
-
-        if (widthsChanged || measuredWidths !== widths.join(',')) {
+        if (layoutColumns() || measuredWidths !== columnWidths.join(',')) {
             redraw()
         }
     }
@@ -537,14 +678,13 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
     resizeObserver.observe(element)
     fitColumns()
 
-    if (document.fonts?.status === 'loading') {
-        document.fonts.ready.then(() => {
-            if (grid) {
-                measuredHeights.clear()
-                redraw()
-            }
-        })
+    const remeasure = () => {
+        intrinsicWidths.clear()
+        measuredHeights.clear()
+        redraw()
     }
+
+    document.fonts?.addEventListener?.('loadingdone', remeasure)
 
     return {
         getQuery() {
@@ -591,6 +731,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
             page = result.page
             recordsPerPage = result.recordsPerPage
             measuredHeights.clear()
+            intrinsicWidths.clear()
             indexRows()
             redraw()
         },
@@ -606,12 +747,12 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
 
             payload = nextPayload
             measuredHeights.clear()
+            intrinsicWidths.clear()
             indexRows()
             applyChildTablePadding()
 
             if (columnsChanged) {
                 grid.setColumns(columnDefinitions())
-                fitColumns()
             }
 
             redraw()
@@ -625,6 +766,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         destroy() {
             cancelAnimationFrame(resizeFrame)
             resizeObserver.disconnect()
+            document.fonts?.removeEventListener?.('loadingdone', remeasure)
             grid.destroy()
             grid = null
         },
