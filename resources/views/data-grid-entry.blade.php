@@ -28,7 +28,11 @@
     @endif
 
     <div wire:ignore class="fi-data-grid-viewport" x-show="! isMounted || total > 0">
-        <div x-ref="grid" class="fi-data-grid-canvas"></div>
+        <div
+            x-ref="grid"
+            class="fi-data-grid-canvas"
+            style="min-height: calc(2.75rem + 1px + {{ min(count($payload['rows']), $payload['recordsPerPage'] ?? PHP_INT_MAX) * 44 }}px)"
+        ></div>
     </div>
 
     <p x-cloak x-show="isMounted && total === 0" class="fi-data-grid-empty">

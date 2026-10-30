@@ -33,6 +33,7 @@ export default function dataGridEntry({ translations, icons, styleHref }) {
                 onChange: (state) => Object.assign(this, state),
             })
 
+            this.$refs.grid.style.removeProperty('min-height')
             this.isMounted = true
             this.$watch('search', (value) => this.grid.search(value))
             this.observe(this.$refs.payload, ['data-payload'], () => this.applyPayload())
