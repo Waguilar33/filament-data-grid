@@ -409,3 +409,21 @@ it('ignores row heights that are not positive whole numbers', function (): void 
 
     expect($payload['rows'][0]['height'])->toBeNull();
 });
+
+it('renders the components above and below the child table for each row', function (): void {
+    $payload = deliveriesPayload(mountDeliveries(fn (DataGridEntry $entry): DataGridEntry => $entry
+        ->expandedAbove([TextEntry::make('customer')->label('Recipient')])
+        ->expandedBelow(fn (array $state): array => $state['status'] === 'partial' ? [TextEntry::make('number')->label('Follow up')] : [])));
+
+    expect($payload['rows'][0]['above'])->toContain('Recipient')->toContain('Ana Torres')
+        ->and($payload['rows'][0]['below'])->toBeNull()
+        ->and($payload['rows'][1]['above'])->toContain('Bruno Díaz')
+        ->and($payload['rows'][1]['below'])->toContain('Follow up')->toContain('DLV-2');
+});
+
+it('sends no slots unless they are set', function (): void {
+    $row = deliveriesPayload(mountDeliveries())['rows'][0];
+
+    expect($row['above'])->toBeNull()
+        ->and($row['below'])->toBeNull();
+});

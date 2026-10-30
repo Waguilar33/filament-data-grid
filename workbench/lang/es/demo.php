@@ -45,6 +45,12 @@ return [
             'requested' => 'Solicitado',
             'handed_over' => 'Entregado por bodega',
         ],
+        'details' => [
+            'address' => 'Dirección',
+            'phone' => 'Teléfono',
+            'route' => 'Ruta',
+            'notes' => 'Notas',
+        ],
         'kinds' => [
             'shipment' => 'Envío',
             'pickup' => 'Retiro',

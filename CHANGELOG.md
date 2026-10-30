@@ -4,6 +4,7 @@ All notable changes to `filament-data-grid` will be documented in this file.
 
 ## Unreleased
 
+- `expandedAbove()` and `expandedBelow()` show your own Filament components above and below the child table of an open `DataGridEntry` row.
 - Every plugin icon can be replaced through Filament's icon aliases (`DataGridIconAlias`).
 - `DataGridEntry` rows, parent and child, grow to fit their content, so wrapped text, several badges and an entry's `belowContent()` are no longer cut off. `rowHeight()` sets a fixed height for every parent row, or one per row from a closure.
 - Inside a Filament table, each parent row shows the table's `recordActions()` and, with `recordUrl()`, a chevron and a clickable row that open the record.

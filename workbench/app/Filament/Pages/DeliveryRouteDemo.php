@@ -9,6 +9,7 @@ use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\RepeatableEntry\TableColumn;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Text;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -74,6 +75,16 @@ final class DeliveryRouteDemo extends Page
     {
         return DataGridEntry::make($name)
             ->hiddenLabel()
+            ->expandedAbove([
+                Grid::make(3)->schema([
+                    TextEntry::make('address')->label(__('demo::demo.route.details.address')),
+                    TextEntry::make('phone')->label(__('demo::demo.route.details.phone')),
+                    TextEntry::make('route')->label(__('demo::demo.route.details.route'))->badge()->color('gray'),
+                ]),
+            ])
+            ->expandedBelow(fn (array $state): array => filled($state['notes'] ?? null) ? [
+                TextEntry::make('notes')->label(__('demo::demo.route.details.notes')),
+            ] : [])
             ->table([
                 TableColumn::make(__('demo::demo.route.columns.delivery')),
                 TableColumn::make(__('demo::demo.route.columns.customer')),
@@ -120,7 +131,7 @@ final class DeliveryRouteDemo extends Page
 
     /**
      * @param  array<mixed>  $filters
-     * @return LengthAwarePaginator<int, array{delivery_number: string, customer: string, fill_status: string, kind: string, holds: list<string>, lines: list<array{product: string, code: string|null, requested: int, handed_over: int}>}>
+     * @return LengthAwarePaginator<int, array{delivery_number: string, customer: string, fill_status: string, kind: string, holds: list<string>, address: string, phone: string, route: string, notes: string|null, lines: list<array{product: string, code: string|null, requested: int, handed_over: int}>}>
      */
     private function searchDeliveries(?string $search, int $page, ?int $recordsPerPage, array $filters): LengthAwarePaginator
     {

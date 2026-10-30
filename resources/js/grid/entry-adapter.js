@@ -56,7 +56,11 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
     let measuredWidths = null
     let columnWidths = []
 
-    const hasChildren = () => payload.childColumns.length > 0
+    const hasChildTable = () => payload.childColumns.length > 0
+
+    const canExpand = (row) => hasChildTable() || Boolean(row.above) || Boolean(row.below)
+
+    const hasChildren = () => payload.rows.some(canExpand)
 
     const perPage = () => (typeof recordsPerPage === 'number' ? recordsPerPage : null)
 
@@ -109,21 +113,37 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         pageRows.forEach((row) => {
             visible.push({ kind: 'parent', row })
 
-            if (!expanded.has(row.key)) {
+            if (!expanded.has(row.key) || !canExpand(row)) {
                 return
             }
 
-            if (row.children.length === 0) {
-                visible.push({ kind: 'child-empty', row, isFirst: true, isLast: true })
+            const group = []
 
-                return
+            if (row.above) {
+                group.push({ kind: 'child-slot', slot: 'above', row })
             }
 
-            visible.push({ kind: 'child-header', row, isFirst: true, isLast: false })
+            if (hasChildTable()) {
+                if (row.children.length === 0) {
+                    group.push({ kind: 'child-empty', row, tableStart: true, tableEnd: true })
+                } else {
+                    group.push({ kind: 'child-header', row, tableStart: true })
 
-            row.children.forEach((cells, childIndex) =>
-                visible.push({ kind: 'child', row, cells, childIndex, isFirst: false, isLast: childIndex === row.children.length - 1 }),
-            )
+                    row.children.forEach((cells, childIndex) =>
+                        group.push({ kind: 'child', row, cells, childIndex, tableEnd: childIndex === row.children.length - 1 }),
+                    )
+                }
+            }
+
+            if (row.below) {
+                group.push({ kind: 'child-slot', slot: 'below', row })
+            }
+
+            group.forEach((item, index) => {
+                item.isFirst = index === 0
+                item.isLast = index === group.length - 1
+                visible.push(item)
+            })
         })
 
         measureRows()
@@ -139,7 +159,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
     }
 
     const formatToggle = (rowIndex, cellIndex, value, column, item) => {
-        if (item.kind !== 'parent') {
+        if (item.kind !== 'parent' || !canExpand(item.row)) {
             return ''
         }
 
@@ -151,7 +171,16 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
 
     const formatChildRow = (item) => {
         const style = `grid-template-columns: ${childGridTemplate(payload.childColumns)}`
-        const edges = `${item.isFirst ? 'fi-data-grid-child-first' : ''} ${item.isLast ? 'fi-data-grid-child-last' : ''}`
+        const edges = [
+            item.isFirst ? 'fi-data-grid-pad-top' : '',
+            item.isLast ? 'fi-data-grid-pad-bottom' : '',
+            item.tableStart ? 'fi-data-grid-child-first' : '',
+            item.tableEnd ? 'fi-data-grid-child-last' : '',
+        ].join(' ')
+
+        if (item.kind === 'child-slot') {
+            return `<div class="fi-data-grid-child-slot fi-data-grid-child-slot-${item.slot} ${edges}">${item.slot === 'above' ? item.row.above : item.row.below}</div>`
+        }
 
         if (item.kind === 'child-empty') {
             return `<div class="fi-data-grid-child-row fi-data-grid-child-empty ${edges}">${escapeHtml(translations.no_children)}</div>`
@@ -284,10 +313,15 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         return columns.map((column) => column.fixedWidth ?? flexibleWidth)
     }
 
-    const measureKey = (item) => (item.kind === 'parent' ? `parent:${item.row.key}` : `child:${item.row.key}:${item.childIndex}`)
+    const measureKey = (item) =>
+        item.kind === 'parent'
+            ? `parent:${item.row.key}`
+            : item.kind === 'child-slot'
+              ? `slot:${item.row.key}:${item.slot}`
+              : `child:${item.row.key}:${item.childIndex}`
 
     const needsMeasuring = (item) =>
-        (item.kind === 'child' || (item.kind === 'parent' && typeof item.row.height !== 'number')) &&
+        (item.kind === 'child' || item.kind === 'child-slot' || (item.kind === 'parent' && typeof item.row.height !== 'number')) &&
         !measuredHeights.has(measureKey(item))
 
     const parentProbeHtml = (item, columns) => {
@@ -336,17 +370,19 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         element.appendChild(probe)
 
         const heights = [...probe.children].map((row) =>
-            (row.querySelector('.fi-data-grid-child-row') ?? row).getBoundingClientRect().height,
+            (row.querySelector('.fi-data-grid-child-row, .fi-data-grid-child-slot') ?? row).getBoundingClientRect().height,
         )
 
         probe.remove()
-        pending.forEach((item, index) => measuredHeights.set(measureKey(item), Math.max(ROW_HEIGHT, Math.ceil(heights[index]))))
+        pending.forEach((item, index) =>
+            measuredHeights.set(measureKey(item), Math.max(item.kind === 'child-slot' ? 0 : ROW_HEIGHT, Math.ceil(heights[index]))),
+        )
     }
 
     const parentRowHeight = (item) => item.row.height ?? measuredHeights.get(measureKey(item)) ?? ROW_HEIGHT
 
     const childRowHeight = (item) =>
-        (item.kind === 'child-header' ? CHILD_HEADER_HEIGHT : (measuredHeights.get(measureKey(item)) ?? ROW_HEIGHT)) +
+        (item.kind === 'child-header' ? CHILD_HEADER_HEIGHT : (measuredHeights.get(measureKey(item)) ?? (item.kind === 'child-slot' ? 0 : ROW_HEIGHT))) +
         (item.isFirst ? childTablePadding() : 0) +
         (item.isLast ? childTablePadding() : 0)
 
@@ -367,7 +403,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
                     height: parentRowHeight(item),
                     cssClasses: [
                         'fi-data-grid-parent-row',
-                        hasChildren() ? 'fi-data-grid-parent-row-expandable' : '',
+                        canExpand(item.row) ? 'fi-data-grid-parent-row-expandable' : '',
                         expanded.has(item.row.key) ? 'fi-data-grid-parent-row-expanded' : '',
                         isLast ? 'fi-data-grid-row-last' : '',
                     ].join(' '),
@@ -466,7 +502,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
             return
         }
 
-        if (hasChildren()) {
+        if (canExpand(item.row)) {
             toggle(item.row.key)
         }
     })
@@ -562,9 +598,11 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         toggle,
 
         setPayload(nextPayload) {
+            const hadToggles = hasChildren()
             const columnsChanged =
                 JSON.stringify(nextPayload.columns) !== JSON.stringify(payload.columns) ||
-                JSON.stringify(nextPayload.childColumns) !== JSON.stringify(payload.childColumns)
+                JSON.stringify(nextPayload.childColumns) !== JSON.stringify(payload.childColumns) ||
+                hadToggles !== nextPayload.rows.some((row) => nextPayload.childColumns.length > 0 || Boolean(row.above) || Boolean(row.below))
 
             payload = nextPayload
             measuredHeights.clear()

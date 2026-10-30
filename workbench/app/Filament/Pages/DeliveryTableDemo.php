@@ -81,7 +81,7 @@ final class DeliveryTableDemo extends Page implements HasTable
 
     /**
      * @param  array<mixed>  $filters
-     * @return LengthAwarePaginator<array-key, array{delivery_number: string, customer: string, fill_status: string, kind: string, holds: list<string>, lines: list<array{product: string, code: string|null, requested: int, handed_over: int}>}>
+     * @return LengthAwarePaginator<array-key, array{delivery_number: string, customer: string, fill_status: string, kind: string, holds: list<string>, address: string, phone: string, route: string, notes: string|null, lines: list<array{product: string, code: string|null, requested: int, handed_over: int}>}>
      */
     private function deliveries(?string $search, array $filters, int $page, int $recordsPerPage): LengthAwarePaginator
     {

@@ -319,6 +319,26 @@ The state can be an array, a collection or a relationship, as with `RepeatableEn
 - **Search:** `searchable()` adds a search field that filters parent rows. A row's child rows stay with it. Pass a list of fields to search only those columns. The search matches the text the entries show, such as a badge's formatted label.
 - **Pagination:** `paginated([10, 25, 50])` pages parent rows and lets users pick the page size, with Filament's own pagination controls. Add `DataGridEntry::ALL_RECORDS` to offer "All", and use `defaultPaginationPageOption(25)` to start on another size. `paginated(10)` gives a fixed size, and `paginated()` uses 10, 25 and 50. Open child rows don't count toward the page size, so a parent row and its children are never split across pages.
 
+### Content above and below the child rows
+
+An open row can show your own content above and below its child table, such as the delivery's address and phone above its products. Pass any Filament schema components; they use the row's data, like entries in an infolist:
+
+```php
+DataGridEntry::make('deliveries')
+    ->expandedAbove([
+        Grid::make(3)->schema([
+            TextEntry::make('address'),
+            TextEntry::make('phone'),
+            TextEntry::make('route')->badge(),
+        ]),
+    ])
+    ->expandedBelow(fn (array $state): array => filled($state['notes'] ?? null)
+        ? [TextEntry::make('notes')]
+        : [])
+```
+
+A closure receives the row's `$state` (and `$record` for Eloquent rows) and returns the components for that row, or an empty array for none. A row with content above or below, but no child table, still opens. The content sits inside the same inset panel as the child table, and the row grows to fit it.
+
 ### Row height
 
 Each parent and child row grows to fit its tallest cell, so text can wrap and an entry's `belowContent()`, such as a code badge under a product name, shows in full. A row is never shorter than 44 pixels, and the cells stay centred vertically:

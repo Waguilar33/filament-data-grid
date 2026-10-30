@@ -29,12 +29,12 @@ function visitTable(): AwaitableWebpage
 it('opens rows inside a Filament table and keeps them open while Filament searches', function (): void {
     visitTable()
         ->click(tableRow(0).' .fi-data-grid-row-toggle')
-        ->assertSeeIn(tableRow(1), 'Product')
+        ->assertSeeIn(TABLE_GRID.' .fi-data-grid-child-header', 'Product')
         ->type('.fi-ta-search-field input', '0000001')
         ->wait(1.5)
         ->assertSeeIn(tableRow(0), 'DLV-2026-0000001')
         ->assertAttribute(tableRow(0).' .fi-data-grid-row-toggle', 'aria-expanded', 'true')
-        ->assertSeeIn(tableRow(1), 'Product')
+        ->assertSeeIn(TABLE_GRID.' .fi-data-grid-child-header', 'Product')
         ->assertNoJavaScriptErrors();
 });
 

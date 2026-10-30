@@ -45,6 +45,12 @@ return [
             'requested' => 'Requested',
             'handed_over' => 'Handed over',
         ],
+        'details' => [
+            'address' => 'Address',
+            'phone' => 'Phone',
+            'route' => 'Route',
+            'notes' => 'Notes',
+        ],
         'kinds' => [
             'shipment' => 'Shipment',
             'pickup' => 'Pick-up',
