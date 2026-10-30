@@ -61,6 +61,8 @@ return [
             'awaiting_payment' => 'Esperando pago',
         ],
         'actions' => [
+            'edit' => 'Editar',
+            'edited' => 'Entrega :number editada',
             'deliver' => 'Entregar',
             'delivered' => 'Entrega :number marcada como entregada',
             'reschedule' => 'Reprogramar',

@@ -61,6 +61,8 @@ return [
             'awaiting_payment' => 'Awaiting payment',
         ],
         'actions' => [
+            'edit' => 'Edit',
+            'edited' => 'Delivery :number edited',
             'deliver' => 'Deliver',
             'delivered' => 'Delivery :number marked as delivered',
             'reschedule' => 'Reschedule',
