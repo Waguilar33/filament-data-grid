@@ -70,15 +70,17 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
                 return
             }
 
-            visible.push({ kind: 'child-header', row })
-
             if (row.children.length === 0) {
-                visible.push({ kind: 'child-empty', row })
+                visible.push({ kind: 'child-empty', row, isFirst: true, isLast: true })
 
                 return
             }
 
-            row.children.forEach((cells) => visible.push({ kind: 'child', row, cells }))
+            visible.push({ kind: 'child-header', row, isFirst: true, isLast: false })
+
+            row.children.forEach((cells, childIndex) =>
+                visible.push({ kind: 'child', row, cells, isFirst: false, isLast: childIndex === row.children.length - 1 }),
+            )
         })
 
         onChange?.({
@@ -103,15 +105,16 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
 
     const formatChildRow = (item) => {
         const style = `grid-template-columns: ${childGridTemplate(payload.childColumns)}`
+        const edges = `${item.isFirst ? 'fi-data-grid-child-first' : ''} ${item.isLast ? 'fi-data-grid-child-last' : ''}`
 
         if (item.kind === 'child-empty') {
-            return `<div class="fi-data-grid-child-row fi-data-grid-child-empty">${escapeHtml(translations.no_children)}</div>`
+            return `<div class="fi-data-grid-child-row fi-data-grid-child-empty ${edges}">${escapeHtml(translations.no_children)}</div>`
         }
 
         const isHeader = item.kind === 'child-header'
         const cells = payload.childColumns.map((column, index) => childCellHtml(item.cells?.[index], column, isHeader)).join('')
 
-        return `<div class="fi-data-grid-child-row ${isHeader ? 'fi-data-grid-child-header' : ''}" role="row" style="${style}">${cells}</div>`
+        return `<div class="fi-data-grid-child-row ${isHeader ? 'fi-data-grid-child-header' : ''} ${edges}" role="row" style="${style}">${cells}</div>`
     }
 
     const formatCell = (rowIndex, cellIndex, value, column, item) => {
