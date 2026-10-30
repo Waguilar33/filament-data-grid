@@ -80,6 +80,7 @@ export default function dataGrid({ statePath, schemaComponent, actions, translat
                 onReorder: (keys) => this.$wire.mountAction(actions.reorder, { items: keys }, { schemaComponent }),
             })
 
+            this.$refs.grid.style.removeProperty('min-height')
             this.observe(this.$refs.payload, ['data-payload'], () => this.applyPayload())
             this.observe(document.documentElement, ['class'], () => this.grid.setDarkMode(isDarkMode()))
 
