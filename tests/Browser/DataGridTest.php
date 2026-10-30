@@ -154,15 +154,10 @@ it('searches inside a slide-over without closing it on Escape', function (): voi
 });
 
 it('adds rows with the add action and accepts rows pushed by the server', function (): void {
-    $page = visitDemo();
-    $probe = '() => ({ payloadRows: JSON.parse(document.querySelector(\'[id="form.adjustments"] [data-payload]\').dataset.payload).rows.length, domRows: document.querySelectorAll(\'[id="form.adjustments"] .slick-row\').length, active: document.activeElement?.outerHTML.slice(0, 120), button: JSON.stringify([...document.querySelectorAll("button")].find((b) => b.textContent.trim() === "Add adjustment")?.getBoundingClientRect()), sheets: [...document.styleSheets].map((s) => s.href).filter(Boolean).map((h) => h.split("/").pop()) })';
-    $before = $page->script($probe);
-    $page->click('Add adjustment')->wait(1);
-    $after = $page->script($probe);
-    $page->wait(3);
-    $later = $page->script($probe);
-    fwrite(STDERR, 'DIAG '.json_encode([$before, $after, $later]).PHP_EOL);
-    $page->assertPresent(cell(2, 1, ADJUSTMENTS))
+    visitDemo()
+        ->click('Add adjustment')
+        ->wait(1)
+        ->assertPresent(cell(2, 1, ADJUSTMENTS))
         ->click('Add sample lines')
         ->wait(1)
         ->assertSee('Crispy Chocolate 100 g')
