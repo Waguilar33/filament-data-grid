@@ -2,28 +2,6 @@ import { createGrid } from './grid/slickgrid-adapter.js'
 
 const isDarkMode = () => document.documentElement.classList.contains('dark')
 
-const STYLESHEET_TIMEOUT_MS = 5000
-
-const whenStylesheetLoads = (href) =>
-    new Promise((resolve) => {
-        const url = new URL(href, window.location.href).href
-        const startedAt = performance.now()
-
-        const check = () => {
-            const isLoaded = [...document.styleSheets].some((sheet) => sheet.href === url)
-
-            if (isLoaded || performance.now() - startedAt > STYLESHEET_TIMEOUT_MS) {
-                resolve()
-
-                return
-            }
-
-            requestAnimationFrame(check)
-        }
-
-        check()
-    })
-
 const callInParallel = (wire, method, args) =>
     typeof Livewire.fireAction === 'function'
         ? Livewire.fireAction(wire.__instance, method, args, { async: true })
@@ -46,7 +24,7 @@ const afterEachRequest = (wire, startRequest) => {
     })
 }
 
-export default function dataGrid({ statePath, schemaComponent, actions, translations, icons, styleHref }) {
+export default function dataGrid({ statePath, schemaComponent, actions, translations, icons }) {
     return {
         grid: null,
         localChanges: new Map(),
@@ -55,17 +33,7 @@ export default function dataGrid({ statePath, schemaComponent, actions, translat
         stopInterceptingMessages: null,
         wasEditingOnKeyDown: false,
 
-        isDestroyed: false,
-
         init() {
-            whenStylesheetLoads(styleHref).then(() => {
-                if (!this.isDestroyed) {
-                    this.mount()
-                }
-            })
-        },
-
-        mount() {
             this.appliedPayload = this.$refs.payload.dataset.payload
             this.grid = createGrid(this.$refs.grid, {
                 payload: JSON.parse(this.appliedPayload),
@@ -104,7 +72,6 @@ export default function dataGrid({ statePath, schemaComponent, actions, translat
         },
 
         destroy() {
-            this.isDestroyed = true
             this.stopInterceptingMessages?.()
             this.observers.forEach((observer) => observer.disconnect())
             this.grid?.destroy()

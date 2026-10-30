@@ -11,6 +11,6 @@ First preview. Not ready for production; the API may change before v1.0.0.
 - Keyboard entry: typing starts editing, Enter and Shift+Enter save and move down or up, and Tab moves across.
 - A trailing empty row, which doesn't count toward `minItems()` or `maxItems()`.
 - Frozen columns, drag reordering, row menu with extra item actions, and per-row validation errors.
-- Assets load only on pages that use the field.
+- The JavaScript loads only on pages that use the field. The stylesheet loads with every Filament page, so the page doesn't shift when a grid appears.
 - English and Spanish translations.
 - Supports Filament 4 and 5, Laravel 11 to 13 and PHP 8.2+.

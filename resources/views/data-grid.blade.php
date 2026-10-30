@@ -15,7 +15,6 @@
 
 <div
     x-load
-    x-load-css="@js([$styleHref])"
     x-load-src="{{ $alpineSrc }}"
     x-data="filamentDataGrid({{ $config }})"
     x-on:keydown.capture="rememberEditingState()"
