@@ -285,6 +285,7 @@ class DataGrid extends Repeater
                     'reorder' => generate_icon_html(Heroicon::Bars2)?->toHtml(),
                     'date' => generate_icon_html(Heroicon::Calendar)?->toHtml(),
                     'edit' => generate_icon_html(Heroicon::PencilSquare)?->toHtml(),
+                    'expand' => generate_icon_html(Heroicon::ChevronRight)?->toHtml(),
                 ],
             ]),
         ])->render();

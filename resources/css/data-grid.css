@@ -573,8 +573,7 @@
     overflow: hidden;
     border-radius: var(--radius-lg);
     background-color: var(--fi-data-grid-bg);
-    outline: 1px solid var(--fi-data-grid-border);
-    outline-offset: -1px;
+    box-shadow: 0 0 0 1px var(--fi-data-grid-border);
     pointer-events: auto;
 }
 
