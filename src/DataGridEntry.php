@@ -4,19 +4,23 @@ declare(strict_types=1);
 
 namespace Waguilar\FilamentDataGrid;
 
+use BackedEnum;
 use Closure;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Schemas\Schema;
 use Filament\Support\Components\Attributes\ExposedLivewireMethod;
 use Filament\Support\Facades\FilamentAsset;
 use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Filters\BaseFilter;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Js;
 use Livewire\Attributes\Renderless;
 use Traversable;
 use Waguilar\FilamentDataGrid\Entry\BuildEntryPayload;
+use Waguilar\FilamentDataGrid\Entry\EntryFilters;
 use Waguilar\FilamentDataGrid\Entry\EntryPage;
 
 use function Filament\Support\generate_icon_html;
@@ -41,7 +45,18 @@ class DataGridEntry extends RepeatableEntry
 
     protected bool|Closure $isServerSide = false;
 
+    protected string|Htmlable|Closure|null $heading = null;
+
+    protected string|Htmlable|Closure|null $description = null;
+
+    protected string|BackedEnum|Htmlable|Closure|null $icon = null;
+
     protected ?Closure $getRecordsUsing = null;
+
+    /**
+     * @var list<BaseFilter>|Closure
+     */
+    protected array|Closure $filters = [];
 
     /**
      * @param  bool|int|list<int|string>|Closure  $condition
@@ -120,6 +135,48 @@ class DataGridEntry extends RepeatableEntry
         return is_array($searchable) ? array_values(array_filter($searchable, is_string(...))) : null;
     }
 
+    public function heading(string|Htmlable|Closure|null $heading): static
+    {
+        $this->heading = $heading;
+
+        return $this;
+    }
+
+    public function getHeading(): string|Htmlable|null
+    {
+        $heading = $this->evaluate($this->heading);
+
+        return is_string($heading) || $heading instanceof Htmlable ? $heading : null;
+    }
+
+    public function description(string|Htmlable|Closure|null $description): static
+    {
+        $this->description = $description;
+
+        return $this;
+    }
+
+    public function getDescription(): string|Htmlable|null
+    {
+        $description = $this->evaluate($this->description);
+
+        return is_string($description) || $description instanceof Htmlable ? $description : null;
+    }
+
+    public function icon(string|BackedEnum|Htmlable|Closure|null $icon): static
+    {
+        $this->icon = $icon;
+
+        return $this;
+    }
+
+    public function getIcon(): string|BackedEnum|Htmlable|null
+    {
+        $icon = $this->evaluate($this->icon);
+
+        return is_string($icon) || $icon instanceof BackedEnum || $icon instanceof Htmlable ? $icon : null;
+    }
+
     public function serverSide(bool|Closure $condition = true): static
     {
         $this->isServerSide = $condition;
@@ -130,6 +187,37 @@ class DataGridEntry extends RepeatableEntry
     public function isServerSide(): bool
     {
         return (bool) $this->evaluate($this->isServerSide);
+    }
+
+    /**
+     * @param  list<BaseFilter>|Closure  $filters
+     */
+    public function filters(array|Closure $filters): static
+    {
+        $this->filters = $filters;
+
+        return $this;
+    }
+
+    /**
+     * @return list<BaseFilter>
+     */
+    public function getFilters(): array
+    {
+        $filters = $this->evaluate($this->filters);
+
+        return is_array($filters) ? array_values(array_filter($filters, fn (mixed $filter): bool => $filter instanceof BaseFilter)) : [];
+    }
+
+    public function getEntryFilters(): EntryFilters
+    {
+        $filters = new EntryFilters($this->getFilters());
+
+        if ($this->getRecordsUsing === null) {
+            $filters->assertSupportedWithoutRecords();
+        }
+
+        return $filters;
     }
 
     public function records(?Closure $callback): static
@@ -149,7 +237,7 @@ class DataGridEntry extends RepeatableEntry
      */
     #[ExposedLivewireMethod]
     #[Renderless]
-    public function getGridPage(mixed $search = null, mixed $page = 1, mixed $recordsPerPage = null): array
+    public function getGridPage(mixed $search = null, mixed $page = 1, mixed $recordsPerPage = null, mixed $filters = []): array
     {
         if (! $this->isServerSide()) {
             return ['rows' => [], 'total' => 0, 'page' => 1, 'recordsPerPage' => null];
@@ -161,6 +249,7 @@ class DataGridEntry extends RepeatableEntry
             recordsPerPage: in_array($recordsPerPage, $this->getPaginationPageOptions(), false)
                 ? (is_numeric($recordsPerPage) ? (int) $recordsPerPage : self::ALL_RECORDS)
                 : $this->getDefaultPaginationPageOption(),
+            filters: $this->getEntryFilters()->sanitize($filters),
         );
 
         return [
@@ -171,13 +260,20 @@ class DataGridEntry extends RepeatableEntry
         ];
     }
 
-    public function resolvePage(string $search, int $page, int|string|null $recordsPerPage): EntryPage
+    /**
+     * @param  array<string, mixed>  $filters
+     */
+    public function resolvePage(string $search, int $page, int|string|null $recordsPerPage, array $filters = []): EntryPage
     {
         if ($this->getRecordsUsing !== null) {
-            return $this->resolvePageFromCallback($search, $page, $recordsPerPage);
+            return $this->resolvePageFromCallback($search, $page, $recordsPerPage, $filters);
         }
 
-        $items = $this->makeItemSchemas($this->normalizeState($this->getState()));
+        $entryFilters = $this->getEntryFilters();
+        $items = array_filter(
+            $this->makeItemSchemas($this->normalizeState($this->getState())),
+            fn (Schema $item): bool => $entryFilters->matches($item, $filters),
+        );
 
         if ($search !== '') {
             $needle = mb_strtolower($search);
@@ -239,7 +335,7 @@ class DataGridEntry extends RepeatableEntry
             return app(BuildEntryPayload::class)->handle($this, $this->getItems(), total: null, page: 1);
         }
 
-        $entryPage = $this->resolvePage('', 1, $this->getDefaultPaginationPageOption());
+        $entryPage = $this->resolvePage('', 1, $this->getDefaultPaginationPageOption(), $this->getEntryFilters()->sanitize([]));
 
         return app(BuildEntryPayload::class)->handle($this, $entryPage->items, total: $entryPage->total, page: $entryPage->page);
     }
@@ -269,9 +365,13 @@ class DataGridEntry extends RepeatableEntry
         return $this->wrapEmbeddedHtml($html);
     }
 
-    private function resolvePageFromCallback(string $search, int $page, int|string|null $recordsPerPage): EntryPage
+    /**
+     * @param  array<string, mixed>  $filters
+     */
+    private function resolvePageFromCallback(string $search, int $page, int|string|null $recordsPerPage, array $filters): EntryPage
     {
         $result = $this->evaluate($this->getRecordsUsing, [
+            'filters' => $this->getEntryFilters()->toFilamentData($filters),
             'search' => $search === '' ? null : $search,
             'page' => $page,
             'recordsPerPage' => $recordsPerPage === self::ALL_RECORDS ? null : $recordsPerPage,

@@ -5,10 +5,16 @@ declare(strict_types=1);
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\RepeatableEntry\TableColumn;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
 use Waguilar\FilamentDataGrid\DataGridEntry;
+use Waguilar\FilamentDataGrid\Entry\EntryFilters;
+use Waguilar\FilamentDataGrid\Exceptions\UnsupportedFilter;
 use Waguilar\FilamentDataGrid\Tests\Fixtures\EntryPage;
 
 /**
@@ -130,7 +136,7 @@ it('has no child rows without a table repeatable entry', function (): void {
 it('renders the grid component with its search and pagination controls', function (): void {
     mountDeliveries(fn (DataGridEntry $entry): DataGridEntry => $entry->searchable()->paginated(10))
         ->assertSeeHtml('filamentDataGridEntry(')
-        ->assertSeeHtml('fi-data-grid-search')
+        ->assertSeeHtml('fi-ta-search-field')
         ->assertSeeHtml('fi-pagination');
 });
 
@@ -266,4 +272,92 @@ it('only lets the browser call the page method', function (): void {
 
     expect($page->callSchemaComponentMethod((string) $key, 'getGridPayload'))->toBeNull()
         ->and($page->callSchemaComponentMethod((string) $key, 'getGridPage', [null, 1, 5]))->toHaveKey('total', 3);
+});
+
+/**
+ * @return list<array{number: string, customer: string, status: string, late: bool}>
+ */
+function filterableDeliveries(): array
+{
+    return [
+        ['number' => 'DLV-1', 'customer' => 'Ana', 'status' => 'complete', 'late' => false],
+        ['number' => 'DLV-2', 'customer' => 'Bruno', 'status' => 'partial', 'late' => true],
+        ['number' => 'DLV-3', 'customer' => 'Carla', 'status' => 'partial', 'late' => false],
+    ];
+}
+
+function filterableEntry(Closure $configure): DataGridEntry
+{
+    return serverEntry(fn (DataGridEntry $entry): DataGridEntry => $configure($entry
+        ->filters([
+            SelectFilter::make('status')->options(['complete' => 'Complete', 'partial' => 'Partial']),
+            SelectFilter::make('customer')->multiple()->options(['Ana' => 'Ana', 'Bruno' => 'Bruno', 'Carla' => 'Carla']),
+            TernaryFilter::make('late'),
+        ])
+        ->schema([TextEntry::make('number'), TextEntry::make('customer')])));
+}
+
+it('describes Filament filters and sends each row its raw filter values', function (): void {
+    $payload = filterableEntry(fn (DataGridEntry $entry): DataGridEntry => $entry->state(filterableDeliveries()))->getGridPayload();
+
+    expect(array_column($payload['filters'], 'type', 'name'))->toBe(['status' => 'select', 'customer' => 'select', 'late' => 'ternary'])
+        ->and($payload['filters'][1]['multiple'])->toBeTrue()
+        ->and($payload['filters'][0]['options'][1])->toBe(['value' => 'partial', 'label' => 'Partial'])
+        ->and($payload['rows'][1]['filterValues'])->toBe(['status' => 'partial', 'customer' => 'Bruno', 'late' => true]);
+});
+
+it('applies select, multiple select and ternary filters to the state on the server', function (): void {
+    $entry = filterableEntry(fn (DataGridEntry $entry): DataGridEntry => $entry->state(filterableDeliveries())->serverSide()->paginated(10));
+
+    $numbers = fn (array $filters): array => array_map(
+        fn (array $row): string => strip_tags((string) preg_replace('/.*?(DLV-\d).*/s', '$1', $row['cells']['number']['html'])),
+        $entry->getGridPage(null, 1, 10, $filters)['rows'],
+    );
+
+    expect($numbers(['status' => 'partial']))->toBe(['DLV-2', 'DLV-3'])
+        ->and($numbers(['customer' => ['Ana', 'Carla']]))->toBe(['DLV-1', 'DLV-3'])
+        ->and($numbers(['late' => 'true']))->toBe(['DLV-2'])
+        ->and($numbers(['late' => 'false', 'status' => 'partial']))->toBe(['DLV-3'])
+        ->and($numbers(['status' => 'unknown', 'customer' => ['Nobody'], 'late' => 'maybe']))->toBe(['DLV-1', 'DLV-2', 'DLV-3']);
+});
+
+it('passes the filters to records() in the shape Filament tables use', function (): void {
+    $received = new ArrayObject;
+
+    $entry = filterableEntry(fn (DataGridEntry $entry): DataGridEntry => $entry
+        ->serverSide()
+        ->paginated(10)
+        ->records(function (array $filters) use ($received): array {
+            $received[] = $filters;
+
+            return filterableDeliveries();
+        }));
+
+    $entry->getGridPage(null, 1, 10, ['status' => 'partial', 'customer' => ['Ana'], 'late' => 'false']);
+
+    expect($received[count($received) - 1])->toBe([
+        'status' => ['value' => 'partial'],
+        'customer' => ['values' => ['Ana']],
+        'late' => ['value' => false],
+    ]);
+});
+
+it('refuses filters it cannot apply without records()', function (): void {
+    $entry = DataGridEntry::make('deliveries')
+        ->state(filterableDeliveries())
+        ->filters([Filter::make('has_code')]);
+
+    expect(fn () => $entry->getEntryFilters())->toThrow(UnsupportedFilter::class)
+        ->and($entry->records(fn (): array => [])->getEntryFilters())->toBeInstanceOf(EntryFilters::class);
+});
+
+it('renders a heading, description and icon above the grid', function (): void {
+    mountDeliveries(fn (DataGridEntry $entry): DataGridEntry => $entry
+        ->heading('Deliveries')
+        ->description('Where each order stands')
+        ->icon(Heroicon::OutlinedTruck))
+        ->assertSeeHtml('fi-ta-header-heading')
+        ->assertSee('Deliveries')
+        ->assertSee('Where each order stands')
+        ->assertSeeHtml('fi-data-grid-entry-header-icon');
 });

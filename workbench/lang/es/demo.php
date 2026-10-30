@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 return [
     'route' => [
+        'descriptions' => [
+            'browser' => 'Entregas de esta ruta, filtradas en el navegador.',
+            'server' => 'Las mismas entregas, cargadas página por página desde el servidor.',
+        ],
         'sections' => [
             'browser' => 'Filas enviadas al navegador',
             'server' => 'Filas cargadas desde el servidor',

@@ -16,7 +16,6 @@ return [
         'actions' => 'Acciones',
     ],
     'entry' => [
-        'search' => 'Buscar',
         'empty' => 'Sin resultados.',
         'expand' => 'Expandir fila',
         'collapse' => 'Contraer fila',

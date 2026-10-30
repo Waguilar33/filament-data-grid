@@ -8,8 +8,9 @@ use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\RepeatableEntry\TableColumn;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Pages\Page;
-use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -33,17 +34,17 @@ final class DeliveryRouteDemo extends Page
     public function content(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make(__('demo::demo.route.sections.browser'))
-                ->schema([
-                    $this->deliveries('deliveries')
-                        ->state(FakeDeliveries::all()),
-                ]),
-            Section::make(__('demo::demo.route.sections.server'))
-                ->schema([
-                    $this->deliveries('server_deliveries')
-                        ->serverSide()
-                        ->records(fn (?string $search, int $page, ?int $recordsPerPage): LengthAwarePaginator => $this->searchDeliveries($search, $page, $recordsPerPage)),
-                ]),
+            $this->deliveries('deliveries')
+                ->heading(__('demo::demo.route.sections.browser'))
+                ->description(__('demo::demo.route.descriptions.browser'))
+                ->icon(Heroicon::OutlinedTruck)
+                ->state(FakeDeliveries::all()),
+            $this->deliveries('server_deliveries')
+                ->heading(__('demo::demo.route.sections.server'))
+                ->description(__('demo::demo.route.descriptions.server'))
+                ->icon(Heroicon::OutlinedServerStack)
+                ->serverSide()
+                ->records(fn (?string $search, int $page, ?int $recordsPerPage, array $filters): LengthAwarePaginator => $this->searchDeliveries($search, $page, $recordsPerPage, $filters)),
         ]);
     }
 
@@ -52,6 +53,18 @@ final class DeliveryRouteDemo extends Page
         return DataGridEntry::make($name)
             ->hiddenLabel()
             ->searchable(['delivery_number', 'customer'])
+            ->filters([
+                SelectFilter::make('fill_status')
+                    ->label(__('demo::demo.route.columns.warehouse'))
+                    ->options([
+                        'complete' => __('demo::demo.route.fill_statuses.complete'),
+                        'partial' => __('demo::demo.route.fill_statuses.partial'),
+                    ]),
+                SelectFilter::make('customer')
+                    ->label(__('demo::demo.route.columns.customer'))
+                    ->multiple()
+                    ->options(array_combine(FakeDeliveries::customers(), FakeDeliveries::customers())),
+            ])
             ->paginated([5, 10, 25, DataGridEntry::ALL_RECORDS])
             ->defaultPaginationPageOption(10)
             ->table([
@@ -83,14 +96,21 @@ final class DeliveryRouteDemo extends Page
     }
 
     /**
+     * @param  array<mixed>  $filters
      * @return LengthAwarePaginator<int, array{delivery_number: string, customer: string, fill_status: string, lines: list<array{product: string, code: string|null, requested: int, handed_over: int}>}>
      */
-    private function searchDeliveries(?string $search, int $page, ?int $recordsPerPage): LengthAwarePaginator
+    private function searchDeliveries(?string $search, int $page, ?int $recordsPerPage, array $filters): LengthAwarePaginator
     {
+        $status = data_get($filters, 'fill_status.value');
+        $customers = data_get($filters, 'customer.values');
+        $customers = is_array($customers) ? $customers : [];
+
         $deliveries = collect(FakeDeliveries::all(count: 240))
             ->when(filled($search), fn (Collection $deliveries): Collection => $deliveries->filter(
                 fn (array $delivery): bool => Str::contains($delivery['delivery_number'].' '.$delivery['customer'], (string) $search, ignoreCase: true),
             ))
+            ->when(filled($status), fn (Collection $deliveries): Collection => $deliveries->where('fill_status', $status))
+            ->when($customers !== [], fn (Collection $deliveries): Collection => $deliveries->whereIn('customer', $customers))
             ->values();
 
         $perPage = $recordsPerPage ?? max(1, $deliveries->count());

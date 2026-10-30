@@ -20,6 +20,9 @@ export default function dataGridEntry({ schemaComponent, translations, icons }) 
         total: 0,
         first: 0,
         last: 0,
+        filterDefinitions: [],
+        draftFilters: {},
+        activeFilters: {},
 
         init() {
             this.appliedPayload = this.$refs.payload.dataset.payload
@@ -27,6 +30,9 @@ export default function dataGridEntry({ schemaComponent, translations, icons }) 
             const payload = JSON.parse(this.appliedPayload)
 
             this.isServerSide = payload.serverSide
+            this.filterDefinitions = payload.filters ?? []
+            this.draftFilters = this.emptyFilters()
+            this.activeFilters = this.emptyFilters()
             this.grid = createEntryGrid(this.$refs.grid, {
                 payload,
                 translations,
@@ -74,6 +80,33 @@ export default function dataGridEntry({ schemaComponent, translations, icons }) 
             return pages
         },
 
+        get activeFiltersCount() {
+            return Object.values(this.activeFilters).filter((value) => this.isActiveFilterValue(value)).length
+        },
+
+        isActiveFilterValue(value) {
+            return Array.isArray(value) ? value.length > 0 : value !== null && value !== '' && value !== false
+        },
+
+        emptyFilters() {
+            return Object.fromEntries(
+                this.filterDefinitions.map((filter) => [
+                    filter.name,
+                    filter.type === 'checkbox' ? false : filter.multiple ? [] : '',
+                ]),
+            )
+        },
+
+        applyFilters() {
+            this.activeFilters = JSON.parse(JSON.stringify(this.draftFilters))
+            this.query({ filters: this.activeFilters })
+        },
+
+        resetFilters() {
+            this.draftFilters = this.emptyFilters()
+            this.applyFilters()
+        },
+
         goToPageLabel(number) {
             return translations.pagination.go_to_page.replace(':page', number.toLocaleString())
         },
@@ -110,7 +143,7 @@ export default function dataGridEntry({ schemaComponent, translations, icons }) 
             }
         },
 
-        async fetchPage({ search, page, recordsPerPage }) {
+        async fetchPage({ search, page, recordsPerPage, filters }) {
             const request = ++this.latestRequest
 
             this.isLoading = true
@@ -119,7 +152,7 @@ export default function dataGridEntry({ schemaComponent, translations, icons }) 
                 const result = await callInParallel(this.$wire, 'callSchemaComponentMethod', [
                     schemaComponent,
                     'getGridPage',
-                    [search, page, recordsPerPage],
+                    [search, page, recordsPerPage, filters],
                 ])
 
                 if (request === this.latestRequest && result) {
@@ -146,7 +179,9 @@ export default function dataGridEntry({ schemaComponent, translations, icons }) 
 
             this.grid.setPayload(nextPayload)
 
-            if (this.isServerSide && (query.search !== '' || query.page !== 1 || query.recordsPerPage !== nextPayload.recordsPerPage)) {
+            const hasActiveFilters = Object.values(query.filters).some((value) => this.isActiveFilterValue(value))
+
+            if (this.isServerSide && (query.search !== '' || query.page !== 1 || query.recordsPerPage !== nextPayload.recordsPerPage || hasActiveFilters)) {
                 this.grid.setQuery(query)
                 this.fetchPage(query)
             }

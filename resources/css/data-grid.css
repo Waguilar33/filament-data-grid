@@ -496,14 +496,45 @@
     --fi-data-grid-row-hover-bg: color-mix(in oklab, #fff 3%, transparent);
 }
 
-.fi-data-grid-toolbar {
-    display: flex;
-    justify-content: flex-end;
+
+.fi-data-grid-entry-content {
+    min-width: 0;
+    overflow: hidden;
+    border-end-start-radius: var(--radius-xl);
+    border-end-end-radius: var(--radius-xl);
 }
 
-.fi-data-grid-search {
-    width: 100%;
-    max-width: 20rem;
+.fi-data-grid-entry-header {
+    display: flex;
+    align-items: flex-start;
+    gap: calc(var(--spacing) * 3);
+}
+
+.fi-data-grid-entry-header-icon {
+    flex-shrink: 0;
+    color: var(--gray-400);
+}
+
+.dark .fi-data-grid-entry-header-icon {
+    color: var(--gray-500);
+}
+
+.fi-data-grid-filters-form {
+    display: grid;
+    gap: calc(var(--spacing) * 4);
+}
+
+.fi-data-grid-filter-options {
+    display: grid;
+    gap: calc(var(--spacing) * 2);
+}
+
+.fi-data-grid-filter-option {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--spacing) * 3);
+    font-size: var(--text-sm);
+    color: var(--fi-data-grid-text);
 }
 
 .fi-data-grid-entry-grid .fi-data-grid-parent-row-expandable .slick-cell {

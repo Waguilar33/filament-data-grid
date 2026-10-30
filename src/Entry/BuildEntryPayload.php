@@ -46,6 +46,7 @@ final readonly class BuildEntryPayload
             'serverSide' => $entry->isServerSide(),
             'total' => $total,
             'page' => $page,
+            'filters' => $entry->getEntryFilters()->describe(),
             'recordsPerPageOptions' => $entry->getPaginationPageOptions(),
             'recordsPerPage' => $entry->getDefaultPaginationPageOption(),
         ];
@@ -101,6 +102,7 @@ final readonly class BuildEntryPayload
             'key' => $key,
             'cells' => $cells,
             'search' => $entry->isServerSide() ? '' : $this->searchText($entry, $item),
+            'filterValues' => $entry->isServerSide() ? [] : $entry->getEntryFilters()->rawValues($item),
             'children' => $children === null ? [] : $this->describeChildren($children),
         ];
     }

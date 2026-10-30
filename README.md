@@ -259,6 +259,35 @@ The state can be an array, a collection or a relationship, as with `RepeatableEn
 
 Child rows have the same height as parent rows, so show extra details, such as a code badge, in a column of their own.
 
+### Heading, description and icon
+
+Like a section, the grid can have a heading, a description and an icon above it:
+
+```php
+DataGridEntry::make('deliveries')
+    ->heading('Deliveries')
+    ->description('Where each order on the route stands.')
+    ->icon(Heroicon::OutlinedTruck)
+```
+
+### Filters
+
+`filters()` takes Filament's own table filters. They appear behind the filter button next to the search field, with the same form, "Apply filters" and "Reset" as a Filament table:
+
+```php
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
+
+DataGridEntry::make('deliveries')
+    ->filters([
+        SelectFilter::make('fill_status')->options(['complete' => 'Complete', 'partial' => 'Partial']),
+        SelectFilter::make('customer')->multiple()->options($customers),
+        TernaryFilter::make('is_late'),
+    ])
+```
+
+The grid applies `SelectFilter` and `TernaryFilter` itself, by comparing each row's `attribute()` (the filter's name by default) with the chosen value. Any other filter, such as a plain `Filter` with a custom query, needs `records()`. As with Filament's custom data tables, `records()` receives the filter state as `$filters`, for example `['fill_status' => ['value' => 'partial'], 'customer' => ['values' => ['Ana']]]`, and applies it itself.
+
 ### In the browser or on the server
 
 By default, the server sends every row with the page, and search and pagination run in the browser. Results are instant and nothing goes back to the server, which suits grids of up to a few hundred parent rows whose size you know.

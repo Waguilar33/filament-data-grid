@@ -44,6 +44,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
     let search = ''
     let page = payload.page ?? 1
     let recordsPerPage = payload.recordsPerPage ?? null
+    let filters = {}
     const expanded = new Set()
 
     const hasChildren = () => payload.childColumns.length > 0
@@ -52,13 +53,33 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
 
     const pageCountFor = (count) => (perPage() ? Math.max(1, Math.ceil(count / perPage())) : 1)
 
+    const matchesFilters = (row) =>
+        (payload.filters ?? []).every((filter) => {
+            const active = filters[filter.name]
+            const value = row.filterValues?.[filter.name]
+
+            if (active === undefined || active === null || active === '' || (Array.isArray(active) && active.length === 0)) {
+                return true
+            }
+
+            if (filter.type === 'ternary') {
+                return Boolean(value) === (active === true || active === 'true')
+            }
+
+            if (Array.isArray(active)) {
+                return active.map(String).includes(String(value))
+            }
+
+            return String(value) === String(active)
+        })
+
     const currentPage = () => {
         if (payload.serverSide) {
             return { pageRows: rows, total: payload.total ?? rows.length }
         }
 
         const needle = search.toLowerCase()
-        const matching = needle === '' ? rows : rows.filter((row) => row.search.includes(needle))
+        const matching = rows.filter((row) => (needle === '' || row.search.includes(needle)) && matchesFilters(row))
 
         page = Math.min(Math.max(1, page), pageCountFor(matching.length))
 
@@ -311,12 +332,21 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
 
     return {
         getQuery() {
-            return { search, page, recordsPerPage }
+            return { search, page, recordsPerPage, filters }
         },
 
         setQuery(changes) {
             if ('search' in changes && changes.search !== search) {
                 search = String(changes.search ?? '').trim()
+                page = 1
+
+                if (payload.serverSide) {
+                    expanded.clear()
+                }
+            }
+
+            if ('filters' in changes) {
+                filters = { ...changes.filters }
                 page = 1
 
                 if (payload.serverSide) {
@@ -337,7 +367,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
                 redraw()
             }
 
-            return { search, page, recordsPerPage }
+            return { search, page, recordsPerPage, filters }
         },
 
         setServerPage(result) {
