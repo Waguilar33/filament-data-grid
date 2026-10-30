@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Workbench\App\Filament\Pages;
 
 use Filament\Actions\Action;
+use Filament\Forms\Components\DatePicker;
+use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\EmbeddedTable;
 use Filament\Schemas\Schema;
@@ -61,13 +63,25 @@ final class DeliveryTableDemo extends Page implements HasTable
                     ->options(array_combine(FakeDeliveries::customers(), FakeDeliveries::customers())),
             ])
             ->filtersTriggerAction(fn (Action $action): Action => $action->slideOver())
+            ->recordActions([
+                Action::make('deliver')
+                    ->label(__('demo::demo.route.actions.deliver'))
+                    ->requiresConfirmation()
+                    ->action(fn (array $record) => Notification::make()->success()->title(__('demo::demo.route.actions.delivered', ['number' => self::number($record)]))->send()),
+                Action::make('reschedule')
+                    ->label(__('demo::demo.route.actions.reschedule'))
+                    ->slideOver()
+                    ->schema([DatePicker::make('date')->label(__('demo::demo.route.actions.date'))->required()])
+                    ->action(fn (array $record) => Notification::make()->success()->title(__('demo::demo.route.actions.rescheduled', ['number' => self::number($record)]))->send()),
+            ])
+            ->recordUrl(fn (array $record): string => DeliveryRouteDemo::getUrl().'#'.self::number($record))
             ->paginated([10, 25, 50])
             ->content(DeliveryRouteDemo::rows('deliveries')->toTableContent());
     }
 
     /**
      * @param  array<mixed>  $filters
-     * @return LengthAwarePaginator<string, array{delivery_number: string, customer: string, fill_status: string, lines: list<array{product: string, code: string|null, requested: int, handed_over: int}>}>
+     * @return LengthAwarePaginator<array-key, array{delivery_number: string, customer: string, fill_status: string, kind: string, holds: list<string>, lines: list<array{product: string, code: string|null, requested: int, handed_over: int}>}>
      */
     private function deliveries(?string $search, array $filters, int $page, int $recordsPerPage): LengthAwarePaginator
     {
@@ -84,5 +98,15 @@ final class DeliveryTableDemo extends Page implements HasTable
             ->keyBy('delivery_number');
 
         return new LengthAwarePaginator($deliveries->forPage($page, $recordsPerPage), $deliveries->count(), $recordsPerPage, $page);
+    }
+
+    /**
+     * @param  array<mixed>  $record
+     */
+    private static function number(array $record): string
+    {
+        $number = $record['delivery_number'] ?? null;
+
+        return is_string($number) ? $number : '';
     }
 }

@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## Unreleased
+
+- Inside a Filament table, each parent row shows the table's `recordActions()` and, with `recordUrl()`, a chevron and a clickable row that open the record.
+
 ## v1.0.0-beta.1 - 2026-10-30
 
 First beta. You can install and use it, but the API may change before v1.0.0.

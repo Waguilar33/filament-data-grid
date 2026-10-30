@@ -36,6 +36,8 @@ return [
         ],
         'navigation' => 'Delivery route',
         'columns' => [
+            'kind' => 'Type',
+            'preparation' => 'Preparation',
             'delivery' => 'Delivery',
             'customer' => 'Customer',
             'warehouse' => 'Warehouse',
@@ -43,6 +45,22 @@ return [
             'code' => 'Unit code',
             'requested' => 'Requested',
             'handed_over' => 'Handed over',
+        ],
+        'kinds' => [
+            'shipment' => 'Shipment',
+            'pickup' => 'Pick-up',
+        ],
+        'holds' => [
+            'ready' => 'Ready',
+            'awaiting_stock' => 'Awaiting stock',
+            'awaiting_payment' => 'Awaiting payment',
+        ],
+        'actions' => [
+            'deliver' => 'Deliver',
+            'delivered' => 'Delivery :number marked as delivered',
+            'reschedule' => 'Reschedule',
+            'date' => 'New date',
+            'rescheduled' => 'Delivery :number rescheduled',
         ],
         'fill_statuses' => [
             'complete' => 'Complete',

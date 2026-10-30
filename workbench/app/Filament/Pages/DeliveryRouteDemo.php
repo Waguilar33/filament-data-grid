@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Workbench\App\Filament\Pages;
 
+use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\RepeatableEntry\TableColumn;
 use Filament\Infolists\Components\TextEntry;
@@ -76,6 +77,8 @@ final class DeliveryRouteDemo extends Page
                 TableColumn::make(__('demo::demo.route.columns.delivery')),
                 TableColumn::make(__('demo::demo.route.columns.customer')),
                 TableColumn::make(__('demo::demo.route.columns.warehouse'))->width('12rem'),
+                TableColumn::make(__('demo::demo.route.columns.kind'))->width('5rem')->alignCenter(),
+                TableColumn::make(__('demo::demo.route.columns.preparation'))->width('18rem'),
             ])
             ->schema([
                 TextEntry::make('delivery_number')->weight('medium'),
@@ -84,6 +87,14 @@ final class DeliveryRouteDemo extends Page
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => __("demo::demo.route.fill_statuses.{$state}"))
                     ->color(fn (string $state): string => $state === 'complete' ? 'success' : 'warning'),
+                IconEntry::make('kind')
+                    ->icon(fn (string $state): Heroicon => $state === 'pickup' ? Heroicon::OutlinedHandRaised : Heroicon::OutlinedTruck)
+                    ->tooltip(fn (string $state): string => __("demo::demo.route.kinds.{$state}"))
+                    ->color('gray'),
+                TextEntry::make('holds')
+                    ->badge()
+                    ->formatStateUsing(fn (string $state): string => __("demo::demo.route.holds.{$state}"))
+                    ->color(fn (string $state): string => $state === 'ready' ? 'success' : 'warning'),
                 RepeatableEntry::make('lines')
                     ->table([
                         TableColumn::make(__('demo::demo.route.columns.product')),
@@ -102,7 +113,7 @@ final class DeliveryRouteDemo extends Page
 
     /**
      * @param  array<mixed>  $filters
-     * @return LengthAwarePaginator<int, array{delivery_number: string, customer: string, fill_status: string, lines: list<array{product: string, code: string|null, requested: int, handed_over: int}>}>
+     * @return LengthAwarePaginator<int, array{delivery_number: string, customer: string, fill_status: string, kind: string, holds: list<string>, lines: list<array{product: string, code: string|null, requested: int, handed_over: int}>}>
      */
     private function searchDeliveries(?string $search, int $page, ?int $recordsPerPage, array $filters): LengthAwarePaginator
     {

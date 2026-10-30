@@ -36,6 +36,8 @@ return [
         ],
         'navigation' => 'Ruta de entrega',
         'columns' => [
+            'kind' => 'Tipo',
+            'preparation' => 'Preparación',
             'delivery' => 'Entrega',
             'customer' => 'Cliente',
             'warehouse' => 'Bodega',
@@ -43,6 +45,22 @@ return [
             'code' => 'Código',
             'requested' => 'Solicitado',
             'handed_over' => 'Entregado por bodega',
+        ],
+        'kinds' => [
+            'shipment' => 'Envío',
+            'pickup' => 'Retiro',
+        ],
+        'holds' => [
+            'ready' => 'Lista',
+            'awaiting_stock' => 'Esperando inventario',
+            'awaiting_payment' => 'Esperando pago',
+        ],
+        'actions' => [
+            'deliver' => 'Entregar',
+            'delivered' => 'Entrega :number marcada como entregada',
+            'reschedule' => 'Reprogramar',
+            'date' => 'Nueva fecha',
+            'rescheduled' => 'Entrega :number reprogramada',
         ],
         'fill_statuses' => [
             'complete' => 'Completa',

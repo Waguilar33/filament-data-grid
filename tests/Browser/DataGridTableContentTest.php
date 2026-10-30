@@ -58,3 +58,28 @@ it('uses Filament filters in a slide-over and Filament pagination', function ():
         ->assertSeeIn(tableRow(0), 'Ana Torres')
         ->assertNoJavaScriptErrors();
 });
+
+it('runs the table record actions and opens the record from its row', function (): void {
+    visitTable()
+        ->click(tableRow(0).' button:has-text("Reschedule")')
+        ->wait(1)
+        ->assertSee('New date')
+        ->click('.fi-modal-slide-over.fi-modal-open .fi-modal-close-btn, .fi-modal-slide-over:has-text("New date") .fi-modal-close-btn')
+        ->wait(0.5)
+        ->click(tableRow(1).' button:has-text("Deliver")')
+        ->wait(1)
+        ->click('.fi-modal-window button:has-text("Confirm")')
+        ->wait(1)
+        ->assertSee('Delivery DLV-2026-0000002 marked as delivered')
+        ->click(tableRow(2).' .fi-data-grid-record-link')
+        ->wait(1.5)
+        ->assertUrlIs('*delivery-route-demo*')
+        ->assertNoJavaScriptErrors();
+});
+
+it('shows a tooltip on an icon-only cell', function (): void {
+    visitTable()
+        ->hover(tableRow(0).' .slick-cell.l4 svg')
+        ->wait(0.5)
+        ->assertSee('Shipment');
+});
