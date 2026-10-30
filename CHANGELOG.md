@@ -11,7 +11,7 @@ First preview. Not ready for production; the API may change before v1.0.0.
 - Keyboard entry: typing starts editing, Enter and Shift+Enter save and move down or up, and Tab moves across.
 - A trailing empty row, which doesn't count toward `minItems()` or `maxItems()`.
 - Frozen columns, drag reordering, row menu with extra item actions, and per-row validation errors.
-- The JavaScript loads only on pages that use the field. The stylesheet loads with every Filament page, so the page doesn't shift when a grid appears.
+- The JavaScript is about 88 KB gzipped for `DataGrid` and 57 KB for `DataGridEntry`, and loads only on pages that use the field. The stylesheet loads with every Filament page, so the page doesn't shift when a grid appears.
 - English and Spanish translations.
 - `DataGridEntry`: a read-only grid whose rows open to show child rows, inside a Filament table card with an optional heading, description and icon. Search, Filament filters and Filament's pagination work over parent rows, in the browser or on the server. `toTableContent()` draws the grid inside a native Filament table, which then does the searching, filtering and paging.
 - `IconHeading` gives a Filament table's heading an icon, like a section's.

@@ -401,7 +401,7 @@ The server renders the rows, the cell descriptions and the row actions, and send
 - The whole grid is sent again on every update. 200 rows take about 47 ms on the server and 11 KB gzipped, which is fine for grids the size of an order. Grids with thousands of rows aren't a good fit yet.
 - Parent and child rows are read-only, in `DataGridEntry`. The editable `DataGrid` doesn't have them yet.
 - There are no footer totals yet. Show totals with an entry or a field outside the grid.
-- The compiled JavaScript is about 150 KB gzipped, because it includes parts of SlickGrid-Universal that the grid doesn't use. It is loaded only on pages with a grid.
+- The compiled JavaScript is about 88 KB gzipped for `DataGrid` and 57 KB for `DataGridEntry`, most of it SlickGrid-Universal's grid. It loads only on pages with a grid.
 - The select dropdown is Filament's own JavaScript, copied into the plugin's build from Filament 5. The same build runs on Filament 4. Check the grid after upgrading Filament.
 
 ## Testing

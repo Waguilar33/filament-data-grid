@@ -9,6 +9,27 @@ const entries = [
     { in: 'resources/css/data-grid.css', out: 'data-grid' },
 ]
 
+// SlickGrid-Universal doesn't declare `sideEffects`, so without this esbuild keeps every module its index imports.
+const treeShakeSlickGrid = {
+    name: 'tree-shake-slickgrid',
+    setup(build) {
+        build.onResolve({ filter: /^@slickgrid-universal\// }, async (args) => {
+            if (args.pluginData?.isResolving) {
+                return undefined
+            }
+
+            const result = await build.resolve(args.path, {
+                kind: args.kind,
+                importer: args.importer,
+                resolveDir: args.resolveDir,
+                pluginData: { isResolving: true },
+            })
+
+            return { ...result, sideEffects: false }
+        })
+    },
+}
+
 const context = await esbuild.context({
     entryPoints: entries,
     outdir: 'resources/dist',
@@ -20,6 +41,7 @@ const context = await esbuild.context({
     logLevel: 'info',
     loader: { '.svg': 'dataurl', '.woff': 'dataurl', '.woff2': 'dataurl' },
     metafile: true,
+    plugins: [treeShakeSlickGrid],
 })
 
 const FILAMENT_NOTICE = `MIT License
@@ -61,7 +83,13 @@ const writeThirdPartyLicenses = (metafile) => {
     const packages = new Set()
     let bundlesFilament = false
 
-    for (const input of Object.keys(metafile.inputs)) {
+    const bundledInputs = Object.values(metafile.outputs).flatMap((output) =>
+        Object.entries(output.inputs)
+            .filter(([, { bytesInOutput }]) => bytesInOutput > 0)
+            .map(([input]) => input),
+    )
+
+    for (const input of new Set(bundledInputs)) {
         const match = input.match(/node_modules\/((@[^/]+\/)?[^/]+)/)
 
         if (match) {
