@@ -19,7 +19,15 @@ function savedState(string $grid = 'lines'): string
 function dragRow(string $handle, string $target): string
 {
     return <<<JS
-        () => {
+        async () => {
+            const styled = () => [...document.styleSheets].some((sheet) => sheet.href?.includes('/data-grid.css'))
+
+            for (let tries = 0; ! styled() && tries < 50; tries++) {
+                await new Promise((resolve) => setTimeout(resolve, 100))
+            }
+
+            await new Promise(requestAnimationFrame)
+
             const handle = document.querySelector('{$handle}')
             const target = document.querySelector('{$target}').getBoundingClientRect()
             const start = handle.getBoundingClientRect()
@@ -162,8 +170,8 @@ it('reorders rows by dragging the handle', function (): void {
 
     $page->script(dragRow(cell(0, 0, ADJUSTMENTS).' .fi-data-grid-move-handle', cell(1, 0, ADJUSTMENTS)));
 
-    $page->wait(1)
-        ->assertSeeIn(cell(0, 1, ADJUSTMENTS), 'Late delivery')
+    $page->assertSeeIn(cell(0, 1, ADJUSTMENTS), 'Late delivery')
+        ->waitForEvent('networkidle')
         ->click('Save')
         ->wait(1.5)
         ->assertScript(savedState('adjustments').'[0].reason', 'Late delivery');
