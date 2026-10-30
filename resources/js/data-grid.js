@@ -1,6 +1,5 @@
 import { createGrid } from './grid/slickgrid-adapter.js'
-
-const isDarkMode = () => document.documentElement.classList.contains('dark')
+import { isDarkMode } from './grid/page.js'
 
 const callInParallel = (wire, method, args) =>
     typeof Livewire.fireAction === 'function'

@@ -3,6 +3,22 @@
 declare(strict_types=1);
 
 return [
+    'route' => [
+        'navigation' => 'Ruta de entrega',
+        'columns' => [
+            'delivery' => 'Entrega',
+            'customer' => 'Cliente',
+            'warehouse' => 'Bodega',
+            'product' => 'Producto',
+            'code' => 'Código',
+            'requested' => 'Solicitado',
+            'handed_over' => 'Entregado por bodega',
+        ],
+        'fill_statuses' => [
+            'complete' => 'Completa',
+            'partial' => 'Parcial',
+        ],
+    ],
     'navigation' => 'Tabla de datos',
     'sections' => [
         'lines' => 'Productos',

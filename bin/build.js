@@ -5,6 +5,7 @@ const isWatching = process.argv.includes('--watch')
 
 const entries = [
     { in: 'resources/js/data-grid.js', out: 'data-grid' },
+    { in: 'resources/js/data-grid-entry.js', out: 'data-grid-entry' },
     { in: 'resources/css/data-grid.css', out: 'data-grid' },
 ]
 

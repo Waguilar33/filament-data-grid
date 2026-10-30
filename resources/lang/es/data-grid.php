@@ -15,6 +15,19 @@ return [
         'reorder' => 'Reordenar',
         'actions' => 'Acciones',
     ],
+    'entry' => [
+        'search' => 'Buscar',
+        'empty' => 'Sin resultados.',
+        'expand' => 'Expandir fila',
+        'collapse' => 'Contraer fila',
+        'no_children' => 'Sin líneas.',
+        'pagination' => [
+            'label' => 'Paginación',
+            'overview' => 'Mostrando :first a :last de :total',
+            'previous' => 'Página anterior',
+            'next' => 'Página siguiente',
+        ],
+    ],
     'errors' => [
         'row' => 'Fila :row',
     ],
