@@ -2,7 +2,7 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
-## Unreleased
+## v1.0.0-beta.2 - 2026-10-30
 
 - `expandedAbove()` and `expandedBelow()` show your own Filament components above and below the child table of an open `DataGridEntry` row.
 - Every plugin icon can be replaced through Filament's icon aliases (`DataGridIconAlias`).
