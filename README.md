@@ -339,6 +339,51 @@ DataGridEntry::make('deliveries')
 
 A closure receives the row's `$state` (and `$record` for Eloquent rows) and returns the components for that row, or an empty array for none. A row with content above or below, but no child table, still opens. The content sits inside the same inset panel as the child table, and the row grows to fit it.
 
+### A full Filament table as the child rows
+
+When the child rows need their own search, filters, pagination, bulk selection or actions, give each open row a real Filament table instead of a nested `RepeatableEntry`. Write it as a Livewire component that extends `ChildTable`, and pass it to `childTable()` with the props for each parent row:
+
+```php
+use Waguilar\FilamentDataGrid\ChildTable;
+
+class ShiftMovementsTable extends ChildTable
+{
+    public string $method;
+
+    public function table(Table $table): Table
+    {
+        return $table
+            ->query(fn () => Movement::query()->where('payment_method', $this->method))
+            ->columns([
+                TextColumn::make('time'),
+                TextColumn::make('reference')->searchable(),
+                TextColumn::make('card')->visible(fn (): bool => $this->method !== 'cash'),
+                TextColumn::make('amount')->money('USD'),
+            ])
+            ->filters([SelectFilter::make('type')->options([...])])
+            ->recordActions([Action::make('receipt')->action(...)])
+            ->toolbarActions([BulkAction::make('reconcile')->action(...)])
+            ->paginated([10, 25, 50, 'all']);
+    }
+}
+
+DataGridEntry::make('payment_methods')
+    ->table([...])
+    ->schema([...])
+    ->childTable(ShiftMovementsTable::class, fn (array $record): array => ['method' => $record['key']])
+```
+
+Livewire must be able to find the component on later requests. On Livewire 3 that means it lives in your Livewire namespace (`App\Livewire` by default) or you register it with `Livewire::component()`; Livewire 4 finds any class.
+
+`ChildTable` is a Livewire component with Filament's `HasTable`, `HasSchemas` and `HasActions` already set up. Anything a Filament table does works inside it: column `visible()` closures that read its props (so each parent can show different columns), its own search field and filters, the per-page select, "select all on this page", bulk actions, and record actions with modals and slide-overs. Any other Livewire component works too.
+
+- The closure receives the row's `$record` (the Eloquent model, or the row's array) and `$state`, and returns the component's props. A component with a public `$record` property, as `ChildTable` has, also gets the parent model.
+- Each parent row on the page gets its own component, mounted lazily: it loads the first time its row is opened and scrolled into view, then keeps its search, filters and page while the row is closed and reopened, and while the page around it re-renders.
+- The parent row grows and shrinks with the child table as it pages, filters or switches to "all", and moves the rows below it.
+- It works in a standalone `DataGridEntry` (browser mode) and in `toTableContent()`, where Filament pages the parents and the children follow. It can't be combined with `serverSide()`: pages loaded that way don't go through Livewire's render, so they can't mount components, and the grid throws `UnsupportedChildTable`.
+- Filament remembers a table's per-page choice in the session by component class, so every child table of the same class opens with the per-page the user last picked in any of them.
+- `childTable()` replaces a nested `RepeatableEntry` child table. `expandedAbove()` and `expandedBelow()` still show above and below it.
+
 ### Column widths
 
 Columns fit their content, the way an HTML table does. The browser measures the header and the cells of the rows on the current page, each at its widest (on one line) and at its narrowest (wrapped wherever the text can break, such as at spaces and hyphens, with each badge, icon and action kept whole):
@@ -542,6 +587,8 @@ The search, filter and pagination icons are Filament's own, under its table and 
 ## How it works
 
 The grid is drawn with [SlickGrid-Universal](https://github.com/ghiscoding/slickgrid-universal) inside a `wire:ignore` element. SlickGrid-Universal is bundled with the plugin, so your app doesn't install it.
+
+Child tables from `childTable()` aren't inside the grid. Livewire renders them in a layer beside it, and the grid leaves an empty row of the same height where each open one sits.
 
 The server renders the rows, the cell descriptions and the row actions, and sends them to the browser as JSON. Every edit is written back to the field's state through Livewire.
 

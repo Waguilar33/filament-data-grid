@@ -1,3 +1,4 @@
+import { createChildTables } from './grid/child-tables.js'
 import { createEntryGrid } from './grid/entry-adapter.js'
 import { callInParallel, isDarkMode } from './grid/page.js'
 
@@ -6,6 +7,7 @@ const SERVER_SEARCH_DEBOUNCE_MS = 300
 export default function dataGridEntry({ schemaComponent, translations, icons }) {
     return {
         grid: null,
+        childTables: null,
         appliedPayload: null,
         observers: [],
         isServerSide: false,
@@ -33,8 +35,10 @@ export default function dataGridEntry({ schemaComponent, translations, icons }) 
             this.filterDefinitions = payload.filters ?? []
             this.draftFilters = this.emptyFilters()
             this.activeFilters = this.emptyFilters()
+            this.childTables = this.$refs.childTables ? createChildTables(this.$refs.childTables, { onResize: () => this.grid?.redraw() }) : null
             this.grid = createEntryGrid(this.$refs.grid, {
                 payload,
+                childTables: this.childTables,
                 translations,
                 icons,
                 isDarkMode: isDarkMode(),
@@ -51,6 +55,7 @@ export default function dataGridEntry({ schemaComponent, translations, icons }) 
         destroy() {
             clearTimeout(this.searchTimeout)
             this.observers.forEach((observer) => observer.disconnect())
+            this.childTables?.destroy()
             this.grid?.destroy()
         },
 

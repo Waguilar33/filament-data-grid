@@ -121,4 +121,45 @@ return [
     ],
     'warehouse_option' => '{0} :zone > :place · sin disponibilidad|{1} :zone > :place · 1 disponible|[2,*] :zone > :place · :count disponibles',
     'saved_lines' => '{0} Guardado sin líneas|{1} Guardada 1 línea|[2,*] Guardadas :count líneas',
+    'shift' => [
+        'navigation' => 'Turno de caja',
+        'sections' => [
+            'table' => 'Métodos de pago',
+            'standalone' => 'Métodos de pago (infolist)',
+        ],
+        'descriptions' => [
+            'table' => 'Abre un método de pago para ver sus movimientos en una tabla de Filament.',
+            'standalone' => 'Las mismas tablas hijas dentro de un DataGridEntry normal.',
+        ],
+        'columns' => [
+            'method' => 'Método',
+            'movements' => 'Movimientos',
+            'money_in' => 'Entradas',
+            'money_out' => 'Salidas',
+            'balance' => 'Saldo',
+            'time' => 'Hora',
+            'type' => 'Tipo',
+            'reference' => 'Referencia',
+            'details' => 'Detalles',
+            'amount' => 'Monto',
+        ],
+        'methods' => [
+            'cash' => 'Efectivo',
+            'card' => 'Tarjeta',
+            'transfer' => 'Transferencia',
+            'voucher' => 'Vale',
+        ],
+        'types' => [
+            'sale' => 'Venta',
+            'refund' => 'Devolución',
+            'cash_in' => 'Ingreso',
+            'cash_out' => 'Retiro',
+        ],
+        'actions' => [
+            'receipt' => 'Enviar recibo',
+            'receipt_sent' => 'Recibo :reference enviado',
+            'reconcile' => 'Conciliar',
+            'reconciled' => '{1} 1 movimiento conciliado|[2,*] :count movimientos conciliados',
+        ],
+    ],
 ];

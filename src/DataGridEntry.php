@@ -8,6 +8,7 @@ use BackedEnum;
 use Closure;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Schemas\Components\Component as SchemaComponent;
+use Filament\Schemas\Components\Livewire as LivewireComponent;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Filament\Support\Components\Attributes\ExposedLivewireMethod;
@@ -29,6 +30,7 @@ use Waguilar\FilamentDataGrid\Entry\BuildEntryPayload;
 use Waguilar\FilamentDataGrid\Entry\DescribeTableRecord;
 use Waguilar\FilamentDataGrid\Entry\EntryFilters;
 use Waguilar\FilamentDataGrid\Entry\EntryPage;
+use Waguilar\FilamentDataGrid\Exceptions\UnsupportedChildTable;
 use Waguilar\FilamentDataGrid\View\DataGridIconAlias;
 
 use function Filament\Support\generate_icon_html;
@@ -68,6 +70,13 @@ class DataGridEntry extends RepeatableEntry
     protected array|Closure|null $expandedBelow = null;
 
     protected int|Closure|null $rowHeight = null;
+
+    protected string|Closure|null $childTable = null;
+
+    /**
+     * @var array<string, mixed>|Closure
+     */
+    protected array|Closure $childTableData = [];
 
     /**
      * @var array<string, array{actions: string|null, link: string|null}>
@@ -438,6 +447,73 @@ class DataGridEntry extends RepeatableEntry
         return $html === '' ? null : $html;
     }
 
+    /**
+     * @param  class-string<Component>|Closure|null  $component
+     * @param  array<string, mixed>|Closure  $data
+     */
+    public function childTable(string|Closure|null $component, array|Closure $data = []): static
+    {
+        $this->childTable = $component;
+        $this->childTableData = $data;
+
+        return $this;
+    }
+
+    public function getChildTableComponent(): ?string
+    {
+        $component = $this->evaluate($this->childTable);
+
+        return is_string($component) && $component !== '' ? $component : null;
+    }
+
+    public function hasChildTable(): bool
+    {
+        return $this->getChildTableComponent() !== null;
+    }
+
+    /**
+     * @param  array<array-key, Schema>  $items
+     * @return array<string, string>
+     */
+    public function renderChildTables(array $items): array
+    {
+        $component = $this->getChildTableComponent();
+
+        if ($component === null) {
+            return [];
+        }
+
+        $html = [];
+
+        foreach ($items as $key => $item) {
+            $html[(string) $key] = $this->renderChildTable($component, (string) $key, $item);
+        }
+
+        return $html;
+    }
+
+    private function renderChildTable(string $component, string $key, Schema $item): string
+    {
+        $record = $item->getRecord();
+        $state = $record instanceof Model ? $record->toArray() : $item->getConstantState();
+        $data = $this->evaluate($this->childTableData, [
+            'record' => $record ?? $state,
+            'state' => $state,
+        ], [
+            Model::class => $record,
+        ]);
+
+        $child = $item->getClone()
+            ->components([
+                LivewireComponent::make($component, is_array($data) ? array_filter($data, is_string(...), ARRAY_FILTER_USE_KEY) : [])
+                    ->key('child-table')
+                    ->lazy(),
+            ])
+            ->getComponents()[0] ?? null;
+
+        return $child instanceof LivewireComponent ? $child->toEmbeddedHtml() : '';
+    }
+
     public function hasRowHeightPerRow(): bool
     {
         return $this->rowHeight instanceof Closure;
@@ -504,8 +580,21 @@ class DataGridEntry extends RepeatableEntry
      */
     public function getGridPayload(): array
     {
-        if (! $this->isServerSide()) {
-            return app(BuildEntryPayload::class)->handle($this, $this->getItems(), total: null, page: 1);
+        return $this->buildGridPayload($this->isServerSide() ? null : $this->getItems());
+    }
+
+    /**
+     * @param  array<array-key, Schema>|null  $items
+     * @return array<string, mixed>
+     */
+    private function buildGridPayload(?array $items): array
+    {
+        if ($this->isServerSide() && $this->hasChildTable()) {
+            throw UnsupportedChildTable::serverSide((string) $this->getName());
+        }
+
+        if ($items !== null) {
+            return app(BuildEntryPayload::class)->handle($this, $items, total: null, page: 1);
         }
 
         $entryPage = $this->resolvePage('', 1, $this->getDefaultPaginationPageOption(), $this->getEntryFilters()->sanitize([]));
@@ -515,9 +604,12 @@ class DataGridEntry extends RepeatableEntry
 
     public function toEmbeddedHtml(): string
     {
+        $items = $this->isServerSide() ? null : $this->getItems();
+
         $html = view($this->isTableContent() ? 'filament-data-grid::data-grid-table-content' : 'filament-data-grid::data-grid-entry', [
             'entry' => $this,
-            'payload' => $this->getGridPayload(),
+            'payload' => $this->buildGridPayload($items),
+            'childTables' => $items === null ? [] : $this->renderChildTables($items),
             'alpineSrc' => FilamentAsset::getAlpineComponentSrc('data-grid-entry', FilamentDataGridServiceProvider::PACKAGE),
             'config' => Js::from([
                 'schemaComponent' => $this->getKey(),

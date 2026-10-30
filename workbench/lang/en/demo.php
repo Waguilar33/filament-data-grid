@@ -121,4 +121,45 @@ return [
     ],
     'warehouse_option' => '{0} :zone > :place · none available|{1} :zone > :place · 1 available|[2,*] :zone > :place · :count available',
     'saved_lines' => '{0} Saved with no lines|{1} Saved 1 line|[2,*] Saved :count lines',
+    'shift' => [
+        'navigation' => 'Cash shift',
+        'sections' => [
+            'table' => 'Payment methods',
+            'standalone' => 'Payment methods (infolist)',
+        ],
+        'descriptions' => [
+            'table' => 'Open a payment method to see its movements as a full Filament table.',
+            'standalone' => 'The same child tables inside a plain DataGridEntry.',
+        ],
+        'columns' => [
+            'method' => 'Method',
+            'movements' => 'Movements',
+            'money_in' => 'In',
+            'money_out' => 'Out',
+            'balance' => 'Balance',
+            'time' => 'Time',
+            'type' => 'Type',
+            'reference' => 'Reference',
+            'details' => 'Details',
+            'amount' => 'Amount',
+        ],
+        'methods' => [
+            'cash' => 'Cash',
+            'card' => 'Card',
+            'transfer' => 'Bank transfer',
+            'voucher' => 'Voucher',
+        ],
+        'types' => [
+            'sale' => 'Sale',
+            'refund' => 'Refund',
+            'cash_in' => 'Cash in',
+            'cash_out' => 'Cash out',
+        ],
+        'actions' => [
+            'receipt' => 'Send receipt',
+            'receipt_sent' => 'Receipt :reference sent',
+            'reconcile' => 'Reconcile',
+            'reconciled' => '{1} Reconciled 1 movement|[2,*] Reconciled :count movements',
+        ],
+    ],
 ];
