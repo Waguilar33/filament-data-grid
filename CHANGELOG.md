@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.6 - 2026-10-30
+
+- On a page with a record, such as a View page, `DataGridEntry` rows given as plain arrays now reach `childTable()`, `expandedAbove()`, `expandedBelow()`, `rowHeight()` and the filters as the row itself. Before, they got the page's record instead.
+
 ## v1.0.0-beta.5 - 2026-10-30
 
 - `DataGridEntry::childTable()` opens a full Filament table under each parent row, scoped to that row. It's a Livewire component that extends the new `ChildTable` base class, so it has its own search, filters, pagination with a per-page select, bulk selection and bulk actions, and record actions, and its columns can differ per parent through `visible()`. The parent row resizes as the child table pages or filters. It works in a standalone grid and in `toTableContent()`, but not with `serverSide()`.

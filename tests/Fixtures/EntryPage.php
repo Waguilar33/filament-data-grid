@@ -11,6 +11,7 @@ use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Model;
 use Livewire\Component;
 
 final class EntryPage extends Component implements HasActions, HasSchemas
@@ -20,9 +21,11 @@ final class EntryPage extends Component implements HasActions, HasSchemas
 
     public static ?Closure $configureUsing = null;
 
+    public static ?Model $record = null;
+
     public function infolist(Schema $schema): Schema
     {
-        return $schema->components(self::$configureUsing ? (self::$configureUsing)() : []);
+        return $schema->record(self::$record)->components(self::$configureUsing ? (self::$configureUsing)() : []);
     }
 
     public function render(): View
