@@ -244,3 +244,21 @@ it('shows the details above and the notes below the child table of an open row',
         ->assertMissing(ROUTE.' .fi-data-grid-child-slot-below')
         ->assertNoJavaScriptErrors();
 });
+
+it('centres badges vertically in their cells', function (): void {
+    $page = visitRoute()
+        ->click(ROUTE.' .slick-row:has-text("DLV-2026-0000004") .fi-data-grid-row-toggle')
+        ->wait(0.5);
+
+    $gaps = $page->script(sprintf(<<<'JS'
+        () => [...document.querySelectorAll(%s)].map((badge) => {
+            const cell = badge.closest('.slick-cell, .fi-data-grid-child-cell').getBoundingClientRect()
+            const box = badge.getBoundingClientRect()
+
+            return Math.abs((box.top - cell.top) - (cell.bottom - box.bottom))
+        })
+        JS, json_encode(ROUTE.' .fi-data-grid-parent-row .slick-cell.l3 .fi-badge, '.ROUTE.' .fi-data-grid-child-row:not(.fi-data-grid-child-header) .fi-data-grid-child-cell:nth-child(2) .fi-badge')));
+
+    expect($gaps)->not->toBeEmpty()
+        ->each->toBeLessThanOrEqual(1);
+});
