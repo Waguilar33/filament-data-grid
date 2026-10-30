@@ -258,7 +258,7 @@
                                 x-on:click="goToPage(page - 1)"
                                 class="fi-pagination-item-btn"
                             >
-                                {{ \Filament\Support\generate_icon_html(\Filament\Support\Icons\Heroicon::ChevronLeft, attributes: (new \Filament\Support\View\ComponentAttributeBag)->class(['fi-pagination-item-icon'])) }}
+                                {{ \Filament\Support\generate_icon_html(\Filament\Support\Icons\Heroicon::ChevronLeft, \Filament\Support\View\SupportIconAlias::PAGINATION_PREVIOUS_BUTTON, attributes: (new \Filament\Support\View\ComponentAttributeBag)->class(['fi-pagination-item-icon'])) }}
                             </button>
                         </li>
 
@@ -291,7 +291,7 @@
                                 x-on:click="goToPage(page + 1)"
                                 class="fi-pagination-item-btn"
                             >
-                                {{ \Filament\Support\generate_icon_html(\Filament\Support\Icons\Heroicon::ChevronRight, attributes: (new \Filament\Support\View\ComponentAttributeBag)->class(['fi-pagination-item-icon'])) }}
+                                {{ \Filament\Support\generate_icon_html(\Filament\Support\Icons\Heroicon::ChevronRight, \Filament\Support\View\SupportIconAlias::PAGINATION_NEXT_BUTTON, attributes: (new \Filament\Support\View\ComponentAttributeBag)->class(['fi-pagination-item-icon'])) }}
                             </button>
                         </li>
                     </ol>

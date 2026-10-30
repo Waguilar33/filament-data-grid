@@ -4,6 +4,7 @@ All notable changes to `filament-data-grid` will be documented in this file.
 
 ## Unreleased
 
+- Every plugin icon can be replaced through Filament's icon aliases (`DataGridIconAlias`).
 - Inside a Filament table, each parent row shows the table's `recordActions()` and, with `recordUrl()`, a chevron and a clickable row that open the record.
 
 ## v1.0.0-beta.1 - 2026-10-30
