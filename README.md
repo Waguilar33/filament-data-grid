@@ -373,6 +373,8 @@ DataGridEntry::make('payment_methods')
     ->childTable(ShiftMovementsTable::class, fn (array $record): array => ['method' => $record['key']])
 ```
 
+Livewire must be able to find the component on later requests. On Livewire 3 that means it lives in your Livewire namespace (`App\Livewire` by default) or you register it with `Livewire::component()`; Livewire 4 finds any class.
+
 `ChildTable` is a Livewire component with Filament's `HasTable`, `HasSchemas` and `HasActions` already set up. Anything a Filament table does works inside it: column `visible()` closures that read its props (so each parent can show different columns), its own search field and filters, the per-page select, "select all on this page", bulk actions, and record actions with modals and slide-overs. Any other Livewire component works too.
 
 - The closure receives the row's `$record` (the Eloquent model, or the row's array) and `$state`, and returns the component's props. A component with a public `$record` property, as `ChildTable` has, also gets the parent model.
