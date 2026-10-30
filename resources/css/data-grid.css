@@ -504,6 +504,11 @@
 }
 
 
+.fi-data-grid-entry-grid .fi-ta-ctn,
+.fi-data-grid-entry-grid .fi-ta-main {
+    min-width: 0;
+}
+
 .fi-data-grid-entry-content {
     min-width: 0;
     overflow: hidden;
@@ -791,14 +796,6 @@
     color: var(--gray-500);
 }
 
-.fi-data-grid-record-actions-probe {
-    position: absolute;
-    visibility: hidden;
-    pointer-events: none;
-    white-space: nowrap;
-}
-
-.fi-data-grid-record-actions-probe .fi-data-grid-record-actions,
 .fi-data-grid-canvas .fi-data-grid-record-actions {
     display: inline-flex;
     flex-wrap: nowrap;
@@ -842,12 +839,36 @@
     max-width: 100%;
 }
 
-.fi-data-grid-canvas .fi-data-grid-row-probe {
+.fi-data-grid-entry-grid .fi-data-grid-child-header .fi-data-grid-child-cell {
+    white-space: nowrap;
+}
+
+.fi-data-grid-canvas .fi-data-grid-row-probe,
+.fi-data-grid-canvas .fi-data-grid-width-probe {
     position: absolute;
     top: 0;
     left: 0;
     visibility: hidden;
     pointer-events: none;
+}
+
+.fi-data-grid-canvas .fi-data-grid-width-probe .slick-cell {
+    position: relative;
+    top: auto;
+    bottom: auto;
+}
+
+.fi-data-grid-canvas .fi-data-grid-width-probe .slick-header-column {
+    float: none;
+}
+
+/* Filament's minmax(0, 1fr) entry grids and truncating badges make width: min-content report almost 0. */
+.fi-data-grid-canvas .fi-data-grid-width-probe * {
+    min-width: min-content !important;
+    max-width: none !important;
+    overflow: visible !important;
+    overflow-wrap: normal !important;
+    word-break: normal !important;
 }
 
 .fi-data-grid-canvas .fi-data-grid-row-probe .slick-row {

@@ -11,9 +11,9 @@ function tableRow(int $row): string
     return sprintf('%s .slick-row[style*="top: %dpx"]', TABLE_GRID, $row * 44);
 }
 
-function visitTable(): AwaitableWebpage
+function visitTable(string $query = ''): AwaitableWebpage
 {
-    $page = visit('/demo/delivery-table-demo')->waitForEvent('networkidle');
+    $page = visit('/demo/delivery-table-demo'.$query)->waitForEvent('networkidle');
 
     $page->script(<<<'JS'
         async () => {
@@ -104,4 +104,29 @@ it('opens a row action dropdown above the open row below it', function (): void 
         ->wait(1)
         ->assertSee('Delivery DLV-2026-0000001 edited')
         ->assertNoJavaScriptErrors();
+});
+
+it('fits the record actions and badges without a sideways scrollbar', function (): void {
+    $page = visitTable()->resize(1600, 900)->wait(0.5);
+
+    expect($page->script(clippedContentIn(TABLE_GRID)))->toBe([])
+        ->and($page->script(scrollsSideways(TABLE_GRID)))->toBeFalse()
+        ->and($page->script(headerWidth(TABLE_GRID, 'Type')))->toBeLessThan($page->script(headerWidth(TABLE_GRID, 'Customer')));
+});
+
+it('keeps the record actions whole when the columns no longer fit', function (): void {
+    $page = visitTable('?locale=es')->resize(480, 900)->wait(0.5);
+
+    expect($page->script(sprintf('document.querySelectorAll(%s).length', json_encode(TABLE_GRID.' .fi-data-grid-record-actions-cell .fi-data-grid-record-actions > *'))))->toBeGreaterThan(0)
+        ->and($page->script(clippedContentIn(TABLE_GRID)))->toBe([])
+        ->and($page->script(scrollsSideways(TABLE_GRID)))->toBeTrue();
+});
+
+it('sizes the columns again for the next page of the table', function (): void {
+    $page = visitTable('?locale=es')
+        ->click('.fi-pagination-items [rel="next"]')
+        ->wait(1.5)
+        ->assertSee('Se muestran de 11 a 20');
+
+    expect($page->script(clippedContentIn(TABLE_GRID)))->toBe([]);
 });

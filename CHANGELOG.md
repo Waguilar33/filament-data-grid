@@ -2,9 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
-## Unreleased
+## v1.0.0-beta.4 - 2026-10-30
 
 - A record action dropdown, such as an `ActionGroup` on a parent row, now opens above an open row's panel below it instead of behind it.
+- `DataGridEntry` columns now fit their content, like an HTML table: short columns such as an icon or a date stay narrow, and long text gets the spare room. Badges, icons with text and the table's record actions are never cut off, and the grid scrolls sideways only when the columns can't fit even with their text wrapped. Each open child table sizes its columns to its own rows. `TableColumn::width()` still sets a fixed width.
 
 ## v1.0.0-beta.3 - 2026-10-30
 
