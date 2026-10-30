@@ -7,17 +7,22 @@ namespace Waguilar\FilamentDataGrid;
 use BackedEnum;
 use Closure;
 use Filament\Infolists\Components\RepeatableEntry;
+use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Filament\Support\Components\Attributes\ExposedLivewireMethod;
 use Filament\Support\Facades\FilamentAsset;
 use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\BaseFilter;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Contracts\Pagination\Paginator;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Js;
 use Livewire\Attributes\Renderless;
+use Livewire\Component;
 use Traversable;
 use Waguilar\FilamentDataGrid\Entry\BuildEntryPayload;
 use Waguilar\FilamentDataGrid\Entry\EntryFilters;
@@ -44,6 +49,8 @@ class DataGridEntry extends RepeatableEntry
     protected bool|array|Closure $searchable = false;
 
     protected bool|Closure $isServerSide = false;
+
+    protected bool $isTableContent = false;
 
     protected string|Htmlable|Closure|null $heading = null;
 
@@ -326,6 +333,34 @@ class DataGridEntry extends RepeatableEntry
         return $schemas;
     }
 
+    public function isTableContent(): bool
+    {
+        return $this->isTableContent;
+    }
+
+    public function toTableContent(): View
+    {
+        $this->isTableContent = true;
+
+        return view('filament-data-grid::table-content', ['entry' => $this]);
+    }
+
+    /**
+     * @param  iterable<array-key, mixed>  $records
+     */
+    public function renderTableRecords(HasSchemas&HasTable&Component $livewire, iterable $records): Htmlable
+    {
+        $state = [];
+
+        foreach ($records instanceof Paginator ? $records->items() : $records as $key => $record) {
+            $state[$record instanceof Model ? $livewire->getTableRecordKey($record) : $key] = $record;
+        }
+
+        $this->state($state)->hiddenLabel();
+
+        return Schema::make($livewire)->components([$this]);
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -342,7 +377,7 @@ class DataGridEntry extends RepeatableEntry
 
     public function toEmbeddedHtml(): string
     {
-        $html = view('filament-data-grid::data-grid-entry', [
+        $html = view($this->isTableContent() ? 'filament-data-grid::data-grid-table-content' : 'filament-data-grid::data-grid-entry', [
             'entry' => $this,
             'payload' => $this->getGridPayload(),
             'alpineSrc' => FilamentAsset::getAlpineComponentSrc('data-grid-entry', FilamentDataGridServiceProvider::PACKAGE),

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 return [
     'route' => [
+        'table_navigation' => 'Tabla de entregas',
         'descriptions' => [
             'browser' => 'Entregas de esta ruta, filtradas en el navegador.',
             'server' => 'Las mismas entregas, cargadas página por página desde el servidor.',

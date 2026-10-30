@@ -34,12 +34,12 @@ final class DeliveryRouteDemo extends Page
     public function content(Schema $schema): Schema
     {
         return $schema->components([
-            $this->deliveries('deliveries')
+            self::deliveries('deliveries')
                 ->heading(__('demo::demo.route.sections.browser'))
                 ->description(__('demo::demo.route.descriptions.browser'))
                 ->icon(Heroicon::OutlinedTruck)
                 ->state(FakeDeliveries::all()),
-            $this->deliveries('server_deliveries')
+            self::deliveries('server_deliveries')
                 ->heading(__('demo::demo.route.sections.server'))
                 ->description(__('demo::demo.route.descriptions.server'))
                 ->icon(Heroicon::OutlinedServerStack)
@@ -48,10 +48,9 @@ final class DeliveryRouteDemo extends Page
         ]);
     }
 
-    private function deliveries(string $name): DataGridEntry
+    private static function deliveries(string $name): DataGridEntry
     {
-        return DataGridEntry::make($name)
-            ->hiddenLabel()
+        return self::rows($name)
             ->searchable(['delivery_number', 'customer'])
             ->filters([
                 SelectFilter::make('fill_status')
@@ -66,7 +65,13 @@ final class DeliveryRouteDemo extends Page
                     ->options(array_combine(FakeDeliveries::customers(), FakeDeliveries::customers())),
             ])
             ->paginated([5, 10, 25, DataGridEntry::ALL_RECORDS])
-            ->defaultPaginationPageOption(10)
+            ->defaultPaginationPageOption(10);
+    }
+
+    public static function rows(string $name): DataGridEntry
+    {
+        return DataGridEntry::make($name)
+            ->hiddenLabel()
             ->table([
                 TableColumn::make(__('demo::demo.route.columns.delivery')),
                 TableColumn::make(__('demo::demo.route.columns.customer')),

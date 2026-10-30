@@ -288,7 +288,33 @@ DataGridEntry::make('deliveries')
 
 The grid applies `SelectFilter` and `TernaryFilter` itself, by comparing each row's `attribute()` (the filter's name by default) with the chosen value. Any other filter, such as a plain `Filter` with a custom query, needs `records()`. As with Filament's custom data tables, `records()` receives the filter state as `$filters`, for example `['fill_status' => ['value' => 'partial'], 'customer' => ['values' => ['Ana']]]`, and applies it itself.
 
-### In the browser or on the server
+### Inside a Filament table
+
+To let Filament handle searching, filtering and paging, build a normal Filament table and use the grid as its content. Filament keeps everything around the rows: the heading, search field, filters (in a dropdown, modal or slide-over), active filter chips, pagination, empty state and header actions. The grid draws only the current page of records, with child rows that open:
+
+```php
+use Filament\Tables\Table;
+use Waguilar\FilamentDataGrid\DataGridEntry;
+
+public function table(Table $table): Table
+{
+    return $table
+        ->query(Delivery::query())
+        ->columns([TextColumn::make('number')->searchable()])
+        ->filters([SelectFilter::make('fill_status')->options([...])])
+        ->filtersTriggerAction(fn (Action $action) => $action->slideOver())
+        ->content(
+            DataGridEntry::make('deliveries')
+                ->table([...])
+                ->schema([...])
+                ->toTableContent(),
+        );
+}
+```
+
+`toTableContent()` uses Filament's `content()` hook, so the table works the same as any other Filament table, with `query()` or `records()`. Define the grid's columns with `table()` and `schema()` as above. The table's `columns()` still decide what can be searched and sorted, but aren't shown. Leave `searchable()`, `filters()` and `paginated()` off the grid itself here, because the table does that work.
+
+### Searching, filtering and paging it yourself
 
 By default, the server sends every row with the page, and search and pagination run in the browser. Results are instant and nothing goes back to the server, which suits grids of up to a few hundred parent rows whose size you know.
 
