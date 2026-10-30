@@ -630,27 +630,24 @@
 
 .fi-data-grid-empty {
     padding-block: calc(var(--spacing) * 6);
+    border-top: 1px solid var(--fi-data-grid-border);
     text-align: center;
     font-size: var(--text-sm);
     color: var(--fi-data-grid-muted);
 }
 
-.fi-data-grid-pagination {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: calc(var(--spacing) * 3);
-    font-size: var(--text-sm);
-    color: var(--fi-data-grid-disabled-text);
+.fi-data-grid-entry-grid .fi-pagination {
+    padding: calc(var(--spacing) * 3);
+    border-top: 1px solid var(--fi-data-grid-border);
 }
 
-.fi-data-grid-pagination-pages {
-    display: flex;
-    align-items: center;
-    gap: calc(var(--spacing) * 2);
+@media (min-width: 40rem) {
+    .fi-data-grid-entry-grid .fi-pagination {
+        padding-inline: calc(var(--spacing) * 6);
+    }
 }
 
-.fi-data-grid-pagination-page {
-    font-variant-numeric: tabular-nums;
+.fi-data-grid-loading .fi-data-grid-canvas {
+    opacity: 0.6;
+    transition: opacity 150ms;
 }

@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 return [
     'route' => [
+        'sections' => [
+            'browser' => 'Rows sent to the browser',
+            'server' => 'Rows loaded from the server',
+        ],
         'navigation' => 'Delivery route',
         'columns' => [
             'delivery' => 'Delivery',

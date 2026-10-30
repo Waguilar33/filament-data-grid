@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\RepeatableEntry\TableColumn;
 use Filament\Infolists\Components\TextEntry;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
 use Waguilar\FilamentDataGrid\DataGridEntry;
@@ -130,7 +131,7 @@ it('renders the grid component with its search and pagination controls', functio
     mountDeliveries(fn (DataGridEntry $entry): DataGridEntry => $entry->searchable()->paginated(10))
         ->assertSeeHtml('filamentDataGridEntry(')
         ->assertSeeHtml('fi-data-grid-search')
-        ->assertSeeHtml('fi-data-grid-pagination');
+        ->assertSeeHtml('fi-pagination');
 });
 
 it('searches the text users see, as formatted by the entry', function (): void {
@@ -144,4 +145,125 @@ it('searches the text users see, as formatted by the entry', function (): void {
     $payload = deliveriesPayload(Livewire::test(EntryPage::class));
 
     expect($payload['rows'][0]['search'])->toBe('fully complete');
+});
+
+/**
+ * @return list<array{number: string, customer: string}>
+ */
+function manyDeliveries(int $count): array
+{
+    return array_map(
+        fn (int $index): array => ['number' => sprintf('DLV-%02d', $index), 'customer' => $index % 2 === 0 ? 'Ana' : 'Bruno'],
+        range(1, $count),
+    );
+}
+
+function serverEntry(Closure $configure): DataGridEntry
+{
+    EntryPage::$configureUsing = fn (): array => [
+        $configure(DataGridEntry::make('deliveries')->schema([TextEntry::make('number'), TextEntry::make('customer')])),
+    ];
+
+    $entry = Livewire::test(EntryPage::class)->instance()->getSchema('infolist')?->getComponent('deliveries');
+
+    expect($entry)->toBeInstanceOf(DataGridEntry::class);
+
+    return $entry;
+}
+
+it('pages in the browser unless told otherwise', function (): void {
+    $payload = serverEntry(fn (DataGridEntry $entry): DataGridEntry => $entry->state(manyDeliveries(12))->paginated(5))->getGridPayload();
+
+    expect($payload['serverSide'])->toBeFalse()
+        ->and($payload['rows'])->toHaveCount(12);
+});
+
+it('lets the app make every entry server-side and a single entry opt out', function (): void {
+    DataGridEntry::configureUsing(fn (DataGridEntry $entry): DataGridEntry => $entry->serverSide());
+
+    try {
+        expect(serverEntry(fn (DataGridEntry $entry): DataGridEntry => $entry)->isServerSide())->toBeTrue()
+            ->and(serverEntry(fn (DataGridEntry $entry): DataGridEntry => $entry->serverSide(false))->isServerSide())->toBeFalse();
+    } finally {
+        DataGridEntry::configureUsing(fn (DataGridEntry $entry): DataGridEntry => $entry->serverSide(false));
+    }
+});
+
+it('sends only the first page on load when server-side', function (): void {
+    $payload = serverEntry(fn (DataGridEntry $entry): DataGridEntry => $entry->state(manyDeliveries(12))->serverSide()->paginated(5))->getGridPayload();
+
+    expect($payload['serverSide'])->toBeTrue()
+        ->and($payload['total'])->toBe(12)
+        ->and(array_column($payload['rows'], 'key'))->toBe(['0', '1', '2', '3', '4']);
+});
+
+it('searches and pages the state on the server', function (): void {
+    $entry = serverEntry(fn (DataGridEntry $entry): DataGridEntry => $entry->state(manyDeliveries(12))->serverSide()->searchable()->paginated([2, 5]));
+
+    $result = $entry->getGridPage('ana', 2, 5);
+
+    expect($result['total'])->toBe(6)
+        ->and($result['page'])->toBe(2)
+        ->and($result['recordsPerPage'])->toBe(5)
+        ->and($result['rows'])->toHaveCount(1)
+        ->and($result['rows'][0]['cells']['number']['html'])->toContain('DLV-12');
+});
+
+it('clamps the page and ignores page sizes it does not offer', function (): void {
+    $entry = serverEntry(fn (DataGridEntry $entry): DataGridEntry => $entry->state(manyDeliveries(12))->serverSide()->paginated([5]));
+
+    $result = $entry->getGridPage(null, 99, 1000);
+
+    expect($result['page'])->toBe(3)
+        ->and($result['recordsPerPage'])->toBe(5)
+        ->and($result['rows'])->toHaveCount(2);
+});
+
+it('answers junk arguments with the first page', function (): void {
+    $entry = serverEntry(fn (DataGridEntry $entry): DataGridEntry => $entry->state(manyDeliveries(12))->serverSide()->paginated(5));
+
+    $result = $entry->getGridPage(['not' => 'text'], 'abc', ['x']);
+
+    expect($result['page'])->toBe(1)
+        ->and($result['rows'])->toHaveCount(5);
+});
+
+it('passes the search, page and page size to records() and uses its total', function (): void {
+    $received = new ArrayObject;
+
+    $entry = serverEntry(fn (DataGridEntry $entry): DataGridEntry => $entry
+        ->serverSide()
+        ->paginated([5, DataGridEntry::ALL_RECORDS])
+        ->records(function (?string $search, int $page, ?int $recordsPerPage) use ($received): LengthAwarePaginator {
+            $received[] = [$search, $page, $recordsPerPage];
+
+            return new LengthAwarePaginator([['number' => 'DLV-99', 'customer' => 'Ana']], 40, 5, $page);
+        }));
+
+    $result = $entry->getGridPage('ana', 3, 5);
+    $entry->getGridPage(null, 1, 'all');
+
+    expect($received[1] ?? null)->toBe(['ana', 3, 5])
+        ->and($received[2] ?? null)->toBe([null, 1, null])
+        ->and($result['total'])->toBe(40)
+        ->and($result['page'])->toBe(3)
+        ->and($result['rows'][0]['key'])->toBe('10');
+});
+
+it('returns nothing to the browser when the entry is not server-side', function (): void {
+    $entry = serverEntry(fn (DataGridEntry $entry): DataGridEntry => $entry->state(manyDeliveries(3))->paginated(5));
+
+    expect($entry->getGridPage(null, 1, 5)['rows'])->toBe([]);
+});
+
+it('only lets the browser call the page method', function (): void {
+    EntryPage::$configureUsing = fn (): array => [
+        DataGridEntry::make('deliveries')->state(manyDeliveries(3))->serverSide()->paginated(5)->schema([TextEntry::make('number')]),
+    ];
+
+    $page = Livewire::test(EntryPage::class)->instance();
+    $key = $page->getSchema('infolist')?->getComponent('deliveries')?->getKey();
+
+    expect($page->callSchemaComponentMethod((string) $key, 'getGridPayload'))->toBeNull()
+        ->and($page->callSchemaComponentMethod((string) $key, 'getGridPage', [null, 1, 5]))->toHaveKey('total', 3);
 });

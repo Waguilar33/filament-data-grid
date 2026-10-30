@@ -226,7 +226,7 @@ use Waguilar\FilamentDataGrid\DataGridEntry;
 DataGridEntry::make('deliveries')
     ->state(fn (): array => $deliveries)
     ->searchable(['delivery_number', 'customer'])
-    ->paginated(10)
+    ->paginated([10, 25, 50])
     ->table([
         TableColumn::make('Delivery'),
         TableColumn::make('Customer'),
@@ -255,9 +255,41 @@ The state can be an array, a collection or a relationship, as with `RepeatableEn
 - **Child rows** come from the first `RepeatableEntry` in the schema that has a `table()`. It doesn't take a column. Its rows open under their parent row, with their own column headers. Without one, the grid has no child rows.
 - **Opening rows:** rows start closed. Click a row, or its arrow button, to open or close it. Several rows can be open at once.
 - **Search:** `searchable()` adds a search field that filters parent rows. A row's child rows stay with it. Pass a list of fields to search only those columns. The search matches the text the entries show, such as a badge's formatted label.
-- **Pagination:** `paginated(10)` shows 10 parent rows per page. Open child rows don't count toward the page size, so a parent row and its children are never split across pages.
+- **Pagination:** `paginated([10, 25, 50])` pages parent rows and lets users pick the page size, with Filament's own pagination controls. Add `DataGridEntry::ALL_RECORDS` to offer "All", and use `defaultPaginationPageOption(25)` to start on another size. `paginated(10)` gives a fixed size, and `paginated()` uses 10, 25 and 50. Open child rows don't count toward the page size, so a parent row and its children are never split across pages.
 
-Search and pagination run in the browser over the rows the server sent, so they suit grids of up to a few hundred parent rows. Child rows have the same height as parent rows, so show extra details, such as a code badge, in a column of their own.
+Child rows have the same height as parent rows, so show extra details, such as a code badge, in a column of their own.
+
+### In the browser or on the server
+
+By default, the server sends every row with the page, and search and pagination run in the browser. Results are instant and nothing goes back to the server, which suits grids of up to a few hundred parent rows whose size you know.
+
+For larger or unknown sizes, make the entry server-side. The page then loads only the first page of rows, and each search, page or page size change asks the server for the rows it needs:
+
+```php
+DataGridEntry::make('deliveries')
+    ->serverSide()
+    ->state(fn (): array => $deliveries)
+```
+
+With only `state()`, the server still reads every row on each request, but renders and sends only the current page. To let your data source do the work, as with Filament's [custom data tables](https://filamentphp.com/docs/5.x/tables/custom-data), use `records()`. It receives the search, the page and the page size (`null` for "All"), and returns a `LengthAwarePaginator`, or an array or collection that the grid pages for you:
+
+```php
+use Illuminate\Pagination\LengthAwarePaginator;
+
+DataGridEntry::make('deliveries')
+    ->serverSide()
+    ->records(fn (?string $search, int $page, ?int $recordsPerPage): LengthAwarePaginator => Delivery::query()
+        ->when($search, fn ($query) => $query->where('number', 'like', "%{$search}%"))
+        ->paginate($recordsPerPage ?? PHP_INT_MAX, page: $page))
+```
+
+Search terms and page numbers come from the browser. As with Filament's custom data, `records()` must return only data the current user may see.
+
+To make every grid in your app server-side, set it once in a service provider. A grid can still opt out with `serverSide(false)`:
+
+```php
+DataGridEntry::configureUsing(fn (DataGridEntry $entry) => $entry->serverSide());
+```
 
 ## Validation
 
