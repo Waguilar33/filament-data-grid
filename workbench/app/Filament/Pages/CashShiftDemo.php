@@ -59,7 +59,7 @@ final class CashShiftDemo extends Page implements HasTable
             ))
             ->columns([TextColumn::make('key')->searchable()])
             ->paginated(false)
-            ->content(self::methods('methods')->toTableContent());
+            ->content(self::methods('methods')->compact()->toTableContent());
     }
 
     private static function methods(string $name): DataGridEntry

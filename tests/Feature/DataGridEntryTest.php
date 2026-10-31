@@ -366,6 +366,26 @@ it('renders a heading, description and icon above the grid', function (): void {
         ->assertSeeHtml('fi-data-grid-entry-header-icon');
 });
 
+it('renders a compact header with the markup of a compact Filament section', function (): void {
+    $html = mountDeliveries(fn (DataGridEntry $entry): DataGridEntry => $entry
+        ->heading('Deliveries')
+        ->description('Where each order stands')
+        ->icon(Heroicon::OutlinedTruck)
+        ->compact())
+        ->html();
+
+    expect($html)->toContain('fi-section fi-compact fi-section-has-header fi-data-grid-section')
+        ->toContain('fi-section-header-heading')
+        ->toContain('fi-section-header-description')
+        ->not->toContain('fi-ta-header-heading')
+        ->not->toContain('fi-data-grid-entry-header-icon');
+});
+
+it('keeps the table header look unless compact, and skips the section without a heading', function (): void {
+    expect(mountDeliveries(fn (DataGridEntry $entry): DataGridEntry => $entry->heading('Deliveries'))->html())->not->toContain('fi-data-grid-section')
+        ->and(mountDeliveries(fn (DataGridEntry $entry): DataGridEntry => $entry->compact())->html())->not->toContain('fi-data-grid-section');
+});
+
 it('pads the child table by 15 pixels unless told otherwise', function (): void {
     expect(deliveriesPayload(mountDeliveries())['childTablePadding'])->toBe(15)
         ->and(deliveriesPayload(mountDeliveries(fn (DataGridEntry $entry): DataGridEntry => $entry->childTablePadding(8)))['childTablePadding'])->toBe(8)

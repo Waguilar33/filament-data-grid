@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.8 - 2026-10-31
+
+- `DataGridEntry::compact()` draws the grid's heading, description and icon as a compact Filament section header, with Filament's own section markup, so it lines up with `Section::make()->compact()` cards. Without it, the header keeps the table look. In `toTableContent()`, `compact()` makes the table's own header compact; give that header an icon with `IconHeading`.
+
 ## v1.0.0-beta.7 - 2026-10-31
 
 - `DataGridEntry::recordActions()` adds Filament Actions and `ActionGroup` menus to each row of a standalone grid, with that row as `$record` for `visible()`, `authorize()`, `schema()` and `action()`. They look and size like a table's record actions. Eloquent rows are found again by model key and array rows by array key, so an action never runs on a different row or on the page's record. Test them with `TestAction::make('name')->schemaComponent('entry', schema: 'infolist')->arguments(['row' => $key])`. Not available with `serverSide()` or `toTableContent()` (`UnsupportedRecordActions`).

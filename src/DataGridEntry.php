@@ -8,6 +8,7 @@ use BackedEnum;
 use Closure;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Schemas\Components\Component as SchemaComponent;
+use Filament\Schemas\Components\Concerns\CanBeCompact;
 use Filament\Schemas\Components\Livewire as LivewireComponent;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
@@ -39,6 +40,7 @@ use function Filament\Support\generate_icon_html;
 
 class DataGridEntry extends RepeatableEntry
 {
+    use CanBeCompact;
     use HasRecordActions;
 
     public const ALL_RECORDS = 'all';

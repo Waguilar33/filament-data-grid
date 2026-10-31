@@ -9,6 +9,7 @@
     $icon = $entry->getIcon();
     $hasHeader = filled($heading) || filled($description);
     $hasToolbar = $entry->isSearchable() || filled($payload['filters']);
+    $isSection = $hasHeader && $entry->isCompact();
 @endphp
 
 <div
@@ -21,9 +22,30 @@
 >
     <div x-ref="payload" hidden data-payload="{{ json_encode($payload, JSON_THROW_ON_ERROR) }}"></div>
 
-    <div @class(['fi-ta-ctn', 'fi-ta-ctn-with-header' => $hasHeader || $hasToolbar])>
+    @if ($isSection)
+        <section class="fi-section fi-compact fi-section-has-header fi-data-grid-section">
+            <header class="fi-section-header">
+                {{ \Filament\Support\generate_icon_html($icon, attributes: (new ComponentAttributeBag)->color(\Filament\Support\View\Components\SectionComponent\IconComponent::class, 'gray'), size: \Filament\Support\Enums\IconSize::Large) }}
+
+                <div class="fi-section-header-content fi-section-header-content-has-heading">
+                    <div class="fi-section-header-text-ctn">
+                        @if (filled($heading))
+                            <h3 class="fi-section-header-heading">{{ $heading }}</h3>
+                        @endif
+
+                        @if (filled($description))
+                            <p class="fi-section-header-description">{{ $description }}</p>
+                        @endif
+                    </div>
+                </div>
+            </header>
+
+            <div class="fi-section-content-ctn">
+    @endif
+
+    <div @class(['fi-ta-ctn', 'fi-ta-ctn-with-header' => ($hasHeader && ! $isSection) || $hasToolbar])>
         <div class="fi-ta-main">
-            @if ($hasHeader)
+            @if ($hasHeader && ! $isSection)
                 <div class="fi-ta-header">
                     <div class="fi-data-grid-entry-header">
                         {{ \Filament\Support\generate_icon_html($icon, attributes: (new ComponentAttributeBag)->class(['fi-data-grid-entry-header-icon']), size: \Filament\Support\Enums\IconSize::Large) }}
@@ -304,4 +326,9 @@
             </div>
         </div>
     </div>
+
+    @if ($isSection)
+            </div>
+        </section>
+    @endif
 </div>

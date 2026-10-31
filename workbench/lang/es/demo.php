@@ -163,6 +163,9 @@ return [
         ],
     ],
     'order_lines' => [
+        'order' => 'Pedido',
+        'order_description' => 'El pedido al que pertenecen estas líneas.',
+        'description' => 'Ajusta una línea corta o quítala.',
         'navigation' => 'Líneas de pedido',
         'section' => 'Líneas',
         'columns' => [

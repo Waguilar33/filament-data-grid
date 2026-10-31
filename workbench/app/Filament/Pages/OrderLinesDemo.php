@@ -58,31 +58,36 @@ final class OrderLinesDemo extends Page
         return $schema
             ->record($this->order)
             ->components([
-                Section::make(__('demo::demo.order_lines.section'))
+                Section::make(__('demo::demo.order_lines.order'))
+                    ->icon(Heroicon::OutlinedDocumentText)
+                    ->description(__('demo::demo.order_lines.order_description'))
+                    ->compact()
+                    ->schema([TextEntry::make('reference')]),
+                DataGridEntry::make('lines')
+                    ->hiddenLabel()
+                    ->heading(__('demo::demo.order_lines.section'))
+                    ->description(__('demo::demo.order_lines.description'))
                     ->icon(Heroicon::OutlinedShoppingBag)
+                    ->compact()
+                    ->state(fn (DemoOrder $record): Collection => $record->lines()->reorder()->latest('id')->get())
+                    ->table([
+                        TableColumn::make(__('demo::demo.order_lines.columns.product')),
+                        TableColumn::make(__('demo::demo.order_lines.columns.quantity'))->alignEnd(),
+                    ])
                     ->schema([
-                        DataGridEntry::make('lines')
-                            ->hiddenLabel()
-                            ->state(fn (DemoOrder $record): Collection => $record->lines()->reorder()->latest('id')->get())
-                            ->table([
-                                TableColumn::make(__('demo::demo.order_lines.columns.product')),
-                                TableColumn::make(__('demo::demo.order_lines.columns.quantity'))->alignEnd(),
-                            ])
-                            ->schema([
-                                TextEntry::make('product'),
-                                TextEntry::make('quantity')->numeric(),
-                            ])
-                            ->recordActions([
-                                self::adjustAction(),
-                                ActionGroup::make([
-                                    Action::make('remove')
-                                        ->label(__('demo::demo.order_lines.actions.remove'))
-                                        ->icon(Heroicon::OutlinedTrash)
-                                        ->color('danger')
-                                        ->requiresConfirmation()
-                                        ->action(fn (DemoOrderLine $record): ?bool => $record->delete()),
-                                ]),
-                            ]),
+                        TextEntry::make('product'),
+                        TextEntry::make('quantity')->numeric(),
+                    ])
+                    ->recordActions([
+                        self::adjustAction(),
+                        ActionGroup::make([
+                            Action::make('remove')
+                                ->label(__('demo::demo.order_lines.actions.remove'))
+                                ->icon(Heroicon::OutlinedTrash)
+                                ->color('danger')
+                                ->requiresConfirmation()
+                                ->action(fn (DemoOrderLine $record): ?bool => $record->delete()),
+                        ]),
                     ]),
             ]);
     }
