@@ -296,8 +296,31 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         return column.cssClass.replace(/\bfi-align-\S+/, `fi-align-${labelAlignment}`)
     }
 
+    const labelSpanEnd = (columns, start) => {
+        const firstTotal = columns.findIndex((candidate, index) => index > start && payload.totals?.columns?.[candidate.field])
+
+        return firstTotal === -1 ? columns.length - 1 : firstTotal - 1
+    }
+
+    const totalPosition = (node, column) => {
+        const position = node.className.match(/\bl\d+ r\d+\b/)?.[0] ?? ''
+
+        if (!grid || column.field !== firstDataField() || payload.totals?.columns?.[column.field]) {
+            return { position, classes: totalCellClasses(column) }
+        }
+
+        const columns = grid.getColumns()
+        const start = columns.indexOf(column)
+        const end = labelSpanEnd(columns, start)
+        const insetEnd = columns[end]?.cssClass.includes('fi-data-grid-inset-end') ? ' fi-data-grid-inset-end' : ''
+
+        return { position: `l${start} r${end}`, classes: `${totalCellClasses(column)}${insetEnd}` }
+    }
+
     const renderTotal = (node, column) => {
-        node.className = `slick-footerrow-column ${node.className.match(/\bl\d+ r\d+\b/)?.[0] ?? ''} ${totalCellClasses(column)} fi-data-grid-total-cell`
+        const { position, classes } = totalPosition(node, column)
+
+        node.className = `slick-footerrow-column ${position} ${classes} fi-data-grid-total-cell`
         node.innerHTML = totalHtml(column.field)
     }
 
