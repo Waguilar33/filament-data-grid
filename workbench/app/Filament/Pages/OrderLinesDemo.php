@@ -62,7 +62,7 @@ final class OrderLinesDemo extends Page
                     ->icon(Heroicon::OutlinedDocumentText)
                     ->description(__('demo::demo.order_lines.order_description'))
                     ->compact()
-                    ->schema([TextEntry::make('reference')]),
+                    ->schema([TextEntry::make('reference')->icon(Heroicon::OutlinedHashtag)]),
                 DataGridEntry::make('lines')
                     ->hiddenLabel()
                     ->heading(__('demo::demo.order_lines.section'))
@@ -75,7 +75,7 @@ final class OrderLinesDemo extends Page
                         TableColumn::make(__('demo::demo.order_lines.columns.quantity'))->alignEnd(),
                     ])
                     ->schema([
-                        TextEntry::make('product'),
+                        TextEntry::make('product')->icon(Heroicon::OutlinedCube),
                         TextEntry::make('quantity')->numeric(),
                     ])
                     ->recordActions([

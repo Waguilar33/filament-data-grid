@@ -12,6 +12,7 @@ use Filament\Pages\Page;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Text;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\IconPosition;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -94,7 +95,7 @@ final class DeliveryRouteDemo extends Page
             ])
             ->schema([
                 TextEntry::make('delivery_number')->weight('medium'),
-                TextEntry::make('customer'),
+                TextEntry::make('customer')->icon(Heroicon::OutlinedUser),
                 TextEntry::make('fill_status')
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => __("demo::demo.route.fill_statuses.{$state}"))
@@ -116,9 +117,10 @@ final class DeliveryRouteDemo extends Page
                     ])
                     ->schema([
                         TextEntry::make('product')
+                            ->icon(Heroicon::OutlinedCube)
                             ->belowContent(fn (TextEntry $component): ?Text => self::unitCode($component)),
                         TextEntry::make('requested')->numeric(),
-                        TextEntry::make('handed_over')->numeric(),
+                        TextEntry::make('handed_over')->numeric()->icon(Heroicon::OutlinedCheck)->iconPosition(IconPosition::After),
                     ]),
             ]);
     }
