@@ -163,6 +163,9 @@ return [
         ],
     ],
     'order_lines' => [
+        'order' => 'Order',
+        'order_description' => 'The order these lines belong to.',
+        'description' => 'Adjust a short line or remove it.',
         'navigation' => 'Order lines',
         'section' => 'Lines',
         'columns' => [

@@ -429,6 +429,17 @@ DataGridEntry::make('deliveries')
     ->icon(Heroicon::OutlinedTruck)
 ```
 
+By default the header looks like a Filament table's header, which has the same spacing as a regular section. Add `compact()` to match a compact section (`Section::make()->compact()`): the grid then uses Filament's own section header markup, so it has the same padding, icon position, border and corners, and follows your theme:
+
+```php
+DataGridEntry::make('deliveries')
+    ->heading('Deliveries')
+    ->icon(Heroicon::OutlinedTruck)
+    ->compact()
+```
+
+`compact()` only changes the header. Without a heading, description or icon there is no header, and the grid looks the same either way.
+
 ### Filters
 
 `filters()` takes Filament's own table filters. They appear behind the filter button next to the search field, with the same form, "Apply filters" and "Reset" as a Filament table:
@@ -532,6 +543,15 @@ use Waguilar\FilamentDataGrid\Support\IconHeading;
 $table
     ->heading(IconHeading::make('Deliveries', Heroicon::OutlinedTruck))
     ->description('Where each order on the route stands.')
+```
+
+Inside a table, the heading, description and icon belong to the table, because Filament draws the table's header (with its search, filters and header actions) before it draws the content. The grid's own `heading()`, `description()` and `icon()` aren't shown there. `compact()` still works: on the grid, it makes the table's header compact too, so it lines up with compact sections:
+
+```php
+$table
+    ->heading(IconHeading::make('Deliveries', Heroicon::OutlinedTruck))
+    ->description('Where each order on the route stands.')
+    ->content(DataGridEntry::make('deliveries')->compact()->...->toTableContent())
 ```
 
 Cells are Filament infolist entries, so their own options work in the grid. For example, a `TextEntry` with `badge()` and an array state shows one badge per item, and an `IconEntry` with `tooltip()` makes an icon-only column:

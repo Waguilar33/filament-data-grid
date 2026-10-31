@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Filament\Facades\Filament;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
+use Workbench\App\Filament\Pages\CashShiftDemo;
 use Workbench\App\Filament\Pages\DeliveryTableDemo;
 
 /**
@@ -70,4 +71,11 @@ it('sends each record its Filament record actions and a link to the record', fun
 
     expect($row['actions'])->toContain('fi-data-grid-record-actions')->toContain('Deliver')->toContain('Reschedule')
         ->and($row['link'])->toContain('href=')->toContain('delivery-route-demo#DLV-2026-0000001');
+});
+
+it('marks a compact grid so the table header around it is compact', function (): void {
+    Filament::setCurrentPanel('demo');
+
+    expect(Livewire::test(CashShiftDemo::class)->html())->toContain('fi-data-grid-in-table fi-data-grid-compact')
+        ->and(Livewire::test(DeliveryTableDemo::class)->html())->not->toContain('fi-data-grid-compact');
 });
