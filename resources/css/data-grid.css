@@ -206,10 +206,14 @@
     pointer-events: none;
 }
 
+.fi-data-grid-canvas .slick-cell.active:not(.editable) {
+    z-index: 2;
+}
+
 .fi-data-grid-canvas .slick-cell.active:not(.editable)::after {
     content: '';
     position: absolute;
-    inset: 0 0 -1px;
+    inset: 0;
     box-shadow: inset 0 0 0 1px var(--fi-data-grid-hint-active);
     pointer-events: none;
 }

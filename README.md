@@ -140,6 +140,8 @@ TextInput::make('code')
     ->suffixIcon('fal-sharp-barcode-read')
 ```
 
+A field hidden in every row, with `visible(false)` or a closure that is false for all rows, gets no column. A field hidden in only some rows keeps its column and leaves those cells empty. With no rows, the field's visibility in the row template decides.
+
 A component that is neither a form field nor an infolist entry throws `Waguilar\FilamentDataGrid\Exceptions\UnsupportedCellComponent`.
 
 Rows grow to fit their tallest cell, with 44px as the minimum, so an entry with `belowContent()` or a long name that wraps is never cut off. This applies to child rows too. The grid measures the rows again when the state changes, when a row opens or closes, and when the grid is resized.
