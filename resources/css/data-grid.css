@@ -15,6 +15,7 @@
     --fi-data-grid-editable-hover-ring: color-mix(in oklab, var(--gray-950) 20%, transparent);
 
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: calc(var(--spacing) * 2);
 }
 

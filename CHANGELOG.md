@@ -5,6 +5,7 @@ All notable changes to `filament-data-grid` will be documented in this file.
 ## v1.0.0-beta.11 - 2026-10-31
 
 - ArrowUp and ArrowDown step a numeric `TextInput` cell while you edit it, like a native number input, with or without a mask. The step is `step()` when it is a number, otherwise 1 (so `numeric()`'s default `'any'` steps by 1). A blank cell starts from 0, the result stays within `minValue()` and `maxValue()`, and an explicit step snaps to the step from `minValue()`. The arrows no longer move to another row while the editor is open. A masked cell keeps its mask. Arrows with Shift, Alt, Ctrl or Meta are left alone.
+- A grid with a header (editable `DataGrid` or `compact()` `DataGridEntry`) now shrinks back when its container gets narrower, for example after the sidebar opens again. Before, it kept its widest width and its last columns were cut off past the card. The grid root's single column is now `minmax(0, 1fr)`, so the grid's own content no longer holds it wide.
 
 ## v1.0.0-beta.10 - 2026-10-31
 
