@@ -23,4 +23,20 @@ final class UnsupportedRecordActions extends LogicException
             $entry,
         ));
     }
+
+    public static function childTable(string $entry): self
+    {
+        return new self(sprintf(
+            'DataGridEntry [%s] cannot combine childRecordActions() with childTable(): child row actions belong to the nested table RepeatableEntry\'s rows, which childTable() replaces. Define the actions in the child table component instead.',
+            $entry,
+        ));
+    }
+
+    public static function withoutChildRows(string $entry): self
+    {
+        return new self(sprintf(
+            'DataGridEntry [%s] has childRecordActions() but its schema has no nested RepeatableEntry with table() to show child rows.',
+            $entry,
+        ));
+    }
 }

@@ -200,6 +200,22 @@ return [
             'remove' => 'Remove',
         ],
     ],
+    'payments' => [
+        'navigation' => 'Payments',
+        'heading' => 'Payments by method',
+        'description' => 'Unsaved payments, grouped by method. Edit or remove one.',
+        'total' => 'Total paid',
+        'columns' => [
+            'method' => 'Method',
+            'total' => 'Total',
+            'amount' => 'Amount',
+            'reference' => 'Reference',
+        ],
+        'actions' => [
+            'edit' => 'Edit',
+            'delete' => 'Delete',
+        ],
+    ],
     'placeholders' => [
         'scan' => 'Scan or type',
     ],

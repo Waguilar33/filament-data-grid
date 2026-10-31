@@ -590,6 +590,54 @@ How it differs from a table's record actions:
 - There are no bulk actions, `recordUrl()`, clickable rows, or settings for the actions column's position, label or alignment.
 - Filament's prebuilt actions such as `EditAction` and `DeleteAction` expect a table or a resource record. Build your own `Action`s for the grid.
 
+#### Actions on child rows
+
+`childRecordActions()` puts actions at the end of each child row of the nested `RepeatableEntry` (the one with `table()`). They work like `recordActions()`: modals, slide-overs, `fillForm()`, `schema()` and groups. `$record` is the child row, a model or its array plus `__key`, the child's array key.
+
+The entry also works inside a form. Its `state()` can read the form with `Get`, and an action can rewrite the form with `Set`. The grid then renders again from the new state. For example, payments kept as unsaved form state keyed by uuid, shown one group per method:
+
+```php
+use Filament\Actions\Action;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
+
+Hidden::make('payments'),
+
+DataGridEntry::make('payments_grid')
+    ->state(fn (Get $get): array => groupByMethod($get('payments') ?? []))
+    ->table([TableColumn::make('Method'), TableColumn::make('Total')->alignEnd()])
+    ->schema([
+        TextEntry::make('method'),
+        TextEntry::make('total')->money('GTQ'),
+        RepeatableEntry::make('payments')
+            ->table([TableColumn::make('Amount')->alignEnd()])
+            ->schema([TextEntry::make('amount')->money('GTQ')]),
+    ])
+    ->childRecordActions([
+        Action::make('editPayment')
+            ->slideOver()
+            ->fillForm(fn (array $record): array => ['amount' => $record['amount']])
+            ->schema([TextInput::make('amount')->numeric()->required()])
+            ->action(fn (array $data, array $record, Get $get, Set $set) => $set(
+                'payments.'.$record['__key'].'.amount', $data['amount'], shouldCallUpdatedHooks: true,
+            )),
+        Action::make('deletePayment')
+            ->action(fn (array $record, Get $get, Set $set) => $set(
+                'payments', array_diff_key($get('payments'), [$record['__key'] => true]), shouldCallUpdatedHooks: true,
+            )),
+    ])
+```
+
+- Give the entry a name other than the field it reads (`payments_grid`, not `payments`).
+- Key the groups and the children by stable keys, like a method id and the payment uuid. An action finds its parent row by `row` and its child by `child`, and the open groups stay open by their keys.
+- `shouldCallUpdatedHooks: true` runs the field's `afterStateUpdated()`, so totals elsewhere on the page that react to it update too.
+- For the parent row, the entry is injected as `$component`: `$component->resolveRecordActionRecord($arguments['row'])`.
+- A child action can't share a name with a parent action, because Filament finds actions by name. That throws `DuplicateRecordActionName`.
+- It throws `UnsupportedRecordActions` with `serverSide()`, `toTableContent()` or `childTable()`, and when the schema has no nested table `RepeatableEntry`.
+- To test, pass both keys: `TestAction::make('deletePayment')->schemaComponent('payments_grid', schema: 'form')->arguments(['row' => 'cash', 'child' => $uuid])`.
+
+`recordActions()` on parent rows works inside a form the same way.
+
 ### Inside a Filament table
 
 To let Filament handle searching, filtering and paging, build a normal Filament table and use the grid as its content. Filament keeps everything around the rows: the heading, search field, filters (in a dropdown, modal or slide-over), active filter chips, pagination, empty state and header actions. The grid draws only the current page of records, with child rows that open:

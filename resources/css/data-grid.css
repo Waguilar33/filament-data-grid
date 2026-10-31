@@ -585,7 +585,8 @@
     z-index: 30;
 }
 
-.fi-data-grid-canvas .fi-data-grid-record-actions-cell {
+.fi-data-grid-canvas .fi-data-grid-record-actions-cell,
+.fi-data-grid-canvas .fi-data-grid-child-actions-cell {
     overflow: visible;
 }
 

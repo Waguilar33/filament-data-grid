@@ -2,6 +2,11 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.19 - 2026-10-31
+
+- `DataGridEntry::childRecordActions()` puts Filament actions at the end of each child row of the nested table `RepeatableEntry`, with modals, slide-overs, `fillForm()`, `schema()` and groups. `$record` is the child row (a model, or its array plus `__key`). The action finds the child by the `row` and `child` arguments, and does nothing if it is gone. A child action named like a parent action throws `DuplicateRecordActionName`. `serverSide()`, `toTableContent()`, `childTable()` or a schema without nested table rows throw `UnsupportedRecordActions`.
+- Inside a form, a grid's `state()` can read the form with `Get`, and a parent or child action can rewrite it with `Set`, for example to edit or remove unsaved rows. The grid renders again from the new state, and open groups stay open.
+
 ## v1.0.0-beta.18 - 2026-10-31
 
 - A `DataGridEntry` whose `state()` is a closure, for example a query, now evaluates it once per request plus once per render. Before, Filament's `RepeatableEntry` checked its cached rows against a fresh `getState()` on every child schema lookup. A query returns new model instances, so the check always failed, and one page load ran the closure 17 times for a single row. Each render still reads the state again, so the grid shows fresh rows after an action.
