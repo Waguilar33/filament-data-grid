@@ -42,6 +42,11 @@ class DataGrid extends Repeater
 
     protected bool|Closure $shouldExpandRows = false;
 
+    /**
+     * @var bool|list<string>|Closure
+     */
+    protected bool|array|Closure $highlightedEditableColumns = false;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -130,6 +135,30 @@ class DataGrid extends Repeater
         $pixels = $this->evaluate($this->childTablePadding);
 
         return is_int($pixels) ? max(0, $pixels) : 15;
+    }
+
+    /**
+     * @param  bool|list<string>|Closure  $columns
+     */
+    public function highlightEditableColumns(bool|array|Closure $columns = true): static
+    {
+        $this->highlightedEditableColumns = $columns;
+
+        return $this;
+    }
+
+    /**
+     * @return bool|list<string>
+     */
+    public function getHighlightedEditableColumns(): bool|array
+    {
+        $columns = $this->evaluate($this->highlightedEditableColumns);
+
+        if (is_array($columns)) {
+            return array_values(array_filter($columns, is_string(...)));
+        }
+
+        return $columns === true;
     }
 
     public function expandRowsWhen(bool|Closure $condition = true): static
@@ -290,6 +319,8 @@ class DataGrid extends Repeater
                     'date' => generate_icon_html(Heroicon::Calendar, DataGridIconAlias::CELL_DATE)?->toHtml(),
                     'edit' => generate_icon_html(Heroicon::PencilSquare, DataGridIconAlias::CELL_EDIT)?->toHtml(),
                     'expand' => generate_icon_html(Heroicon::ChevronRight, DataGridIconAlias::ROW_EXPAND)?->toHtml(),
+                    'stepUp' => generate_icon_html(Heroicon::ChevronUp, DataGridIconAlias::CELL_STEP_UP)?->toHtml(),
+                    'stepDown' => generate_icon_html(Heroicon::ChevronDown, DataGridIconAlias::CELL_STEP_DOWN)?->toHtml(),
                 ],
             ]),
         ])->render();

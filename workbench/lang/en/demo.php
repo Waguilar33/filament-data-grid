@@ -86,6 +86,7 @@ return [
         'saved_state' => 'Last saved state',
         'adjustments' => 'Adjustments',
         'counts' => 'Stock counts',
+        'receipts' => 'Receiving',
     ],
     'actions' => [
         'save' => 'Save',
@@ -115,6 +116,9 @@ return [
         'approved' => 'Approved',
         'location' => 'Location',
         'counted' => 'Counted',
+        'code' => 'Code',
+        'received' => 'Received',
+        'expected' => 'Expected',
     ],
     'separators' => [
         'decimal' => '.',
@@ -194,5 +198,8 @@ return [
             'adjusted' => ':product adjusted',
             'remove' => 'Remove',
         ],
+    ],
+    'placeholders' => [
+        'scan' => 'Scan or type',
     ],
 ];

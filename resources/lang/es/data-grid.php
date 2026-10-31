@@ -35,6 +35,10 @@ return [
         'min' => 'El campo :attribute debe ser al menos :min.',
         'max' => 'El campo :attribute no debe ser mayor que :max.',
     ],
+    'step' => [
+        'up' => 'Aumentar',
+        'down' => 'Disminuir',
+    ],
     'toggle' => [
         'on' => 'Sí',
         'off' => 'No',

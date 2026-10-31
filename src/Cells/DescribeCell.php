@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Waguilar\FilamentDataGrid\Cells;
 
+use Filament\Forms\Components\Contracts\HasAffixes;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Field;
 use Filament\Forms\Components\Radio;
@@ -15,6 +16,8 @@ use Filament\Schemas\Components\Component;
 use Filament\Support\Components\Contracts\HasEmbeddedView;
 use Filament\Support\RawJs;
 use Illuminate\Support\MessageBag;
+
+use function Filament\Support\generate_icon_html;
 
 final readonly class DescribeCell
 {
@@ -41,16 +44,35 @@ final readonly class DescribeCell
         }
 
         $statePath = $component->getStatePath();
+        $isLocked = $this->isLocked($component);
 
         return array_filter([
             'visible' => true,
             'key' => $component->getKey(),
-            'disabled' => $component->isDisabled(),
+            'disabled' => $isLocked,
             'required' => $component instanceof Field && $component->isRequired(),
             'live' => $component->isLive(),
             'error' => $errors->first($statePath) ?: null,
+            'icon' => $isLocked ? null : $this->suffixIcon($component),
             ...$this->editorState($component, $type),
         ], fn (mixed $value): bool => $value !== null);
+    }
+
+    private function isLocked(Component $component): bool
+    {
+        return $component->isDisabled()
+            || (($component instanceof TextInput || $component instanceof DateTimePicker) && $component->isReadOnly());
+    }
+
+    private function suffixIcon(Component $component): ?string
+    {
+        if (! $component instanceof HasAffixes) {
+            return null;
+        }
+
+        $icon = $component->getSuffixIcon();
+
+        return $icon === null ? null : generate_icon_html($icon)?->toHtml();
     }
 
     /**

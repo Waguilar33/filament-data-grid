@@ -15,6 +15,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Text;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Waguilar\FilamentDataGrid\DataGrid;
 use Workbench\App\Catalog\FakeDispatch;
 
@@ -92,7 +93,7 @@ final class DispatchDemo extends Page
                         default => 'gray',
                     }),
                 self::placesGrid($detailed),
-                self::unitsGrid(),
+                self::unitsGrid($detailed),
             ]);
     }
 
@@ -100,6 +101,7 @@ final class DispatchDemo extends Page
     {
         return DataGrid::make('places')
             ->hiddenLabel()
+            ->highlightEditableColumns($detailed)
             ->visible(fn (Get $get): bool => ! $get('has_codes'))
             ->addable(false)
             ->deletable(false)
@@ -121,7 +123,7 @@ final class DispatchDemo extends Page
             ]);
     }
 
-    private static function unitsGrid(): DataGrid
+    private static function unitsGrid(bool $detailed): DataGrid
     {
         return DataGrid::make('units')
             ->hiddenLabel()
@@ -135,7 +137,13 @@ final class DispatchDemo extends Page
             ])
             ->schema([
                 TextEntry::make('place'),
-                TextInput::make('code')->required()->maxLength(20)->live(),
+                TextInput::make('code')
+                    ->required()
+                    ->maxLength(20)
+                    ->when($detailed, fn (TextInput $input): TextInput => $input
+                        ->placeholder(__('demo::demo.placeholders.scan'))
+                        ->suffixIcon(Heroicon::OutlinedQrCode))
+                    ->live(),
             ]);
     }
 

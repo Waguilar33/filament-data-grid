@@ -2,6 +2,17 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.12 - 2026-10-31
+
+- Editable grid cells no longer look like input boxes. The value of an editable cell is underlined with a dashed line, which turns solid in the primary color on hover or keyboard selection while the cell lightens slightly. The cell is outlined only while its editor is open; a keyboard-selected cell keeps a 1px outline. An empty editable cell shows its `placeholder()`, or a short underline. Editable and read-only cells now share one background (`--fi-data-grid-editable-bg` and `--fi-data-grid-readonly-bg` default to transparent), and the 1px hover ring is gone.
+- A pencil (`CELL_EDIT` alias) follows the header label of every column that is editable in at least one row. It updates on live changes without closing an open editor.
+- `DataGrid::highlightEditableColumns(bool|array|Closure $columns = true)` tints the editable cells of every column, or of the listed fields. Off by default.
+- A field's `suffixIcon()` is shown after the value of its editable cells. Date and modal cells show it in place of their own icon.
+- An open number editor has up and down buttons that step like the arrow keys, including masks, and repeat while held. New aliases `CELL_STEP_UP` and `CELL_STEP_DOWN`.
+- A `readOnly()` `TextInput` or date field is locked like a disabled one and no longer opens an editor.
+- Locked cells hide their icons, including the calendar of a disabled date cell.
+- An open row's chevron is now centered on its row. Before, its glyph-fitted box was rotated around the box's center, so the drawn chevron sat up to about 5px high.
+
 ## v1.0.0-beta.11 - 2026-10-31
 
 - ArrowUp and ArrowDown step a numeric `TextInput` cell while you edit it, like a native number input, with or without a mask. The step is `step()` when it is a number, otherwise 1 (so `numeric()`'s default `'any'` steps by 1). A blank cell starts from 0, the result stays within `minValue()` and `maxValue()`, and an explicit step snaps to the step from `minValue()`. The arrows no longer move to another row while the editor is open. A masked cell keeps its mask. Arrows with Shift, Alt, Ctrl or Meta are left alone.

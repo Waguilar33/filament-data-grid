@@ -22,7 +22,7 @@ final readonly class BuildGridPayload
     ) {}
 
     /**
-     * @return array{columns: list<array<string, mixed>>, rows: list<array<string, mixed>>, hasActions: bool, actionTemplates: array<string, string>, rowKeyPlaceholder: string, frozenColumns: int, reorderable: bool, hasChildRows: bool, childTablePadding: int}
+     * @return array{columns: list<array<string, mixed>>, rows: list<array<string, mixed>>, hasActions: bool, actionTemplates: array<string, string>, rowKeyPlaceholder: string, frozenColumns: int, reorderable: bool, hasChildRows: bool, childTablePadding: int, highlightEditableColumns: bool|list<string>, cellIcons: array<string, string>}
      */
     public function handle(DataGrid $grid): array
     {
@@ -37,9 +37,10 @@ final readonly class BuildGridPayload
         $errors = $errors instanceof MessageBag ? $errors : new MessageBag;
         $rows = [];
         $actionTemplates = [];
+        $cellIcons = [];
 
         foreach ($grid->getItems() as $key => $item) {
-            $rows[] = $this->describeRow($grid, (string) $key, $item, $errors, $actionTemplates);
+            $rows[] = $this->describeRow($grid, (string) $key, $item, $errors, $actionTemplates, $cellIcons);
         }
 
         return [
@@ -52,19 +53,30 @@ final readonly class BuildGridPayload
             'reorderable' => $grid->isReorderableWithDragAndDrop(),
             'hasChildRows' => $this->childGrids($grid->getChildSchema()) !== [],
             'childTablePadding' => $grid->getChildTablePadding(),
+            'highlightEditableColumns' => $grid->getHighlightedEditableColumns(),
+            'cellIcons' => $cellIcons,
         ];
     }
 
     /**
      * @param  array<string, string>  $actionTemplates
+     * @param  array<string, string>  $cellIcons
      * @return array<string, mixed>
      */
-    private function describeRow(DataGrid $grid, string $key, Schema $item, MessageBag $errors, array &$actionTemplates): array
+    private function describeRow(DataGrid $grid, string $key, Schema $item, MessageBag $errors, array &$actionTemplates, array &$cellIcons): array
     {
         $cells = [];
 
         foreach ($this->cellComponents($item) as $component) {
-            $cells[$this->describeColumn->fieldName($component)] = $this->describeCell->handle($component, $errors);
+            $cell = $this->describeCell->handle($component, $errors);
+
+            if (is_string($cell['icon'] ?? null)) {
+                $iconKey = md5($cell['icon']);
+                $cellIcons[$iconKey] = $cell['icon'];
+                $cell['icon'] = $iconKey;
+            }
+
+            $cells[$this->describeColumn->fieldName($component)] = $cell;
         }
 
         $rows = $grid->getRawState();

@@ -86,6 +86,7 @@ return [
         'saved_state' => 'Último estado guardado',
         'adjustments' => 'Ajustes',
         'counts' => 'Recuentos de existencias',
+        'receipts' => 'Recepción',
     ],
     'actions' => [
         'save' => 'Guardar',
@@ -115,6 +116,9 @@ return [
         'approved' => 'Aprobado',
         'location' => 'Ubicación',
         'counted' => 'Contado',
+        'code' => 'Código',
+        'received' => 'Recibido',
+        'expected' => 'Esperado',
     ],
     'separators' => [
         'decimal' => ',',
@@ -194,5 +198,8 @@ return [
             'adjusted' => ':product ajustado',
             'remove' => 'Quitar',
         ],
+    ],
+    'placeholders' => [
+        'scan' => 'Escanea o escribe',
     ],
 ];
