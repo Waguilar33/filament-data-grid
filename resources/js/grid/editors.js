@@ -16,6 +16,44 @@ const commitOnFocusLeave = (editor, element) => {
 
 const blankToNull = (value) => (value === '' || value === undefined ? null : value)
 
+const STEP_KEYS = { ArrowUp: 1, ArrowDown: -1 }
+
+const decimalsOf = (number) => (String(number).split('.')[1] ?? '').length
+
+const isSet = (value) => value !== null && value !== undefined && value !== ''
+
+const stepNumber = (value, direction, { step, min, max }) => {
+    const explicitStep = Number(step) > 0 ? Number(step) : null
+    const size = explicitStep ?? 1
+    const base = isSet(min) ? Number(min) : 0
+    const current = value ?? 0
+    let next = current + direction * size
+
+    // A native number input snaps an explicit step to its min; step="any" moves by 1 without snapping.
+    if (explicitStep !== null) {
+        const steps = (current - base) / size
+        const rounded = Math.round(steps)
+        const aligned = Math.abs(steps - rounded) < 1e-9 ? rounded : null
+
+        next = base + size * (aligned !== null ? aligned + direction : direction > 0 ? Math.ceil(steps) : Math.floor(steps))
+    }
+
+    if (isSet(min)) {
+        next = Math.max(next, Number(min))
+    }
+
+    if (isSet(max)) {
+        next = Math.min(next, Number(max))
+    }
+
+    // A native number input never steps against the arrow, e.g. down to max from a value above it.
+    if (value !== null && (next - current) * direction < 0) {
+        return value
+    }
+
+    return Number(next.toFixed(Math.max(decimalsOf(size), decimalsOf(base), explicitStep === null ? decimalsOf(current) : 0)))
+}
+
 class InputEditor {
     constructor(args) {
         this.args = args
@@ -75,6 +113,48 @@ export class NumberEditor extends InputEditor {
         if (hasMask(this.options)) {
             applyMask(input, this.options)
         }
+
+        input.addEventListener('keydown', (event) => this.stepOnArrow(event))
+    }
+
+    stepOnArrow(event) {
+        const direction = STEP_KEYS[event.key]
+
+        if (!direction || event.shiftKey || event.altKey || event.metaKey || event.ctrlKey) {
+            return
+        }
+
+        event.preventDefault()
+        event.stopPropagation()
+
+        const value = this.serializeValue()
+
+        if (value !== null && typeof value !== 'number') {
+            return
+        }
+
+        const next = stepNumber(value, direction, this.options)
+
+        if (next === value) {
+            return
+        }
+
+        if (!hasMask(this.options)) {
+            this.input.value = String(next)
+
+            return
+        }
+
+        const raw = maskInputText(next, this.options)
+        const { text, ready } = maskedText(next, this.options)
+
+        this.input.value = text ?? raw
+
+        ready?.then((masked) => {
+            if (this.input.value === raw) {
+                this.input.value = masked
+            }
+        })
     }
 
     destroy() {
