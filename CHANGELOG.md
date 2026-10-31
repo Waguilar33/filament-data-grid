@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.18 - 2026-10-31
+
+- A `DataGridEntry` whose `state()` is a closure, for example a query, now evaluates it once per request plus once per render. Before, Filament's `RepeatableEntry` checked its cached rows against a fresh `getState()` on every child schema lookup. A query returns new model instances, so the check always failed, and one page load ran the closure 17 times for a single row. Each render still reads the state again, so the grid shows fresh rows after an action.
+
 ## v1.0.0-beta.17 - 2026-10-31
 
 - The totals label's cell now spans every column before the first total, so `totalsLabelAlignment(Alignment::End)` puts the label right next to the first total. With the default start alignment the label still starts at the first column's edge.

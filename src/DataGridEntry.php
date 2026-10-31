@@ -109,6 +109,12 @@ class DataGridEntry extends RepeatableEntry
 
     protected Alignment|string|Closure|null $totalsLabelAlignment = null;
 
+    private bool $isRendering = false;
+
+    private bool $hasCachedState = false;
+
+    private mixed $cachedState = null;
+
     /**
      * @param  array<Total>|Closure  $totals
      */
@@ -639,7 +645,54 @@ class DataGridEntry extends RepeatableEntry
         return app(BuildEntryPayload::class)->handle($this, $entryPage->items, total: $entryPage->total, page: $entryPage->page);
     }
 
+    public function getConstantStateUsing(mixed $callback): static
+    {
+        $this->flushCachedState();
+
+        return parent::getConstantStateUsing($callback);
+    }
+
+    public function getClone(): static
+    {
+        $clone = parent::getClone();
+        $clone->flushCachedState();
+
+        return $clone;
+    }
+
+    public function flushCachedState(): void
+    {
+        $this->hasCachedState = false;
+        $this->cachedState = null;
+    }
+
+    public function getState(): mixed
+    {
+        if (! $this->hasCachedState) {
+            $this->cachedState = parent::getState();
+            $this->hasCachedState = true;
+        }
+
+        return $this->cachedState;
+    }
+
     public function toEmbeddedHtml(): string
+    {
+        if ($this->isRendering) {
+            return $this->renderEmbeddedHtml();
+        }
+
+        $this->isRendering = true;
+        $this->flushCachedState();
+
+        try {
+            return $this->renderEmbeddedHtml();
+        } finally {
+            $this->isRendering = false;
+        }
+    }
+
+    private function renderEmbeddedHtml(): string
     {
         $items = $this->isServerSide() ? null : $this->getItems();
 

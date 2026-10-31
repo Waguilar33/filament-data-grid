@@ -660,7 +660,7 @@ DataGridEntry::make('deliveries')
     ->state(fn (): array => $deliveries)
 ```
 
-With only `state()`, the server still reads every row on each request, but renders and sends only the current page. To let your data source do the work, as with Filament's [custom data tables](https://filamentphp.com/docs/5.x/tables/custom-data), use `records()`. It receives the search, the page and the page size (`null` for "All"), and returns a `LengthAwarePaginator`, or an array or collection that the grid pages for you:
+With only `state()`, the server still reads every row on each request (a `state()` closure runs once per request, and again for each render), but renders and sends only the current page. To let your data source do the work, as with Filament's [custom data tables](https://filamentphp.com/docs/5.x/tables/custom-data), use `records()`. It receives the search, the page and the page size (`null` for "All"), and returns a `LengthAwarePaginator`, or an array or collection that the grid pages for you:
 
 ```php
 use Illuminate\Pagination\LengthAwarePaginator;
