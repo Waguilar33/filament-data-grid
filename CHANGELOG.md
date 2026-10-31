@@ -4,7 +4,7 @@ All notable changes to `filament-data-grid` will be documented in this file.
 
 ## v1.0.0-beta.13 - 2026-10-31
 
-- A keyboard-selected cell in the last row now draws its whole 1px outline. Before, the grid's rounded frame clipped the bottom edge.
+- A selected cell, for example one left with Escape after editing, now draws its whole 1px outline in every row. Before, its bottom edge was hidden: under the next row, which overlaps it by 1px, or, in the last row, by the grid's rounded frame. The outline is now drawn inside the cell, and the selected cell sits above its neighbours.
 - An editable grid leaves out a column whose field is hidden in every row, for example `visible(false)` or a closure that is false for all rows. A column shown in at least one row stays, with empty cells where it is hidden. With no rows, the column follows the field's visibility in the row template.
 
 ## v1.0.0-beta.12 - 2026-10-31
