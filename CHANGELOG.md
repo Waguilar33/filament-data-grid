@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.16 - 2026-10-31
+
+- `DataGridEntry::totalsLabelAlignment()` aligns the totals label in its cell, for example `Alignment::End`. By default the label follows its column's alignment.
+
 ## v1.0.0-beta.15 - 2026-10-31
 
 - `DataGridEntry::totals()` adds a footer row with the sum of the columns you list, each a `Total::make('field')`. Each total is lined up and aligned with its column, and `totalsLabel()` goes in the first column. The browser adds up the totals, so they follow the search and filters and cover every matching row, not just the page. The footer hides while no row matches. In `toTableContent()` they cover the table's page. `serverSide()` grids throw `UnsupportedTotals`.

@@ -9,6 +9,7 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\EmbeddedTable;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\Alignment;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
@@ -45,6 +46,7 @@ final class CashShiftDemo extends Page implements HasTable
                 ->description(__('demo::demo.shift.descriptions.standalone'))
                 ->icon(Heroicon::OutlinedBanknotes)
                 ->searchable()
+                ->totalsLabelAlignment(Alignment::End)
                 ->state(FakeCashShift::methods()),
         ]);
     }

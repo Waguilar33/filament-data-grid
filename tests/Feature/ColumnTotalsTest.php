@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Filament\Infolists\Components\TextEntry;
+use Filament\Support\Enums\Alignment;
 use Filament\Support\RawJs;
 use Livewire\Livewire;
 use Waguilar\FilamentDataGrid\DataGridEntry;
@@ -106,4 +107,9 @@ it('refuses totals on a server-side grid', function (): void {
     $entry = mountEntry(totalsEntry()->totals([Total::make('total')]));
 
     expect(fn () => $entry->serverSide()->getGridPayload())->toThrow(UnsupportedTotals::class);
+});
+
+it('sends the label alignment, start by default', function (): void {
+    expect(mountEntry(totalsEntry()->totals([Total::make('total')]))->getGridPayload()['totals']['labelAlignment'])->toBeNull()
+        ->and(mountEntry(totalsEntry()->totals([Total::make('total')])->totalsLabelAlignment(Alignment::End))->getGridPayload()['totals']['labelAlignment'])->toBe('end');
 });

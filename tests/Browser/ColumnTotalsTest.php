@@ -98,7 +98,9 @@ it('lines each total up with the values of its column', function (string $grid, 
     $cell = fn (int $column): string => sprintf('%s .slick-row .l%d .fi-in-text-item', $grid, $column);
     $total = fn (int $column): string => sprintf('%s .slick-footerrow-column.l%d .fi-data-grid-total', $grid, $column);
 
-    expect($page->script(textEdges($total(1)))[0])->toBe($page->script(textEdges($cell(1)))[0]);
+    if ($grid === TABLE_TOTALS) {
+        expect($page->script(textEdges($total(1)))[0])->toBe($page->script(textEdges($cell(1)))[0]);
+    }
 
     foreach ([2, ...MONEY_TOTALS] as $column) {
         expect($page->script(textEdges($total($column)))[1])->toBe($page->script(textEdges($cell($column)))[1]);
@@ -106,6 +108,25 @@ it('lines each total up with the values of its column', function (string $grid, 
 
     expect($page->script(clippedTotals($grid)))->toBe([]);
 })->with([STANDALONE_TOTALS, TABLE_TOTALS])->with([[1600, 'en'], [1024, 'es']]);
+
+it('puts the label at the end of its cell when totalsLabelAlignment() says so', function (): void {
+    $page = visitTotals();
+
+    $edges = $page->script(sprintf(<<<'JS'
+        (() => {
+            const total = document.querySelector(%s)
+            const cell = total.parentElement
+            const range = document.createRange()
+            range.selectNodeContents(total)
+
+            return [Math.round(range.getBoundingClientRect().right), Math.round(cell.getBoundingClientRect().right - parseFloat(getComputedStyle(cell).paddingInlineEnd))]
+        })()
+        JS, json_encode(STANDALONE_TOTALS.' .slick-footerrow-column.l1 .fi-data-grid-total')));
+
+    expect($page->script(sprintf('document.querySelector(%s).textContent', json_encode(STANDALONE_TOTALS.' .slick-footerrow-column.l1'))))->toBe('Total')
+        ->and($edges[0])->toBe($edges[1])
+        ->and($page->script(sprintf('document.querySelector(%s).className', json_encode(TABLE_TOTALS.' .slick-footerrow-column.l1'))))->toContain('fi-align-start');
+});
 
 it('keeps the totals under the rows while a child table is open', function (): void {
     $page = visitTotals()
