@@ -19,9 +19,19 @@ const toggleHtml = (isOn, translations) => `
         <span class="fi-sr-only">${escapeHtml(isOn ? translations.toggle.on : translations.toggle.off)}</span>
     </span>`
 
-const textWithIcon = (text, placeholder, iconHtml) => `
-    <span class="fi-data-grid-cell-text ${isBlank(text) ? 'fi-data-grid-placeholder' : ''}">${escapeHtml(isBlank(text) ? placeholder : text)}</span>
-    <span class="fi-data-grid-cell-icon">${iconHtml ?? ''}</span>`
+const valueHtml = (text, placeholder, isEditable) => {
+    const blank = isBlank(text)
+    const classes = [
+        'fi-data-grid-cell-text',
+        blank ? 'fi-data-grid-placeholder' : '',
+        isEditable ? 'fi-data-grid-editable-value' : '',
+        isEditable && blank && isBlank(placeholder) ? 'fi-data-grid-editable-value-empty' : '',
+    ]
+
+    return `<span class="${classes.filter(Boolean).join(' ')}">${escapeHtml(blank ? placeholder : text)}</span>`
+}
+
+const iconHtml = (html) => (html ? `<span class="fi-data-grid-cell-icon">${html}</span>` : '')
 
 const formatDate = (value, inputType) => {
     const [datePart, timePart = ''] = String(value).split(' ')
@@ -54,20 +64,18 @@ export const cellLabel = ({ value, cell, serverValue, inputType = null }) => {
     return inputType ? formatDate(value, inputType) : String(value)
 }
 
-export const renderCell = ({ type, value, cell, label, placeholder, translations, icons }) => {
+export const renderCell = ({ type, value, cell, label, placeholder, translations, icons, isEditable = false, cellIcon = null }) => {
     switch (type) {
         case 'entry':
             return htmlElement(cell.html ?? '', 'fi-data-grid-entry')
         case 'toggle':
             return toggleHtml(Boolean(value), translations)
         case 'date':
-            return textWithIcon(label, placeholder, icons.date)
+            return valueHtml(label, placeholder, isEditable) + iconHtml(cellIcon ?? icons.date)
         case 'modal':
-            return textWithIcon(label, placeholder, icons.edit)
+            return valueHtml(label, placeholder, isEditable) + iconHtml(cellIcon ?? icons.edit)
         default:
-            return isBlank(value)
-                ? `<span class="fi-data-grid-placeholder">${escapeHtml(placeholder)}</span>`
-                : `<span class="fi-data-grid-cell-text">${escapeHtml(value)}</span>`
+            return valueHtml(value, placeholder, isEditable) + iconHtml(cellIcon)
     }
 }
 
@@ -79,11 +87,17 @@ export const renderActions = (html) => {
     return element
 }
 
-export const headerHtml = (column) => {
+export const headerHtml = (column, editIcon = null) => {
     const label = escapeHtml(column.label)
     const required = column.required ? '<sup class="fi-data-grid-required">*</sup>' : ''
 
-    return column.headerHidden ? `<span class="fi-sr-only">${label}</span>` : `${label}${required}`
+    if (column.headerHidden) {
+        return `<span class="fi-sr-only">${label}</span>`
+    }
+
+    return editIcon
+        ? `<span class="fi-data-grid-header-label">${label}${required}</span><span class="fi-data-grid-header-edit" aria-hidden="true">${editIcon}</span>`
+        : `${label}${required}`
 }
 
 const fittedIcons = new Map()
@@ -110,7 +124,7 @@ export const fitIconHtml = (html, align, host) => {
 
     if (box?.width) {
         svg.setAttribute('viewBox', `${box.x} ${viewBox.y} ${box.width} ${viewBox.height}`)
-        svg.setAttribute('preserveAspectRatio', `${align === 'end' ? 'xMax' : 'xMin'}YMid meet`)
+        svg.setAttribute('preserveAspectRatio', `${{ start: 'xMin', center: 'xMid', end: 'xMax' }[align]}YMid meet`)
     }
 
     container.remove()

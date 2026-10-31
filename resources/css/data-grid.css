@@ -10,9 +10,13 @@
     --fi-data-grid-danger: var(--danger-600);
     --fi-data-grid-danger-bg: color-mix(in oklab, var(--danger-50) 70%, transparent);
     --fi-data-grid-toggle-off: var(--gray-200);
-    --fi-data-grid-editable-bg: #fff;
-    --fi-data-grid-readonly-bg: color-mix(in oklab, var(--gray-100) 70%, #fff);
-    --fi-data-grid-editable-hover-ring: color-mix(in oklab, var(--gray-950) 20%, transparent);
+    --fi-data-grid-editable-bg: transparent;
+    --fi-data-grid-readonly-bg: transparent;
+    --fi-data-grid-hint: var(--gray-400);
+    --fi-data-grid-hint-active: var(--primary-600);
+    --fi-data-grid-hover-bg: color-mix(in oklab, var(--gray-950) 3%, transparent);
+    --fi-data-grid-highlight-bg: color-mix(in oklab, var(--gray-950) 2.5%, transparent);
+    --fi-data-grid-cell-icon: var(--gray-400);
 
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -31,9 +35,13 @@
     --fi-data-grid-danger: var(--danger-400);
     --fi-data-grid-danger-bg: color-mix(in oklab, var(--danger-400) 10%, transparent);
     --fi-data-grid-toggle-off: var(--gray-700);
-    --fi-data-grid-editable-bg: color-mix(in oklab, #fff 5%, transparent);
+    --fi-data-grid-editable-bg: transparent;
     --fi-data-grid-readonly-bg: transparent;
-    --fi-data-grid-editable-hover-ring: color-mix(in oklab, #fff 25%, transparent);
+    --fi-data-grid-hint: var(--gray-500);
+    --fi-data-grid-hint-active: var(--primary-400);
+    --fi-data-grid-hover-bg: color-mix(in oklab, #fff 4%, transparent);
+    --fi-data-grid-highlight-bg: color-mix(in oklab, #fff 3%, transparent);
+    --fi-data-grid-cell-icon: var(--gray-600);
 }
 
 .fi-data-grid-viewport {
@@ -189,13 +197,20 @@
     background-color: var(--fi-data-grid-bg);
 }
 
-.fi-data-grid-canvas .slick-cell.active::after,
 .fi-data-grid-canvas .slick-cell.editable::after,
 .fi-data-grid-canvas .slick-cell.fi-data-grid-cell-invalid::after {
     content: '';
     position: absolute;
     inset: 0 0 -1px;
     box-shadow: inset 0 0 0 2px var(--fi-data-grid-active);
+    pointer-events: none;
+}
+
+.fi-data-grid-canvas .slick-cell.active:not(.editable)::after {
+    content: '';
+    position: absolute;
+    inset: 0 0 -1px;
+    box-shadow: inset 0 0 0 1px var(--fi-data-grid-hint-active);
     pointer-events: none;
 }
 
@@ -231,12 +246,35 @@
     background-color: var(--fi-data-grid-readonly-bg);
 }
 
-.fi-data-grid-canvas .slick-cell.fi-data-grid-cell-editable:hover:not(.active):not(.editable)::after {
-    content: '';
-    position: absolute;
-    inset: 0 0 -1px;
-    box-shadow: inset 0 0 0 1px var(--fi-data-grid-editable-hover-ring);
-    pointer-events: none;
+.fi-data-grid-canvas .slick-cell.fi-data-grid-column-highlighted.fi-data-grid-cell-editable {
+    background-color: var(--fi-data-grid-highlight-bg);
+}
+
+.fi-data-grid-canvas .slick-cell.fi-data-grid-cell-editable:is(:hover, .active):not(.editable) {
+    background-image: linear-gradient(var(--fi-data-grid-hover-bg), var(--fi-data-grid-hover-bg));
+}
+
+.fi-data-grid-canvas .fi-data-grid-cell-editable :is(.fi-data-grid-editable-value, .fi-select-input-value-label, .fi-select-input-placeholder) {
+    border-bottom: 1px dashed var(--fi-data-grid-hint);
+}
+
+.fi-data-grid-canvas .fi-data-grid-cell-text.fi-data-grid-editable-value-empty {
+    display: inline-block;
+    min-width: calc(var(--spacing) * 8);
+    height: calc(var(--spacing) * 5);
+}
+
+.fi-data-grid-canvas .fi-data-grid-cell-editable:is(:hover, .active):not(.editable) :is(.fi-data-grid-editable-value, .fi-select-input-value-label, .fi-select-input-placeholder) {
+    border-bottom-style: solid;
+    border-bottom-color: var(--fi-data-grid-hint-active);
+}
+
+.fi-data-grid-canvas .fi-data-grid-cell-editable:is(:hover, .active) .fi-data-grid-cell-icon {
+    color: var(--fi-data-grid-hint-active);
+}
+
+.fi-data-grid-canvas .fi-data-grid-cell-disabled .fi-data-grid-cell-icon {
+    display: none;
 }
 
 .fi-data-grid-canvas .slick-cell.fi-data-grid-cell-clickable {
@@ -425,7 +463,74 @@
 .fi-data-grid-canvas .fi-data-grid-cell-icon {
     display: inline-flex;
     flex-shrink: 0;
-    color: var(--gray-400);
+    color: var(--fi-data-grid-cell-icon);
+}
+
+.fi-data-grid-canvas .slick-cell:not(.fi-data-grid-cell-date, .fi-data-grid-cell-modal) .fi-data-grid-cell-icon {
+    margin-inline-start: calc(var(--spacing) * 1.5);
+}
+
+.fi-data-grid-canvas .slick-column-name:has(.fi-data-grid-header-edit) {
+    display: inline-flex;
+    align-items: center;
+    gap: calc(var(--spacing) * 1.5);
+    min-width: 0;
+    max-width: 100%;
+}
+
+.fi-data-grid-canvas .fi-data-grid-header-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.fi-data-grid-canvas .fi-data-grid-header-edit {
+    display: inline-flex;
+    flex-shrink: 0;
+    color: var(--fi-data-grid-hint-active);
+}
+
+.fi-data-grid-canvas .fi-data-grid-header-edit :is(svg, .fi-icon) {
+    width: 0.875rem;
+    height: 0.875rem;
+}
+
+.fi-data-grid-editor-input.fi-data-grid-editor-number {
+    padding-inline-end: calc(var(--spacing) * 2 + 1.25rem);
+}
+
+.fi-data-grid-stepper {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: var(--spacing);
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.fi-data-grid-stepper-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background-color: transparent;
+    color: var(--fi-data-grid-muted);
+    cursor: pointer;
+}
+
+.fi-data-grid-stepper-button:hover {
+    background-color: var(--fi-data-grid-hover-bg);
+    color: var(--fi-data-grid-hint-active);
+}
+
+.fi-data-grid-stepper-button :is(svg, .fi-icon) {
+    width: 0.875rem;
+    height: 0.875rem;
 }
 
 .fi-data-grid-canvas .fi-data-grid-cell-icon .fi-icon,
@@ -679,7 +784,6 @@
     border-radius: var(--radius-md);
     color: var(--fi-data-grid-muted);
     cursor: pointer;
-    transition: transform 75ms;
 }
 
 .fi-data-grid-row-toggle:hover {
@@ -696,7 +800,7 @@
     height: calc(var(--spacing) * 5);
 }
 
-.fi-data-grid-row-toggle-expanded {
+.fi-data-grid-row-toggle-expanded svg {
     transform: rotate(90deg);
 }
 

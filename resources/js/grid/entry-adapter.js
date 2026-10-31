@@ -229,7 +229,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         const isExpanded = expanded.has(item.row.key)
         const label = isExpanded ? translations.collapse : translations.expand
 
-        return `<button type="button" class="fi-data-grid-row-toggle ${isExpanded ? 'fi-data-grid-row-toggle-expanded' : ''}" aria-expanded="${isExpanded ? 'true' : 'false'}" aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}">${fitIconHtml(icons.expand, 'start', element)}</button>`
+        return `<button type="button" class="fi-data-grid-row-toggle ${isExpanded ? 'fi-data-grid-row-toggle-expanded' : ''}" aria-expanded="${isExpanded ? 'true' : 'false'}" aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}">${fitIconHtml(icons.expand, isExpanded ? 'center' : 'start', element)}</button>`
     }
 
     const formatChildRow = (item) => {

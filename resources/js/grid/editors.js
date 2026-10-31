@@ -18,6 +18,10 @@ const blankToNull = (value) => (value === '' || value === undefined ? null : val
 
 const STEP_KEYS = { ArrowUp: 1, ArrowDown: -1 }
 
+const STEP_HOLD_MS = 400
+
+const STEP_REPEAT_MS = 60
+
 const decimalsOf = (number) => (String(number).split('.')[1] ?? '').length
 
 const isSet = (value) => value !== null && value !== undefined && value !== ''
@@ -106,6 +110,11 @@ class InputEditor {
 export class TextEditor extends InputEditor {}
 
 export class NumberEditor extends InputEditor {
+    constructor(args) {
+        super(args)
+        this.mountStepper()
+    }
+
     configure(input) {
         input.inputMode = this.options.integer ? 'numeric' : 'decimal'
         input.classList.add('fi-data-grid-editor-number')
@@ -126,7 +135,10 @@ export class NumberEditor extends InputEditor {
 
         event.preventDefault()
         event.stopPropagation()
+        this.step(direction)
+    }
 
+    step(direction) {
         const value = this.serializeValue()
 
         if (value !== null && typeof value !== 'number') {
@@ -157,7 +169,62 @@ export class NumberEditor extends InputEditor {
         })
     }
 
+    mountStepper() {
+        const { stepIcons = {}, stepLabels = {} } = this.options
+
+        this.stepper = document.createElement('span')
+        this.stepper.className = 'fi-data-grid-stepper'
+
+        for (const [direction, name] of [[1, 'up'], [-1, 'down']]) {
+            const button = document.createElement('button')
+
+            button.type = 'button'
+            button.tabIndex = -1
+            button.className = `fi-data-grid-stepper-button fi-data-grid-stepper-${name}`
+            button.setAttribute('aria-label', stepLabels[name] ?? name)
+            button.innerHTML = stepIcons[name] ?? ''
+            button.addEventListener('mousedown', (event) => {
+                event.preventDefault()
+                event.stopPropagation()
+            })
+            button.addEventListener('click', (event) => event.stopPropagation())
+            button.addEventListener('pointerdown', (event) => {
+                if (event.button !== 0) {
+                    return
+                }
+
+                event.preventDefault()
+                this.input.focus()
+                this.step(direction)
+                this.holdStep(direction)
+            })
+
+            for (const release of ['pointerup', 'pointerleave', 'pointercancel']) {
+                button.addEventListener(release, () => this.releaseStep())
+            }
+
+            this.stepper.append(button)
+        }
+
+        this.args.container.append(this.stepper)
+    }
+
+    holdStep(direction) {
+        this.releaseStep()
+        this.holdTimer = setTimeout(() => {
+            this.holdTimer = setInterval(() => this.step(direction), STEP_REPEAT_MS)
+        }, STEP_HOLD_MS)
+    }
+
+    releaseStep() {
+        clearTimeout(this.holdTimer)
+        clearInterval(this.holdTimer)
+    }
+
     destroy() {
+        this.releaseStep()
+        this.stepper?.remove()
+
         if (hasMask(this.options)) {
             releaseMask(this.input)
         }

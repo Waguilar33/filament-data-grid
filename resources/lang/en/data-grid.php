@@ -35,6 +35,10 @@ return [
         'min' => 'The :attribute field must be at least :min.',
         'max' => 'The :attribute field must not be greater than :max.',
     ],
+    'step' => [
+        'up' => 'Increase',
+        'down' => 'Decrease',
+    ],
     'toggle' => [
         'on' => 'On',
         'off' => 'Off',

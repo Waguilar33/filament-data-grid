@@ -129,3 +129,38 @@ it('lines an editable grid with a header up like an entry grid', function (): vo
     expect(gridEdges('/demo/allocation-demo', '.fi-data-grid-section'))
         ->toMatchArray(['icon' => 16, 'title' => 52, 'header' => 52, 'cell' => 52, 'lastEnd' => 16]);
 });
+
+it('centers the drawn expanded chevron on its row toggle', function (string $url, string $card): void {
+    $offset = visit($url)->waitForEvent('networkidle')->wait(0.5)->script(sprintf(<<<'JS'
+        async () => {
+            const card = () => document.querySelector(%1$s)
+            const expanded = () => card()?.querySelector('.fi-data-grid-canvas .fi-data-grid-row-toggle-expanded svg')
+
+            for (let tries = 0; !card()?.querySelector('.fi-data-grid-row-toggle svg') && tries < 100; tries++) {
+                await new Promise((resolve) => setTimeout(resolve, 50))
+            }
+
+            if (!expanded()) {
+                card().querySelector('.fi-data-grid-canvas .fi-data-grid-row-toggle').click()
+            }
+
+            for (let tries = 0; !expanded() && tries < 100; tries++) {
+                await new Promise((resolve) => setTimeout(resolve, 50))
+            }
+
+            const svg = expanded()
+            const shapes = [...svg.querySelectorAll('path, circle, rect, line, polyline, polygon, ellipse')].map((shape) => shape.getBoundingClientRect())
+            const drawnCenter = (Math.min(...shapes.map((box) => box.top)) + Math.max(...shapes.map((box) => box.bottom))) / 2
+            const button = svg.closest('.fi-data-grid-row-toggle').getBoundingClientRect()
+
+            return Math.round(Math.abs(drawnCenter - (button.top + button.height / 2)) * 10) / 10 + 0
+        }
+        JS, json_encode($card)));
+
+    expect($offset)->toBeLessThanOrEqual(0.5);
+})->with([
+    'standalone' => ['/demo/delivery-route-demo', '[id="content.deliveries"] .fi-ta-ctn'],
+    'table' => ['/demo/delivery-table-demo', '.fi-ta-ctn:has(.fi-data-grid-in-table)'],
+    'compact table' => ['/demo/cash-shift-demo', '.fi-ta-ctn:has(.fi-data-grid-compact)'],
+    'editable compact' => ['/demo/allocation-demo', '.fi-data-grid-section'],
+]);

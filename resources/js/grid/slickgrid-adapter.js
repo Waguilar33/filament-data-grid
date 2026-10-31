@@ -16,6 +16,7 @@ const MOVE_WIDTH = 36
 const EDGE_ICON_WIDTH = 20
 const EDGE_ICON_GAP = 4
 const EDITABLE_TYPES = ['text', 'number', 'select', 'toggle', 'date', 'modal']
+const UNDERLINED_TYPES = ['text', 'number', 'date', 'modal']
 
 const toPixels = (width) => {
     if (!width) {
@@ -93,21 +94,47 @@ export function createGrid(
         }
     }
 
+    const isColumnEditable = (column) =>
+        EDITABLE_TYPES.includes(column.editor.type) &&
+        payload.rows.some((row) => row.cells?.[column.field]?.visible && !row.cells[column.field].disabled)
+
+    const isColumnHighlighted = (column) =>
+        payload.highlightEditableColumns === true ||
+        (Array.isArray(payload.highlightEditableColumns) && payload.highlightEditableColumns.includes(column.field))
+
+    const columnHeader = (column) => headerHtml(column, isColumnEditable(column) ? icons.edit : null)
+
+    const refreshColumnHeaders = () => {
+        payload.columns.forEach((column) => {
+            const name = columnHeader(column)
+            const current = grid.getColumns().find((candidate) => candidate.id === column.field)
+
+            if (current && current.name !== name) {
+                grid.updateColumnHeader(column.field, name)
+            }
+        })
+    }
+
     const columnDefinitions = () => {
         const columns = payload.columns.map((column) => ({
             id: column.field,
             field: column.field,
-            name: headerHtml(column),
+            name: columnHeader(column),
             fixedWidth: userWidths.get(column.field) ?? toPixels(column.width),
             width: userWidths.get(column.field) ?? toPixels(column.width) ?? FLEXIBLE_MIN_WIDTH,
             minWidth: 60,
             resizable: true,
             sortable: false,
             focusable: column.editor.type !== 'entry',
-            cssClass: `fi-data-grid-cell fi-data-grid-cell-${column.editor.type} fi-align-${column.alignment ?? 'start'}`,
+            cssClass: `fi-data-grid-cell fi-data-grid-cell-${column.editor.type} fi-align-${column.alignment ?? 'start'}${isColumnHighlighted(column) ? ' fi-data-grid-column-highlighted' : ''}`,
             headerCssClass: `fi-data-grid-header fi-align-${column.alignment ?? 'start'}`,
             editorClass: EDITORS[column.editor.type] ?? null,
-            editor: { ...column.editor, label: column.label },
+            editor: {
+                ...column.editor,
+                label: column.label,
+                stepIcons: { up: icons.stepUp, down: icons.stepDown },
+                stepLabels: translations.step,
+            },
             source: column,
             formatter: formatCell,
         }))
@@ -227,7 +254,7 @@ export function createGrid(
         const isExpanded = isOpen(item.__key)
         const label = isExpanded ? translations.entry.collapse : translations.entry.expand
 
-        return `<button type="button" class="fi-data-grid-row-toggle ${isExpanded ? 'fi-data-grid-row-toggle-expanded' : ''}" aria-expanded="${isExpanded ? 'true' : 'false'}" aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}">${fitIconHtml(icons.expand ?? '', 'start', element)}</button>`
+        return `<button type="button" class="fi-data-grid-row-toggle ${isExpanded ? 'fi-data-grid-row-toggle-expanded' : ''}" aria-expanded="${isExpanded ? 'true' : 'false'}" aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}">${fitIconHtml(icons.expand ?? '', isExpanded ? 'center' : 'start', element)}</button>`
     }
 
     const frozenColumnIndex = () => {
@@ -268,12 +295,14 @@ export function createGrid(
                   inputType: type === 'date' ? column.source.editor.inputType : null,
               })
             : null
-        const placeholder = row.isTrailingBlank || ['date', 'modal'].includes(type) ? (column.source.editor.placeholder ?? '') : ''
+        const isEditable = UNDERLINED_TYPES.includes(type) && !cell.disabled
+        const placeholder = row.isTrailingBlank || isEditable || ['date', 'modal'].includes(type) ? (column.source.editor.placeholder ?? '') : ''
         const shown = type === 'number' && hasMask(cell) && !isBlank(value) ? maskedCellText(item.__key, column.field, value, cell) : value
         const fullText = type === 'entry' || type === 'toggle' ? '' : (label ?? (isBlank(shown) ? '' : String(shown)))
+        const cellIcon = cell.icon ? (payload.cellIcons?.[cell.icon] ?? null) : null
 
         return {
-            html: renderCell({ type, value: shown, cell, label, placeholder, translations, icons }),
+            html: renderCell({ type, value: shown, cell, label, placeholder, translations, icons, isEditable, cellIcon }),
             addClasses: classes,
             toolTip: cell.error ?? fullText,
         }
@@ -975,6 +1004,7 @@ export function createGrid(
             nextPayload.reorderable !== payload.reorderable ||
             nextPayload.hasActions !== payload.hasActions ||
             nextPayload.frozenColumns !== payload.frozenColumns ||
+            JSON.stringify(nextPayload.highlightEditableColumns) !== JSON.stringify(payload.highlightEditableColumns) ||
             Boolean(nextPayload.hasChildRows) !== Boolean(payload.hasChildRows)
         const editor = grid.getCellEditor()
         const active = grid.getActiveCell()
@@ -1002,6 +1032,8 @@ export function createGrid(
 
             return
         }
+
+        refreshColumnHeaders()
 
         const busyIndex = busyItem ? items.findIndex((item) => item.__key === busyItem.__key) : -1
         const busyRowIndexBefore = editor && active ? active.row : busyIndex

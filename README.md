@@ -111,7 +111,7 @@ The grid chooses how to edit each cell from the component you put in the schema:
 
 | Component | In the grid |
 | --- | --- |
-| `TextInput` | Edited in place. With `numeric()` it aligns right, checks `minValue()`, `maxValue()`, `integer()` and `step()` as you type, and steps with ArrowUp and ArrowDown like a native number input (by `step()`, or 1 when the step is `'any'`), staying within the min and max. |
+| `TextInput` | Edited in place. With `numeric()` it aligns right, checks `minValue()`, `maxValue()`, `integer()` and `step()` as you type, and steps like a native number input (by `step()`, or 1 when the step is `'any'`), staying within the min and max: with ArrowUp and ArrowDown, or with the up and down buttons at the end of the open editor. |
 | `Select` | Filament's own select dropdown. It supports search, the clear button, `allowHtml()`, `multiple()`, `getSearchResultsUsing()`, `getOptionLabelUsing()` and `disableOptionWhen()`. |
 | `Radio`, `ToggleButtons` | The same dropdown, listing their options. |
 | `Toggle`, `Checkbox` | A switch you click, or flip with Space. |
@@ -119,7 +119,26 @@ The grid chooses how to edit each cell from the component you put in the schema:
 | Any other field | Opens in a modal for that row. For example `ColorPicker`, `Textarea` or your own custom field. |
 | An infolist entry, such as `TextEntry` | Read-only. Rendered with Filament's own entry view, so formatting such as `money()` works. |
 
-Editable cells have the background of a Filament input, while read-only and disabled cells are one shade darker. That way users can see what they can change without guessing.
+Editable cells look like text, not input boxes, and still show what you can change:
+
+- **The value is underlined with a dashed line.** On hover, or when the cell is selected with the keyboard, the line turns solid in the primary color and the cell lightens slightly. The cell is outlined only while its editor is open. An empty editable cell shows the field's `placeholder()`, or a short underline when it has none. Selects underline their selected label. Toggles have no underline.
+- **A pencil follows the header label** of every column that is editable in at least one row. It uses the `CELL_EDIT` icon alias. The trailing empty row counts, because you can type in it.
+- **Locked cells read as plain text**, with no underline and no icon. A cell is locked when its field is `disabled()` or `readOnly()`. A read-only field doesn't open an editor.
+
+To also tint the editable cells of a column, use `highlightEditableColumns()`. It is off by default. Pass `true` for every column, or a list of field names. Locked cells are not tinted.
+
+```php
+DataGrid::make('places')
+    ->highlightEditableColumns(['quantity'])
+```
+
+A field's own `suffixIcon()` is shown after the value of its editable cells, faint at rest and in the primary color on hover, for example a barcode icon on a code you can scan. It can be a closure, evaluated for each row. Locked cells don't show it, and the grid doesn't add any icon of its own. Date and modal cells show it instead of their calendar or pencil.
+
+```php
+TextInput::make('code')
+    ->placeholder('Scan or type')
+    ->suffixIcon('fal-sharp-barcode-read')
+```
 
 A component that is neither a form field nor an infolist entry throws `Waguilar\FilamentDataGrid\Exceptions\UnsupportedCellComponent`.
 
@@ -654,13 +673,16 @@ Every element uses `fi-data-grid-*` hook classes and Filament's color variables,
 
 ```css
 .fi-data-grid {
-    --fi-data-grid-editable-bg: var(--primary-50);
+    --fi-data-grid-hint: var(--gray-500);
+    --fi-data-grid-hint-active: var(--primary-700);
 }
 
 .dark .fi-data-grid {
-    --fi-data-grid-editable-bg: color-mix(in oklab, var(--primary-400) 10%, transparent);
+    --fi-data-grid-hint: var(--gray-400);
 }
 ```
+
+The variables for editable cells are `--fi-data-grid-hint` (the dashed underline), `--fi-data-grid-hint-active` (the solid underline, the header pencil, a hovered icon and the keyboard outline), `--fi-data-grid-hover-bg`, `--fi-data-grid-highlight-bg` (`highlightEditableColumns()`), `--fi-data-grid-cell-icon`, `--fi-data-grid-editable-bg` and `--fi-data-grid-readonly-bg`.
 
 ## Icons
 
@@ -682,11 +704,13 @@ FilamentIcon::register([
 | `DataGridIconAlias::ROW_ACTIONS` (`filament-data-grid::row.actions`) | The row menu of the editable grid. |
 | `DataGridIconAlias::CELL_REORDER` (`filament-data-grid::cell.reorder`) | The drag handle. |
 | `DataGridIconAlias::CELL_DATE` (`filament-data-grid::cell.date`) | The calendar in date cells. |
-| `DataGridIconAlias::CELL_EDIT` (`filament-data-grid::cell.edit`) | The pencil in cells that open a modal. |
+| `DataGridIconAlias::CELL_EDIT` (`filament-data-grid::cell.edit`) | The pencil in cells that open a modal, and after the header label of editable columns. |
+| `DataGridIconAlias::CELL_STEP_UP` (`filament-data-grid::cell.step-up`) | The up button in an open number editor. |
+| `DataGridIconAlias::CELL_STEP_DOWN` (`filament-data-grid::cell.step-down`) | The down button in an open number editor. |
 
 The search, filter and pagination icons are Filament's own, under its table and pagination aliases.
 
-The row chevrons line up with the header icon by what they draw, not by their box. Icons have different empty space around the shape inside their box, so the grid fits each chevron's box to its shape and aligns that shape with the header icon's. This works with whatever icon you register.
+The row chevrons line up with the header icon by what they draw, not by their box. Icons have different empty space around the shape inside their box, so the grid fits each chevron's box to its shape and aligns that shape with the header icon's. An open row's chevron, turned to point down, is centered on the row instead. This works with whatever icon you register.
 
 ## How it works
 

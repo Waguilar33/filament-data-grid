@@ -66,6 +66,10 @@ final class DataGridDemo extends Page
                 ['location' => 'Aisle 1', 'counted' => 1500],
                 ['location' => 'Aisle 2', 'counted' => 250.7525],
             ],
+            'receipts' => [
+                ['code' => null, 'received' => null, 'expected' => 4],
+                ['code' => null, 'received' => null, 'expected' => 2],
+            ],
         ]);
     }
 
@@ -76,6 +80,7 @@ final class DataGridDemo extends Page
                 Section::make(__('demo::demo.sections.lines'))->schema([self::linesGrid()]),
                 Section::make(__('demo::demo.sections.adjustments'))->schema([self::adjustmentsGrid()]),
                 Section::make(__('demo::demo.sections.counts'))->schema([self::countsGrid()]),
+                Section::make(__('demo::demo.sections.receipts'))->schema([self::receiptsGrid()]),
             ])
             ->statePath('data');
     }
@@ -244,6 +249,34 @@ final class DataGridDemo extends Page
                     ->maxValue(10_000_000)
                     ->mask(RawJs::make("\$money(\$input, '{$decimalSeparator}', '{$thousandsSeparator}', 3)"))
                     ->stripCharacters($thousandsSeparator),
+            ]);
+    }
+
+    public static function receiptsGrid(): DataGrid
+    {
+        return DataGrid::make('receipts')
+            ->hiddenLabel()
+            ->addable(false)
+            ->deletable(false)
+            ->reorderable(false)
+            ->highlightEditableColumns(['received'])
+            ->table([
+                TableColumn::make(__('demo::demo.columns.code')),
+                TableColumn::make(__('demo::demo.columns.received'))->width('9rem')->alignEnd(),
+                TableColumn::make(__('demo::demo.columns.expected'))->width('9rem')->alignEnd(),
+            ])
+            ->schema([
+                TextInput::make('code')
+                    ->placeholder(__('demo::demo.placeholders.scan'))
+                    ->suffixIcon(Heroicon::OutlinedQrCode)
+                    ->live(),
+                TextInput::make('received')
+                    ->numeric()
+                    ->minValue(0)
+                    ->disabled(fn (Get $get): bool => blank($get('code'))),
+                TextInput::make('expected')
+                    ->numeric()
+                    ->disabled(),
             ]);
     }
 
