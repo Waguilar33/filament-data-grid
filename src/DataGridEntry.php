@@ -109,6 +109,12 @@ class DataGridEntry extends RepeatableEntry
 
     protected Alignment|string|Closure|null $totalsLabelAlignment = null;
 
+    private bool $isRendering = false;
+
+    private bool $hasRenderedState = false;
+
+    private mixed $renderedState = null;
+
     /**
      * @param  array<Total>|Closure  $totals
      */
@@ -639,7 +645,38 @@ class DataGridEntry extends RepeatableEntry
         return app(BuildEntryPayload::class)->handle($this, $entryPage->items, total: $entryPage->total, page: $entryPage->page);
     }
 
+    public function getState(): mixed
+    {
+        if (! $this->isRendering) {
+            return parent::getState();
+        }
+
+        if (! $this->hasRenderedState) {
+            $this->renderedState = parent::getState();
+            $this->hasRenderedState = true;
+        }
+
+        return $this->renderedState;
+    }
+
     public function toEmbeddedHtml(): string
+    {
+        if ($this->isRendering) {
+            return $this->renderEmbeddedHtml();
+        }
+
+        $this->isRendering = true;
+
+        try {
+            return $this->renderEmbeddedHtml();
+        } finally {
+            $this->isRendering = false;
+            $this->hasRenderedState = false;
+            $this->renderedState = null;
+        }
+    }
+
+    private function renderEmbeddedHtml(): string
     {
         $items = $this->isServerSide() ? null : $this->getItems();
 
