@@ -140,8 +140,9 @@ final class DispatchDemo extends Page
                 TextInput::make('code')
                     ->required()
                     ->maxLength(20)
-                    ->placeholder($detailed ? __('demo::demo.placeholders.scan') : null)
-                    ->suffixIcon($detailed ? Heroicon::OutlinedQrCode : null)
+                    ->when($detailed, fn (TextInput $input): TextInput => $input
+                        ->placeholder(__('demo::demo.placeholders.scan'))
+                        ->suffixIcon(Heroicon::OutlinedQrCode))
                     ->live(),
             ]);
     }
