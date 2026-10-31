@@ -85,3 +85,61 @@ export const headerHtml = (column) => {
 
     return column.headerHidden ? `<span class="fi-sr-only">${label}</span>` : `${label}${required}`
 }
+
+const fittedIcons = new Map()
+
+export const fitIconHtml = (html, align, host) => {
+    if (!html || !html.includes('<svg')) {
+        return html
+    }
+
+    const cacheKey = `${align}|${html}`
+
+    if (fittedIcons.has(cacheKey)) {
+        return fittedIcons.get(cacheKey)
+    }
+
+    const container = document.createElement('div')
+    container.style.cssText = 'position: absolute; visibility: hidden; pointer-events: none'
+    container.innerHTML = html
+    host.appendChild(container)
+
+    const svg = container.querySelector('svg')
+    const viewBox = svg?.viewBox?.baseVal
+    const box = svg && viewBox?.width ? svg.getBBox() : null
+
+    if (box?.width) {
+        svg.setAttribute('viewBox', `${box.x} ${viewBox.y} ${box.width} ${viewBox.height}`)
+        svg.setAttribute('preserveAspectRatio', `${align === 'end' ? 'xMax' : 'xMin'}YMid meet`)
+    }
+
+    container.remove()
+
+    const fitted = box?.width ? container.innerHTML : html
+
+    if (box?.width) {
+        fittedIcons.set(cacheKey, fitted)
+    }
+
+    return fitted
+}
+
+const MAX_GLYPH_OFFSET = 4
+
+const glyphLeft = (svg) => {
+    const shapes = [...svg.querySelectorAll('path, circle, rect, line, polyline, polygon, ellipse')]
+
+    return shapes.length > 0 ? Math.min(...shapes.map((shape) => shape.getBoundingClientRect().left)) : svg.getBoundingClientRect().left
+}
+
+export const headerGlyphOffset = (element) => {
+    for (let card = element.closest('.fi-section, .fi-ta-ctn'); card; card = card.parentElement?.closest('.fi-section, .fi-ta-ctn')) {
+        const icon = card.querySelector(':scope > .fi-section-header > svg, :scope > .fi-ta-main > .fi-ta-header-ctn .fi-ta-header svg, :scope > .fi-ta-main > .fi-ta-header svg')
+
+        if (icon) {
+            return Math.min(MAX_GLYPH_OFFSET, Math.max(0, glyphLeft(icon) - icon.getBoundingClientRect().left))
+        }
+    }
+
+    return 0
+}
