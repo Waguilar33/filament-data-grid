@@ -9,6 +9,7 @@ const ROW_HEIGHT = 44
 const CHILD_HEADER_HEIGHT = 32
 const DEFAULT_CHILD_TABLE_PADDING = 15
 const TOGGLE_WIDTH = 44
+const COMPACT_TOGGLE_WIDTH = 40
 const UNMEASURED_WIDTH = 160
 const CHILD_TABLE_BORDER = 1
 const INTRINSIC_WIDTHS = ['max-content', '0px']
@@ -339,7 +340,29 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
             })
         }
 
+        if (payload.compact) {
+            insetEdgeColumns(columns)
+        }
+
         return columns
+    }
+
+    const insetEdgeColumns = (columns) => {
+        const [first] = columns
+        const last = columns.at(-1)
+
+        if (first.id === TOGGLE_COLUMN) {
+            first.width = first.fixedWidth = COMPACT_TOGGLE_WIDTH
+            first.cssClass += ' fi-data-grid-toggle-cell-inset'
+        } else {
+            first.cssClass += ' fi-data-grid-inset-start'
+            first.headerCssClass += ' fi-data-grid-inset-start'
+        }
+
+        if (![TOGGLE_COLUMN, LINK_COLUMN].includes(last.id)) {
+            last.cssClass += ' fi-data-grid-inset-end'
+            last.headerCssClass += ' fi-data-grid-inset-end'
+        }
     }
 
     const childTablePadding = () => payload.childTablePadding ?? DEFAULT_CHILD_TABLE_PADDING

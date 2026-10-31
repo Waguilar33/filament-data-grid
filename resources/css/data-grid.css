@@ -567,6 +567,19 @@
     padding-inline: 0;
 }
 
+.fi-data-grid-canvas .fi-data-grid-toggle-cell-inset:not(.fi-data-grid-child-row-wrapper > *) {
+    justify-content: flex-start;
+    padding-inline-start: calc(var(--spacing) * 3);
+}
+
+.fi-data-grid-canvas .fi-data-grid-inset-start:not(.fi-data-grid-child-row-wrapper > *) {
+    padding-inline-start: calc(var(--spacing) * 4);
+}
+
+.fi-data-grid-canvas .fi-data-grid-inset-end:not(.fi-data-grid-child-row-wrapper > *) {
+    padding-inline-end: calc(var(--spacing) * 4);
+}
+
 .fi-data-grid-viewport,
 .fi-data-grid-child-host {
     position: relative;

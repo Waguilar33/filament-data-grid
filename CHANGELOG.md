@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.9 - 2026-10-31
+
+- A `compact()` grid now lines its columns up with the compact header above them, standalone and in `toTableContent()`. The first column, or the chevron of rows that open, starts on the header icon's edge (16px). After a chevron, the first column starts on the heading's edge (52px), and the last column ends 16px from the right. Before, they sat 4px to the left.
+
 ## v1.0.0-beta.8 - 2026-10-31
 
 - `DataGridEntry::compact()` draws the grid's heading, description and icon as a compact Filament section header, with Filament's own section markup, so it lines up with `Section::make()->compact()` cards. Without it, the header keeps the table look. In `toTableContent()`, `compact()` makes the table's own header compact; give that header an icon with `IconHeading`.
