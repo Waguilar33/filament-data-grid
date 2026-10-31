@@ -110,7 +110,7 @@ final readonly class BuildEntryPayload
             'above' => $entry->renderExpandedAbove($item),
             'below' => $entry->renderExpandedBelow($item),
             'height' => $entry->getRowHeight($entry->hasRowHeightPerRow() ? $this->rawState($item) : []),
-            ...$entry->getTableRecord($key),
+            ...$entry->describeRecord($key, $item),
         ];
     }
 

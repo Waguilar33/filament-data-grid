@@ -447,6 +447,57 @@ DataGridEntry::make('deliveries')
 
 The grid applies `SelectFilter` and `TernaryFilter` itself, by comparing each row's `attribute()` (the filter's name by default) with the chosen value. Any other filter, such as a plain `Filter` with a custom query, needs `records()`. As with Filament's custom data tables, `records()` receives the filter state as `$filters`, for example `['fill_status' => ['value' => 'partial'], 'customer' => ['values' => ['Ana']]]`, and applies it itself.
 
+### Record actions
+
+`recordActions()` puts Filament Actions at the end of each row, as a table's `recordActions()` does. Each action gets that row as its `$record`, so `visible()`, `authorize()`, `schema()`, `fillForm()` and `action()` work per row, and modals, slide-overs and `ActionGroup` menus work as usual:
+
+```php
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
+
+DataGridEntry::make('lines')
+    ->state(fn (Order $record) => $record->lines()->latest()->get())
+    ->table([...])
+    ->schema([...])
+    ->recordActions([
+        Action::make('adjust')
+            ->visible(fn (OrderLine $record): bool => $record->quantity < 10)
+            ->authorize(fn (OrderLine $record): bool => auth()->user()->can('update', $record))
+            ->schema(fn (OrderLine $record): array => [TextInput::make('quantity')->numeric()])
+            ->action(fn (array $data, OrderLine $record) => $record->update($data)),
+        ActionGroup::make([...]),
+    ])
+```
+
+An action without `->view()` shows as a small link and a group as a menu, like in a table, so both look the same. After an action runs, the page renders again and the grid shows the new `state()`.
+
+- With Eloquent rows, each action finds its row again by its model key when it is clicked, so rows added or removed in the meantime don't make it act on the wrong one. If the row is gone, nothing runs. It never falls back to the page's record.
+- With array rows, the row is found by its array key, so give the rows stable keys (`['tea' => [...], 'salt' => [...]]`, not a list that can shift). `$record` is the row's array plus Filament's `__key`, as in a table with array records.
+- It works in browser mode only. `serverSide()` throws `UnsupportedRecordActions`, because the action finds its row among the entry's state. Inside a table (`toTableContent()`), put the actions on the table's `recordActions()` instead; combining both throws too.
+
+To test an action, call it as a schema component action with the row's key (the model key, or the array key) as the `row` argument:
+
+```php
+use Filament\Actions\Testing\TestAction;
+
+livewire(ViewOrder::class, ['record' => $order->getKey()])
+    ->callAction(
+        TestAction::make('adjust')->schemaComponent('lines', schema: 'infolist')->arguments(['row' => $line->getKey()]),
+        data: ['quantity' => 7],
+    )
+    ->assertHasNoActionErrors();
+```
+
+`assertActionVisible()`, `assertActionHidden()`, `mountAction()` and `fillForm()` with a fake `FileUpload` work as usual. `'lines'` is the entry's key, which is its name unless a parent sets a key: check the `schemaComponent` value in the rendered button's `wire:click` if unsure.
+
+How it differs from a table's record actions:
+
+- The grid sets each action's `record()` and `bootUsing()` itself and reserves the `row` argument, so don't set those on the actions you pass in.
+- A click on a row that has gone away closes quietly. Filament's test helpers resolve the action outside that guard, so `callAction()` or `assertActionVisible()` for a missing row throws `ActionNotResolvableException` instead.
+- `$livewire` is the page that holds the entry. There is no `$table`, and on a page that replaces a relation manager there is no `getOwnerRecord()`: use the page's `$record`.
+- There are no bulk actions, `recordUrl()`, clickable rows, or settings for the actions column's position, label or alignment.
+- Filament's prebuilt actions such as `EditAction` and `DeleteAction` expect a table or a resource record. Build your own `Action`s for the grid.
+
 ### Inside a Filament table
 
 To let Filament handle searching, filtering and paging, build a normal Filament table and use the grid as its content. Filament keeps everything around the rows: the heading, search field, filters (in a dropdown, modal or slide-over), active filter chips, pagination, empty state and header actions. The grid draws only the current page of records, with child rows that open:

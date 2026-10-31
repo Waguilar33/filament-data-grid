@@ -162,4 +162,20 @@ return [
             'reconciled' => '{1} 1 movimiento conciliado|[2,*] :count movimientos conciliados',
         ],
     ],
+    'order_lines' => [
+        'navigation' => 'Líneas de pedido',
+        'section' => 'Líneas',
+        'columns' => [
+            'product' => 'Producto',
+            'quantity' => 'Cantidad',
+        ],
+        'fields' => [
+            'receipt' => 'Comprobante',
+        ],
+        'actions' => [
+            'adjust' => 'Ajustar',
+            'adjusted' => ':product ajustado',
+            'remove' => 'Quitar',
+        ],
+    ],
 ];

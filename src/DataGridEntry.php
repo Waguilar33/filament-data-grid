@@ -27,17 +27,23 @@ use Livewire\Attributes\Renderless;
 use Livewire\Component;
 use Traversable;
 use Waguilar\FilamentDataGrid\Entry\BuildEntryPayload;
+use Waguilar\FilamentDataGrid\Entry\Concerns\HasRecordActions;
 use Waguilar\FilamentDataGrid\Entry\DescribeTableRecord;
 use Waguilar\FilamentDataGrid\Entry\EntryFilters;
 use Waguilar\FilamentDataGrid\Entry\EntryPage;
 use Waguilar\FilamentDataGrid\Exceptions\UnsupportedChildTable;
+use Waguilar\FilamentDataGrid\Exceptions\UnsupportedRecordActions;
 use Waguilar\FilamentDataGrid\View\DataGridIconAlias;
 
 use function Filament\Support\generate_icon_html;
 
 class DataGridEntry extends RepeatableEntry
 {
+    use HasRecordActions;
+
     public const ALL_RECORDS = 'all';
+
+    public const RECORD_ACTION_ROW_ARGUMENT = 'row';
 
     private const MAX_SEARCH_LENGTH = 255;
 
@@ -570,9 +576,9 @@ class DataGridEntry extends RepeatableEntry
     /**
      * @return array{actions: string|null, link: string|null}
      */
-    public function getTableRecord(string $key): array
+    public function describeRecord(string $key, Schema $item): array
     {
-        return $this->tableRecords[$key] ?? ['actions' => null, 'link' => null];
+        return $this->tableRecords[$key] ?? ['actions' => $this->renderRecordActions($key, $item), 'link' => null];
     }
 
     /**
@@ -591,6 +597,12 @@ class DataGridEntry extends RepeatableEntry
     {
         if ($this->isServerSide() && $this->hasChildTable()) {
             throw UnsupportedChildTable::serverSide((string) $this->getName());
+        }
+
+        if ($this->hasRecordActions() && ($this->isServerSide() || $this->isTableContent)) {
+            throw $this->isServerSide()
+                ? UnsupportedRecordActions::serverSide((string) $this->getName())
+                : UnsupportedRecordActions::tableContent((string) $this->getName());
         }
 
         if ($items !== null) {

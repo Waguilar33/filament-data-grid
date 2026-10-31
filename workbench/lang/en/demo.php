@@ -162,4 +162,20 @@ return [
             'reconciled' => '{1} Reconciled 1 movement|[2,*] Reconciled :count movements',
         ],
     ],
+    'order_lines' => [
+        'navigation' => 'Order lines',
+        'section' => 'Lines',
+        'columns' => [
+            'product' => 'Product',
+            'quantity' => 'Quantity',
+        ],
+        'fields' => [
+            'receipt' => 'Receipt',
+        ],
+        'actions' => [
+            'adjust' => 'Adjust',
+            'adjusted' => ':product adjusted',
+            'remove' => 'Remove',
+        ],
+    ],
 ];
