@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.17 - 2026-10-31
+
+- The totals label's cell now spans every column before the first total, so `totalsLabelAlignment(Alignment::End)` puts the label right next to the first total. With the default start alignment the label still starts at the first column's edge.
+
 ## v1.0.0-beta.16 - 2026-10-31
 
 - `DataGridEntry::totalsLabelAlignment()` aligns the totals label in its cell, for example `Alignment::End`. By default the label follows its column's alignment.
