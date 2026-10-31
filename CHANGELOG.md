@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.21 - 2026-10-31
+
+- In a `DataGridEntry`, each open row's child table leaves out the child columns that are hidden in all of that row's child rows. Other rows keep the columns their own children use, so one `table()` can list the detail fields of every kind of child, such as a payment's authorization or bank, and each group shows only its own.
+
 ## v1.0.0-beta.20 - 2026-10-31
 
 - `DataGrid::expandedAbove()` and `expandedBelow()` show components above and below an open row's child grid, in the same inset panel, as on `DataGridEntry`. They take an array, or a closure that gets the row's `array $state` and `Get $get`. A row with content but no visible nested grid still opens and shows only that content, for example a note that a pre-sale unit has nothing to fill in yet. The trailing empty row has none.

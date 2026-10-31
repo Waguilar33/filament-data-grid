@@ -239,8 +239,14 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         return `<button type="button" class="fi-data-grid-row-toggle ${isExpanded ? 'fi-data-grid-row-toggle-expanded' : ''}" aria-expanded="${isExpanded ? 'true' : 'false'}" aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}">${fitIconHtml(icons.expand, isExpanded ? 'center' : 'start', element)}</button>`
     }
 
+    const shownChildColumns = (row) =>
+        payload.childColumns.flatMap((column, index) =>
+            column.actions || row.children.some((cells) => cells[index] && cells[index].visible !== false) ? [index] : [],
+        )
+
     const formatChildRow = (item) => {
-        const style = `grid-template-columns: ${childTemplates.get(item.row.key) ?? childGridTemplate(payload.childColumns)}`
+        const shown = shownChildColumns(item.row)
+        const style = `grid-template-columns: ${childTemplates.get(item.row.key) ?? childGridTemplate(shown.map((index) => payload.childColumns[index]))}`
         const edges = [
             item.isFirst ? 'fi-data-grid-pad-top' : '',
             item.isLast ? 'fi-data-grid-pad-bottom' : '',
@@ -261,7 +267,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         }
 
         const isHeader = item.kind === 'child-header'
-        const cells = payload.childColumns.map((column, index) => childCellHtml(item.cells?.[index], column, isHeader)).join('')
+        const cells = shown.map((index) => childCellHtml(item.cells?.[index], payload.childColumns[index], isHeader)).join('')
 
         return `<div class="fi-data-grid-child-row ${isHeader ? 'fi-data-grid-child-header' : ''} ${edges}" role="row" style="${style}">${cells}</div>`
     }
@@ -514,7 +520,12 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         ...row.children.map((cells) => probeRequest('', childCellClasses(column), cellContent(cells[index]))),
     ]
 
-    const flexibleChildColumns = () => payload.childColumns.flatMap((column, index) => (column.width || column.actions ? [] : [{ column, index }]))
+    const flexibleChildColumns = (row) =>
+        shownChildColumns(row).flatMap((index) => {
+            const column = payload.childColumns[index]
+
+            return column.width || column.actions ? [] : [{ column, index }]
+        })
 
     const childActionsIndex = () => payload.childColumns.findIndex((column) => column.actions)
 
@@ -568,9 +579,8 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
 
         const openRows = hasChildTable() ? parents.map((item) => item.row).filter((row) => expanded.has(row.key) && row.children.length > 0) : []
         const flexibleColumns = columns.filter((column) => column.fixedWidth === null)
-        const childColumns = flexibleChildColumns()
         const parentRequestsByColumn = flexibleColumns.map((column) => parentRequests(column, parents))
-        const childRequestsByRow = openRows.map((row) => childColumns.map(({ column, index }) => childRequests(row, column, index)))
+        const childRequestsByRow = openRows.map((row) => flexibleChildColumns(row).map(({ column, index }) => childRequests(row, column, index)))
         const actions = actionsRequests()
         const childActions = childActionsRequests(openRows)
 
@@ -587,10 +597,14 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         const fixedWidth = sumOf(columns.map((column) => column.fixedWidth ?? 0))
         const available = Math.floor(element.getBoundingClientRect().width) - fixedWidth
         const childInset = (childTablePadding() + CHILD_TABLE_BORDER) * 2
-        const fixedChildWidth = (rowWidth) => sumOf(explicitChildWidths(rowWidth).map((width) => width ?? 0))
+        const rowExplicitWidths = (row, explicitWidths) => shownChildColumns(row).map((index) => explicitWidths[index])
+        const fixedOf = (widths) => sumOf(widths.map((width) => width ?? 0))
         const childSpans = childRequestsByRow.map((requestsByColumn) => requestsByColumn.map(spanOf))
-        const provisionalChildWidth = openRows.length > 0 ? fixedChildWidth(available + fixedWidth - childInset) : 0
-        const childNeed = Math.max(0, ...childSpans.map((spans) => childInset + provisionalChildWidth + sumOf(spans.map((span) => span.min))))
+        const provisionalWidths = openRows.length > 0 ? explicitChildWidths(available + fixedWidth - childInset) : []
+        const childNeed = Math.max(
+            0,
+            ...childSpans.map((spans, index) => childInset + fixedOf(rowExplicitWidths(openRows[index], provisionalWidths)) + sumOf(spans.map((span) => span.min))),
+        )
         const flexibleWidths = distribute(parentRequestsByColumn.map(spanOf), Math.max(available, childNeed - fixedWidth))
         let next = 0
         const widths = columns.map((column) => column.fixedWidth ?? flexibleWidths[next++])
@@ -601,9 +615,12 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         if (openRows.length > 0) {
             const childRowWidth = sumOf(widths) - childInset
             const explicitWidths = explicitChildWidths(childRowWidth)
-            const childAvailable = childRowWidth - sumOf(explicitWidths.map((width) => width ?? 0))
 
-            openRows.forEach((row, index) => childTemplates.set(row.key, childTemplate(childSpans[index], childAvailable, explicitWidths)))
+            openRows.forEach((row, index) => {
+                const widths = rowExplicitWidths(row, explicitWidths)
+
+                childTemplates.set(row.key, childTemplate(childSpans[index], childRowWidth - fixedOf(widths), widths))
+            })
         }
 
         columnWidths = widths

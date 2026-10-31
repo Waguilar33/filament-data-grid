@@ -48,7 +48,8 @@ final class PaymentsDemo extends Page
         $this->form->fill(['payments' => [
             'a1f0' => ['method' => 'Cash', 'amount' => 100, 'reference' => 'Till 1'],
             'b2e1' => ['method' => 'Cash', 'amount' => 50, 'reference' => 'Till 2'],
-            'c3d2' => ['method' => 'Card', 'amount' => 75, 'reference' => 'VISA 4242'],
+            'c3d2' => ['method' => 'Card', 'amount' => 75, 'reference' => 'VISA 4242', 'authorization' => 'A-90311'],
+            'd4e5' => ['method' => 'Transfer', 'amount' => 40, 'reference' => 'TRX-118', 'bank' => 'Banco Norte'],
         ]]);
     }
 
@@ -79,10 +80,14 @@ final class PaymentsDemo extends Page
                                     ->table([
                                         TableColumn::make(__('demo::demo.payments.columns.amount'))->alignEnd(),
                                         TableColumn::make(__('demo::demo.payments.columns.reference')),
+                                        TableColumn::make(__('demo::demo.payments.columns.authorization')),
+                                        TableColumn::make(__('demo::demo.payments.columns.bank')),
                                     ])
                                     ->schema([
                                         TextEntry::make('amount')->numeric(),
                                         TextEntry::make('reference'),
+                                        TextEntry::make('authorization')->visible(fn (?string $state): bool => filled($state)),
+                                        TextEntry::make('bank')->visible(fn (?string $state): bool => filled($state)),
                                     ]),
                             ])
                             ->childRecordActions([

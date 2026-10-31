@@ -213,3 +213,23 @@ it('refuses child actions without nested table rows, with server-side pages or a
     'server side' => fn (DataGridEntry $entry): DataGridEntry => $entry->serverSide(),
     'child table' => fn (DataGridEntry $entry): DataGridEntry => $entry->childTable('some-table'),
 ]);
+
+it('marks child cells hidden per row, so each group can drop the columns its rows never show', function (): void {
+    $payload = paymentsPayload(mountPayments(configure: fn (DataGridEntry $entry): DataGridEntry => $entry->schema([
+        TextEntry::make('method'),
+        TextEntry::make('total'),
+        RepeatableEntry::make('payments')
+            ->table([TableColumn::make('Amount'), TableColumn::make('Large')])
+            ->schema([
+                TextEntry::make('amount'),
+                TextEntry::make('large')->state('yes')->visible(fn (TextEntry $component): bool => data_get($component->getContainer()->getConstantState(), 'amount') >= 10),
+            ]),
+    ])));
+    $visibility = fn (string $method): array => array_map(
+        fn (array $cells): bool => $cells[1]['visible'],
+        collect($payload['rows'])->firstWhere('key', $method)['children'],
+    );
+
+    expect($visibility('Cash'))->toBe([true, false])
+        ->and($visibility('Card'))->toBe([false]);
+});
