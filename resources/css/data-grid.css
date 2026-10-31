@@ -753,6 +753,19 @@
     pointer-events: auto;
 }
 
+.fi-data-grid-child-host-slot {
+    padding: calc(var(--spacing) * 3) calc(var(--spacing) * 4);
+    white-space: normal;
+}
+
+.fi-data-grid-child-host-slot-above:has(+ .fi-data-grid-canvas) {
+    border-bottom: 1px solid var(--fi-data-grid-border);
+}
+
+.fi-data-grid-canvas + .fi-data-grid-child-host-slot-below {
+    border-top: 1px solid var(--fi-data-grid-border);
+}
+
 .fi-data-grid-child-host .fi-data-grid-canvas .slick-header-column {
     height: 2rem;
     font-size: var(--text-xs);

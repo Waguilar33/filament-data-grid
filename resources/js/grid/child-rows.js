@@ -39,26 +39,58 @@ export function createChildRows(element, { createChild, onResize, onFocus }) {
         const child = children.get(key)
 
         resizeObserver.unobserve(child.host)
-        child.controller.destroy()
+        child.controller?.destroy()
         child.host.remove()
         children.delete(key)
     }
 
+    const identityOf = (row) => row.child?.config.statePath ?? null
+
+    const renderedSlots = new WeakMap()
+
+    const syncSlot = (element, html) => {
+        if (renderedSlots.get(element) !== (html ?? '')) {
+            renderedSlots.set(element, html ?? '')
+            element.innerHTML = html ?? ''
+        }
+
+        element.hidden = !html
+    }
+
+    const createSlot = (host, slot, html) => {
+        const element = document.createElement('div')
+        element.className = `fi-data-grid-child-host-slot fi-data-grid-child-host-slot-${slot}`
+        syncSlot(element, html)
+        host.append(element)
+
+        return element
+    }
+
     const create = (key, row) => {
         const host = document.createElement('div')
-        const canvas = document.createElement('div')
+        const above = createSlot(host, 'above', row.above)
+        let controller = null
 
         host.className = 'fi-data-grid-child-host'
         host.style.insetInline = `${padding}px`
-        canvas.className = 'fi-data-grid-canvas'
-        host.append(canvas)
+
+        if (row.child) {
+            const canvas = document.createElement('div')
+            canvas.className = 'fi-data-grid-canvas'
+            host.append(canvas)
+            controller = createChild(canvas, row.child)
+        }
+
+        const below = createSlot(host, 'below', row.below)
         layer.append(host)
 
         children.set(key, {
             host,
-            identity: row.child.config.statePath,
-            payload: JSON.stringify(row.child.payload),
-            controller: createChild(canvas, row.child),
+            above,
+            below,
+            identity: identityOf(row),
+            payload: row.child ? JSON.stringify(row.child.payload) : null,
+            controller,
             height: null,
         })
 
@@ -80,7 +112,7 @@ export function createChildRows(element, { createChild, onResize, onFocus }) {
             const open = new Map(openRows.map((row) => [row.key, row]))
 
             ;[...children.keys()].forEach((key) => {
-                if (!open.has(key) || children.get(key).identity !== open.get(key).child.config.statePath) {
+                if (!open.has(key) || children.get(key).identity !== identityOf(open.get(key))) {
                     remove(key)
                 }
             })
@@ -91,6 +123,13 @@ export function createChildRows(element, { createChild, onResize, onFocus }) {
                 if (!child) {
                     create(key, row)
 
+                    return
+                }
+
+                syncSlot(child.above, row.above)
+                syncSlot(child.below, row.below)
+
+                if (!row.child) {
                     return
                 }
 
@@ -116,9 +155,9 @@ export function createChildRows(element, { createChild, onResize, onFocus }) {
             })
         },
 
-        controllers: () => [...children.values()].map(({ controller }) => controller),
+        controllers: () => [...children.values()].flatMap(({ controller }) => (controller ? [controller] : [])),
 
-        isEditing: () => [...children.values()].some(({ controller }) => controller.isEditing()),
+        isEditing: () => [...children.values()].some(({ controller }) => controller?.isEditing()),
 
         destroy() {
             cancelAnimationFrame(frame)

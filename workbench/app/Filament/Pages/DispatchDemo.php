@@ -46,7 +46,7 @@ final class DispatchDemo extends Page
 
     public function mount(): void
     {
-        $this->form->fill(['products' => FakeDispatch::products()]);
+        $this->form->fill(['products' => FakeDispatch::products(preSale: true)]);
     }
 
     public function form(Schema $schema): Schema
@@ -68,6 +68,8 @@ final class DispatchDemo extends Page
             ->deletable(false)
             ->reorderable(false)
             ->expandRowsWhen(fn (Get $get): bool => self::assigned($get) < self::integer($get('requested')))
+            ->expandedAbove(fn (Get $get): ?array => $get('has_codes') && ! $get('purchase_order') ? [Text::make(__('demo::demo.dispatch.scan_hint'))->color('gray')] : null)
+            ->expandedBelow(fn (Get $get): ?array => is_string($order = $get('purchase_order')) ? [Text::make(__('demo::demo.dispatch.pre_sale', ['order' => $order]))] : null)
             ->table([
                 TableColumn::make(__('demo::demo.dispatch.columns.product')),
                 TableColumn::make(__('demo::demo.dispatch.columns.requested'))->width('8rem')->alignEnd(),
@@ -77,6 +79,7 @@ final class DispatchDemo extends Page
             ->schema([
                 Hidden::make('id'),
                 Hidden::make('has_codes'),
+                Hidden::make('purchase_order'),
                 TextEntry::make('name')
                     ->belowContent(fn (Get $get): ?Text => $detailed ? Text::make(sprintf('SKU-%04d', self::integer($get('id'))))->badge()->color('gray') : null),
                 TextEntry::make('requested')->numeric(),
@@ -127,7 +130,7 @@ final class DispatchDemo extends Page
     {
         return DataGrid::make('units')
             ->hiddenLabel()
-            ->visible(fn (Get $get): bool => (bool) $get('has_codes'))
+            ->visible(fn (Get $get): bool => (bool) $get('has_codes') && ! $get('purchase_order'))
             ->addable(false)
             ->deletable(false)
             ->reorderable(false)

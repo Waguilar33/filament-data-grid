@@ -77,7 +77,9 @@ export function createGrid(
 
     const hasChildRows = () => Boolean(payload.hasChildRows && childRows)
 
-    const isOpen = (key) => expanded.has(key) && Boolean(rows.get(key)?.child)
+    const canExpand = (row) => Boolean(row?.child || row?.above || row?.below)
+
+    const isOpen = (key) => expanded.has(key) && canExpand(rows.get(key))
 
     const frozenColumns = () => (hasChildRows() ? 0 : payload.frozenColumns)
 
@@ -247,7 +249,7 @@ export function createGrid(
     }
 
     function formatToggle(item) {
-        if (!rows.get(item.__key)?.child) {
+        if (!canExpand(rows.get(item.__key))) {
             return ''
         }
 
@@ -474,7 +476,7 @@ export function createGrid(
             return {
                 cssClasses: [
                     row?.isTrailingBlank ? 'fi-data-grid-row-trailing' : '',
-                    row?.child ? 'fi-data-grid-parent-row-expandable' : '',
+                    canExpand(row) ? 'fi-data-grid-parent-row-expandable' : '',
                     isOpen(row?.key) ? 'fi-data-grid-parent-row-expanded' : '',
                     isLast ? 'fi-data-grid-row-last' : '',
                 ].join(' '),
@@ -508,7 +510,7 @@ export function createGrid(
         payload.rows.forEach((row) => {
             const errorsAppeared = row.hasChildErrors && (!seen.has(row.key) || !hadChildErrors.get(row.key))
 
-            if (!row.child) {
+            if (!canExpand(row)) {
                 expanded.delete(row.key)
             } else if (errorsAppeared || (!seen.has(row.key) && row.expanded)) {
                 expanded.add(row.key)
@@ -913,7 +915,7 @@ export function createGrid(
         const item = items[rowIndex]
         const column = grid.getColumns()[cellIndex]
 
-        if (!rows.get(item?.__key)?.child) {
+        if (!canExpand(rows.get(item?.__key))) {
             return false
         }
 

@@ -195,7 +195,7 @@ it('saves the dispatch demo once every unit has a code', function (): void {
 
     $component->call('save')->assertHasNoErrors();
 
-    expect($component->get('savedState.products'))->toHaveCount(6)
+    expect($component->get('savedState.products'))->toHaveCount(7)
         ->and($component->get('savedState.products.2.units'))->toContain(['code' => 'NEW-1']);
 });
 
@@ -206,7 +206,8 @@ it('opens the dispatch demo products that are short', function (): void {
 
     $rows = $grid->getGridPayload()['rows'];
 
-    expect(array_column($rows, 'expanded'))->toBe([false, true, true, true, false, false])
-        ->and(array_map(fn (array $row): string => Str::afterLast($row['child']['config']['statePath'], '.'), $rows))
-        ->toBe(['places', 'places', 'units', 'places', 'units', 'places']);
+    expect(array_column($rows, 'expanded'))->toBe([false, true, true, true, false, false, true])
+        ->and(array_map(fn (array $row): ?string => $row['child'] === null ? null : Str::afterLast($row['child']['config']['statePath'], '.'), $rows))
+        ->toBe(['places', 'places', 'units', 'places', 'units', 'places', null])
+        ->and($rows[6]['below'])->toContain('PO-2026-0003');
 });

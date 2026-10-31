@@ -9,7 +9,7 @@ final class FakeDispatch
     /**
      * @return list<array<string, mixed>>
      */
-    public static function products(bool $longNames = false): array
+    public static function products(bool $longNames = false, bool $preSale = false): array
     {
         return [
             ...($longNames ? [self::stocked(7, 'Extra virgin olive oil, cold pressed, family-size tin for restaurants and catering 5 L', 4, [['North · Aisle 2', 6, 2]])] : []),
@@ -19,6 +19,7 @@ final class FakeDispatch
             self::stocked(4, 'Paper towels x6', 15, [['North · Aisle 6', 25, 0], ['West · Dock', 3, 0]]),
             self::coded(5, 'Cordless drill', [['North · Aisle 2', 'CD-0193'], ['South · Main', 'CD-0207'], ['West · Dock', 'CD-0215']]),
             self::stocked(6, 'Green tea x20', 9, [['East · Shop', 4, 4], ['South · Main', 7, 5], ['North · Aisle 6', 2, 0]]),
+            ...($preSale ? [[...self::coded(8, 'Standing desk', []), 'requested' => 2, 'purchase_order' => 'PO-2026-0003']] : []),
         ];
     }
 

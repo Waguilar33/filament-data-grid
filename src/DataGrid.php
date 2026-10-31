@@ -15,6 +15,7 @@ use Filament\Support\Facades\FilamentAsset;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Js;
 use Waguilar\FilamentDataGrid\Actions\BuildEditCellAction;
+use Waguilar\FilamentDataGrid\Concerns\HasExpandedContent;
 use Waguilar\FilamentDataGrid\Concerns\HasGridHeader;
 use Waguilar\FilamentDataGrid\Payload\BuildGridPayload;
 use Waguilar\FilamentDataGrid\Rows\EnsureTrailingEmptyRow;
@@ -27,6 +28,7 @@ use function Filament\Support\generate_icon_html;
 
 class DataGrid extends Repeater
 {
+    use HasExpandedContent;
     use HasGridHeader;
 
     protected bool|Closure $hasTrailingEmptyRow = false;
@@ -173,15 +175,42 @@ class DataGrid extends Repeater
      */
     public function shouldExpandRow(string $key, array $state): bool
     {
+        [$named, $typed] = $this->rowInjections($key, $state);
+
+        return (bool) $this->evaluate($this->shouldExpandRows, $named, $typed);
+    }
+
+    /**
+     * @param  array<mixed>  $state
+     */
+    public function renderExpandedAbove(string $key, Schema $item, array $state): ?string
+    {
+        return $this->renderExpandedSlot($this->expandedAbove, $item, ...$this->rowInjections($key, $state));
+    }
+
+    /**
+     * @param  array<mixed>  $state
+     */
+    public function renderExpandedBelow(string $key, Schema $item, array $state): ?string
+    {
+        return $this->renderExpandedSlot($this->expandedBelow, $item, ...$this->rowInjections($key, $state));
+    }
+
+    /**
+     * @param  array<mixed>  $state
+     * @return array{array<string, mixed>, array<string, mixed>}
+     */
+    private function rowInjections(string $key, array $state): array
+    {
         $rowComponent = $this->getChildSchema($key)?->getComponents(withHidden: true)[0] ?? null;
 
         if (! $rowComponent instanceof Component) {
-            return (bool) $this->evaluate($this->shouldExpandRows, ['state' => $state]);
+            return [['state' => $state], []];
         }
 
         $get = $rowComponent->makeGetUtility();
 
-        return (bool) $this->evaluate($this->shouldExpandRows, ['state' => $state, 'get' => $get], [Get::class => $get]);
+        return [['state' => $state, 'get' => $get], [Get::class => $get]];
     }
 
     public function hasTrailingEmptyRow(): bool

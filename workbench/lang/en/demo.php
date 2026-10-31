@@ -9,6 +9,8 @@ return [
         'description' => 'Assign how many units leave each place.',
     ],
     'dispatch' => [
+        'scan_hint' => 'Scan or type the code of each unit.',
+        'pre_sale' => 'The stock arrives when purchase order :order is received.',
         'on_hand' => ':count on hand',
         'navigation' => 'Dispatch',
         'section' => 'Products to dispatch',
