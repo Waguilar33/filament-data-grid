@@ -47,6 +47,7 @@ final readonly class BuildEntryPayload
             'childTable' => $entry->hasChildTable(),
             'childTablePadding' => $entry->getChildTablePadding(),
             'serverSide' => $entry->isServerSide(),
+            'totals' => $this->describeTotals($entry),
             'total' => $total,
             'page' => $page,
             'filters' => $entry->getEntryFilters()->describe(),
@@ -95,15 +96,18 @@ final readonly class BuildEntryPayload
     private function describeRow(DataGridEntry $entry, string $key, Schema $item): array
     {
         $cells = [];
+        $components = [];
         $children = $this->childRowsEntry($item);
 
         foreach ($this->cellComponents($item, $children) as $component) {
+            $components[$this->fieldName($component)] = $component;
             $cells[$this->fieldName($component)] = $this->describeCell->handle($component, new MessageBag);
         }
 
         return [
             'key' => $key,
             'cells' => $cells,
+            'totals' => $this->totalValues($entry, $components, $cells),
             'search' => $entry->isServerSide() ? '' : $this->searchText($entry, $item),
             'filterValues' => $entry->isServerSide() ? [] : $entry->getEntryFilters()->rawValues($item),
             'children' => $children === null ? [] : $this->describeChildren($children),
@@ -112,6 +116,46 @@ final readonly class BuildEntryPayload
             'height' => $entry->getRowHeight($entry->hasRowHeightPerRow() ? $this->rawState($item) : []),
             ...$entry->describeRecord($key, $item),
         ];
+    }
+
+    /**
+     * @return array{label: string|null, columns: array<string, array<string, mixed>>}|null
+     */
+    private function describeTotals(DataGridEntry $entry): ?array
+    {
+        $totals = $entry->getTotals();
+
+        if ($totals === []) {
+            return null;
+        }
+
+        $columns = [];
+
+        foreach ($totals as $total) {
+            $columns[$total->getField()] = $total->describe($entry);
+        }
+
+        return ['label' => $entry->getTotalsLabel(), 'columns' => $columns];
+    }
+
+    /**
+     * @param  array<string, Component>  $components
+     * @param  array<string, array<string, mixed>>  $cells
+     * @return array<string, float>
+     */
+    private function totalValues(DataGridEntry $entry, array $components, array $cells): array
+    {
+        $values = [];
+
+        foreach ($entry->getTotals() as $total) {
+            $field = $total->getField();
+            $component = $components[$field] ?? null;
+            $state = $component instanceof Entry && ($cells[$field]['visible'] ?? true) !== false ? $component->getState() : null;
+
+            $values[$field] = is_numeric($state) ? (float) $state : 0.0;
+        }
+
+        return $values;
     }
 
     /**

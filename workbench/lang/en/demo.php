@@ -141,6 +141,7 @@ return [
     'saved_lines' => '{0} Saved with no lines|{1} Saved 1 line|[2,*] Saved :count lines',
     'shift' => [
         'navigation' => 'Cash shift',
+        'total' => 'Total',
         'sections' => [
             'table' => 'Payment methods',
             'standalone' => 'Payment methods (infolist)',

@@ -141,6 +141,7 @@ return [
     'saved_lines' => '{0} Guardado sin líneas|{1} Guardada 1 línea|[2,*] Guardadas :count líneas',
     'shift' => [
         'navigation' => 'Turno de caja',
+        'total' => 'Total',
         'sections' => [
             'table' => 'Métodos de pago',
             'standalone' => 'Métodos de pago (infolist)',

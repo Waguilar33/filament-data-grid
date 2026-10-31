@@ -1,5 +1,6 @@
 import { SlickGrid } from '@slickgrid-universal/common'
 import { escapeHtml, fitIconHtml, headerGlyphOffset } from './cells.js'
+import { formatTotal, sumTotals } from './totals.js'
 
 const TOGGLE_COLUMN = '__toggle'
 const ACTIONS_COLUMN = '__actions'
@@ -113,6 +114,8 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
     let columnWidths = []
     const intrinsicWidths = new Map()
     const childTemplates = new Map()
+    let totals = {}
+    let hasMatchingRows = true
 
     const hasNativeChildTable = () => Boolean(payload.childTable && childTables)
 
@@ -148,7 +151,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
 
     const currentPage = () => {
         if (payload.serverSide) {
-            return { pageRows: rows, total: payload.total ?? rows.length }
+            return { pageRows: rows, total: payload.total ?? rows.length, matching: rows }
         }
 
         const needle = search.toLowerCase()
@@ -161,12 +164,16 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         return {
             pageRows: perPage() ? matching.slice(start, start + perPage()) : matching,
             total: matching.length,
+            matching,
         }
     }
 
     const computeVisible = () => {
-        const { pageRows, total } = currentPage()
+        const { pageRows, total, matching } = currentPage()
         const start = perPage() ? (page - 1) * perPage() : 0
+
+        totals = sumTotals(matching, Object.keys(payload.totals?.columns ?? {}))
+        hasMatchingRows = matching.length > 0
 
         visible = []
 
@@ -257,6 +264,49 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         const cells = payload.childColumns.map((column, index) => childCellHtml(item.cells?.[index], column, isHeader)).join('')
 
         return `<div class="fi-data-grid-child-row ${isHeader ? 'fi-data-grid-child-header' : ''} ${edges}" role="row" style="${style}">${cells}</div>`
+    }
+
+    const hasTotals = () => Boolean(payload.totals)
+
+    const firstDataField = () => payload.columns[0]?.field
+
+    const totalText = (field) => {
+        const format = payload.totals?.columns?.[field]
+
+        if (format) {
+            return formatTotal(totals[field] ?? 0, format)
+        }
+
+        return field === firstDataField() ? (payload.totals?.label ?? '') : ''
+    }
+
+    const totalHtml = (field) => {
+        const text = totalText(field)
+
+        return text === '' ? '' : `<span class="fi-data-grid-total">${escapeHtml(text)}</span>`
+    }
+
+    const renderTotal = (node, column) => {
+        node.className = `slick-footerrow-column ${node.className.match(/\bl\d+ r\d+\b/)?.[0] ?? ''} ${column.cssClass} fi-data-grid-total-cell`
+        node.innerHTML = totalHtml(column.field)
+    }
+
+    const renderTotals = () => {
+        if (!grid || !hasTotals()) {
+            return
+        }
+
+        if (grid.getOptions().showFooterRow !== hasMatchingRows) {
+            grid.setFooterRowVisibility(hasMatchingRows)
+        }
+
+        grid.getColumns().forEach((column) => {
+            const node = grid.getFooterRowColumn(column.id)
+
+            if (node) {
+                renderTotal(node, column)
+            }
+        })
     }
 
     const formatCell = (rowIndex, cellIndex, value, column, item) => {
@@ -417,6 +467,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
 
     const parentRequests = (column, parents) => [
         probeRequest('', `slick-header-column ${column.headerCssClass}`, column.name),
+        ...(hasTotals() ? [probeRequest('', `slick-cell ${column.cssClass} fi-data-grid-total-cell`, totalHtml(column.field))] : []),
         ...parents.map((item) => probeRequest('', `slick-cell ${column.cssClass} fi-data-grid-entry`, cellContent(item.row.cells[column.field]))),
     ]
 
@@ -670,7 +721,9 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         showHeaderRow: false,
         showTopPanel: false,
         showPreHeaderPanel: false,
-        showFooterRow: false,
+        createFooterRow: hasTotals(),
+        showFooterRow: hasTotals() && hasMatchingRows,
+        footerRowHeight: ROW_HEIGHT,
         enableTextSelectionOnCells: true,
         darkMode: isDarkMode,
         devMode: false,
@@ -714,6 +767,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
 
     const redraw = () => {
         computeVisible()
+        renderTotals()
         syncChildTables()
         grid.invalidateRowHeights()
         grid.updateRowCount()
@@ -722,6 +776,8 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
     }
 
     grid.onRendered.subscribe(positionChildTables)
+    grid.onFooterRowCellRendered.subscribe((event, { node, column }) => renderTotal(node, column))
+    renderTotals()
 
     const toggle = (key) => {
         if (expanded.has(key)) {
@@ -848,7 +904,15 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
                 JSON.stringify(nextPayload.childColumns) !== JSON.stringify(payload.childColumns) ||
                 hadToggles !== nextPayload.rows.some((row) => Boolean(nextPayload.childTable) || nextPayload.childColumns.length > 0 || Boolean(row.above) || Boolean(row.below))
 
+            const hadTotals = hasTotals()
+
             payload = nextPayload
+
+            if (hadTotals !== hasTotals()) {
+                grid.setOptions({ createFooterRow: hasTotals() })
+                grid.setFooterRowVisibility(hasTotals() && hasMatchingRows)
+            }
+
             measuredHeights.clear()
             intrinsicWidths.clear()
             indexRows()
