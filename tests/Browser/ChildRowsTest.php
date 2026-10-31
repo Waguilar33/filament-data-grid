@@ -67,6 +67,6 @@ it('opens the product that holds a server error and lists the error under the gr
         ->click('Save')
         ->wait(2)
         ->assertSee('Units row 2')
-        ->assertPresent(childGrid(3).' .fi-data-grid-cell-invalid')
+        ->assertPresent(PRODUCTS.' .fi-data-grid-child-host:has-text("EM-4471") .fi-data-grid-cell-invalid')
         ->assertNoJavaScriptErrors();
 });

@@ -9,6 +9,8 @@ return [
         'description' => 'Asigna cuántas unidades salen de cada lugar.',
     ],
     'dispatch' => [
+        'scan_hint' => 'Escanea o escribe el código de cada unidad.',
+        'pre_sale' => 'El inventario llegará cuando se reciba la orden de compra :order.',
         'on_hand' => ':count en existencia',
         'navigation' => 'Despacho',
         'section' => 'Productos por despachar',

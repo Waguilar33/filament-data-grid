@@ -327,6 +327,26 @@ DataGrid::make('products')
 - **Opening rows:** `expandRowsWhen()` takes a boolean or a closure that runs for each row. The closure receives the row's raw state as `array $state`, and `Get $get` reads that row's fields. Rows are closed by default.
 - **Spacing:** the child table sits 15 pixels in from every side of the open row; change that with `childTablePadding(8)`.
 
+### Content above and below the child grid
+
+`expandedAbove()` and `expandedBelow()` work as on [`DataGridEntry`](#content-above-and-below-the-child-rows). An open row shows your components above and below its child grid, in the same inset panel. Pass an array, or a closure that runs for each row. It gets the row's `array $state`, and `Get $get` reads that row's fields. Return an empty array or `null` for no content. A row that has content but no visible nested grid still opens, so it can explain why there is nothing to fill in:
+
+```php
+use Filament\Schemas\Components\Text;
+
+DataGrid::make('products')
+    ->expandedBelow(fn (Get $get): ?array => $get('purchase_order')
+        ? [Text::make("The stock arrives when purchase order {$get('purchase_order')} is received.")]
+        : null)
+    ->schema([
+        Hidden::make('purchase_order'),
+        // ...
+        DataGrid::make('units')->visible(fn (Get $get): bool => ! $get('purchase_order')),
+    ])
+```
+
+The content is for display: it renders with the row's data, but it is not part of the form, so put fields in the grid's columns or in its child grid instead. The trailing empty row has no content.
+
 ## Read-only grid with child rows
 
 `DataGridEntry` is an infolist entry that shows rows in the same grid, read-only. Each row can open to show its own child rows, with their own columns. It extends Filament's `RepeatableEntry`, so you build it the same way as `RepeatableEntry::make()->table()`:

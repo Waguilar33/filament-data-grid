@@ -55,7 +55,7 @@ final readonly class BuildGridPayload
             'rowKeyPlaceholder' => RenderRowActions::ROW_KEY_PLACEHOLDER,
             'frozenColumns' => min($grid->getFrozenColumns(), count($columns)),
             'reorderable' => $grid->isReorderableWithDragAndDrop(),
-            'hasChildRows' => $this->childGrids($grid->getChildSchema()) !== [],
+            'hasChildRows' => $this->childGrids($grid->getChildSchema()) !== [] || $grid->hasExpandedContent(),
             'childTablePadding' => $grid->getChildTablePadding(),
             'highlightEditableColumns' => $grid->getHighlightedEditableColumns(),
             'cellIcons' => $cellIcons,
@@ -87,6 +87,7 @@ final readonly class BuildGridPayload
         $state = is_array($rows) && is_array($rows[$key] ?? null) ? $rows[$key] : [];
         $isTrailingBlank = $grid->isTrailingBlankRow($key);
         $child = $isTrailingBlank ? null : $this->visibleChildGrid($item);
+        $hasSlots = ! $isTrailingBlank && $grid->hasExpandedContent();
 
         return [
             'key' => $key,
@@ -95,6 +96,8 @@ final readonly class BuildGridPayload
             'isTrailingBlank' => $isTrailingBlank,
             'actions' => $this->renderRowActions->template($grid, $key, $actionTemplates),
             'child' => $child === null ? null : ['config' => $child->getGridConfig(), 'payload' => $this->handle($child)],
+            'above' => $hasSlots ? $grid->renderExpandedAbove($key, $item, $state) : null,
+            'below' => $hasSlots ? $grid->renderExpandedBelow($key, $item, $state) : null,
             'hasChildErrors' => $child !== null && $this->hasErrorsUnder((string) $child->getStatePath(), $errors),
             'expanded' => ! $isTrailingBlank && $grid->shouldExpandRow($key, $state),
         ];

@@ -6,7 +6,6 @@ namespace Waguilar\FilamentDataGrid;
 
 use Closure;
 use Filament\Infolists\Components\RepeatableEntry;
-use Filament\Schemas\Components\Component as SchemaComponent;
 use Filament\Schemas\Components\Livewire as LivewireComponent;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
@@ -26,6 +25,7 @@ use Illuminate\Support\Js;
 use Livewire\Attributes\Renderless;
 use Livewire\Component;
 use Traversable;
+use Waguilar\FilamentDataGrid\Concerns\HasExpandedContent;
 use Waguilar\FilamentDataGrid\Concerns\HasGridHeader;
 use Waguilar\FilamentDataGrid\Entry\BuildEntryPayload;
 use Waguilar\FilamentDataGrid\Entry\Concerns\HasRecordActions;
@@ -42,6 +42,7 @@ use function Filament\Support\generate_icon_html;
 
 class DataGridEntry extends RepeatableEntry
 {
+    use HasExpandedContent;
     use HasGridHeader;
     use HasRecordActions;
 
@@ -70,16 +71,6 @@ class DataGridEntry extends RepeatableEntry
     protected bool $isTableContent = false;
 
     protected int|Closure $childTablePadding = 15;
-
-    /**
-     * @var array<SchemaComponent|Htmlable>|Closure|null
-     */
-    protected array|Closure|null $expandedAbove = null;
-
-    /**
-     * @var array<SchemaComponent|Htmlable>|Closure|null
-     */
-    protected array|Closure|null $expandedBelow = null;
 
     protected int|Closure|null $rowHeight = null;
 
@@ -420,66 +411,25 @@ class DataGridEntry extends RepeatableEntry
         return $this;
     }
 
-    /**
-     * @param  array<SchemaComponent|Htmlable>|Closure|null  $components
-     */
-    public function expandedAbove(array|Closure|null $components): static
-    {
-        $this->expandedAbove = $components;
-
-        return $this;
-    }
-
-    /**
-     * @param  array<SchemaComponent|Htmlable>|Closure|null  $components
-     */
-    public function expandedBelow(array|Closure|null $components): static
-    {
-        $this->expandedBelow = $components;
-
-        return $this;
-    }
-
     public function renderExpandedAbove(Schema $item): ?string
     {
-        return $this->renderExpandedSlot($this->expandedAbove, $item);
+        return $this->renderExpandedSlot($this->expandedAbove, $item, $this->expandedSlotInjections($item), [Model::class => $item->getRecord(withParentComponentRecord: false)]);
     }
 
     public function renderExpandedBelow(Schema $item): ?string
     {
-        return $this->renderExpandedSlot($this->expandedBelow, $item);
+        return $this->renderExpandedSlot($this->expandedBelow, $item, $this->expandedSlotInjections($item), [Model::class => $item->getRecord(withParentComponentRecord: false)]);
     }
 
     /**
-     * @param  array<SchemaComponent|Htmlable>|Closure|null  $slot
+     * @return array<string, mixed>
      */
-    private function renderExpandedSlot(array|Closure|null $slot, Schema $item): ?string
+    private function expandedSlotInjections(Schema $item): array
     {
-        if ($slot === null) {
-            return null;
-        }
-
         $record = $item->getRecord(withParentComponentRecord: false);
         $state = $record instanceof Model ? $record->toArray() : $item->getConstantState();
-        $components = $this->evaluate($slot, [
-            'record' => $record ?? $state,
-            'state' => $state,
-        ], [
-            Model::class => $record,
-        ]);
 
-        if (! is_array($components) || $components === []) {
-            return null;
-        }
-
-        $components = array_values(array_map(
-            fn (SchemaComponent|Htmlable $component): SchemaComponent|Htmlable => $component instanceof SchemaComponent ? $component->getClone() : $component,
-            array_filter($components, fn (mixed $component): bool => $component instanceof SchemaComponent || $component instanceof Htmlable),
-        ));
-
-        $html = trim($item->getClone()->components($components)->toHtml());
-
-        return $html === '' ? null : $html;
+        return ['record' => $record ?? $state, 'state' => $state];
     }
 
     /**

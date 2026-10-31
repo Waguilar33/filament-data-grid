@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.20 - 2026-10-31
+
+- `DataGrid::expandedAbove()` and `expandedBelow()` show components above and below an open row's child grid, in the same inset panel, as on `DataGridEntry`. They take an array, or a closure that gets the row's `array $state` and `Get $get`. A row with content but no visible nested grid still opens and shows only that content, for example a note that a pre-sale unit has nothing to fill in yet. The trailing empty row has none.
+
 ## v1.0.0-beta.19 - 2026-10-31
 
 - `DataGridEntry::childRecordActions()` puts Filament actions at the end of each child row of the nested table `RepeatableEntry`, with modals, slide-overs, `fillForm()`, `schema()` and groups. `$record` is the child row (a model, or its array plus `__key`). The action finds the child by the `row` and `child` arguments, and does nothing if it is gone. A child action named like a parent action throws `DuplicateRecordActionName`. `serverSide()`, `toTableContent()`, `childTable()` or a schema without nested table rows throw `UnsupportedRecordActions`.
