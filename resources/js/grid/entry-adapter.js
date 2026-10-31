@@ -9,7 +9,8 @@ const ROW_HEIGHT = 44
 const CHILD_HEADER_HEIGHT = 32
 const DEFAULT_CHILD_TABLE_PADDING = 15
 const TOGGLE_WIDTH = 44
-const COMPACT_TOGGLE_WIDTH = 40
+const TOGGLE_BUTTON_INSET = 4
+const TOGGLE_ICON_WIDTH = 20
 const UNMEASURED_WIDTH = 160
 const CHILD_TABLE_BORDER = 1
 const INTRINSIC_WIDTHS = ['max-content', '0px']
@@ -340,11 +341,19 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
             })
         }
 
-        if (payload.compact) {
-            insetEdgeColumns(columns)
-        }
+        insetEdgeColumns(columns)
 
         return columns
+    }
+
+    const edgeInset = () => {
+        const probe = document.createElement('div')
+        probe.style.paddingInlineStart = 'var(--fi-data-grid-edge-inset, 0px)'
+        element.appendChild(probe)
+        const inset = parseFloat(getComputedStyle(probe).paddingInlineStart) || 0
+        probe.remove()
+
+        return inset
     }
 
     const insetEdgeColumns = (columns) => {
@@ -352,14 +361,15 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         const last = columns.at(-1)
 
         if (first.id === TOGGLE_COLUMN) {
-            first.width = first.fixedWidth = COMPACT_TOGGLE_WIDTH
             first.cssClass += ' fi-data-grid-toggle-cell-inset'
         } else {
             first.cssClass += ' fi-data-grid-inset-start'
             first.headerCssClass += ' fi-data-grid-inset-start'
         }
 
-        if (![TOGGLE_COLUMN, LINK_COLUMN].includes(last.id)) {
+        if (last.id === LINK_COLUMN) {
+            last.cssClass += ' fi-data-grid-record-link-cell-inset'
+        } else if (last.id !== TOGGLE_COLUMN) {
             last.cssClass += ' fi-data-grid-inset-end'
             last.headerCssClass += ' fi-data-grid-inset-end'
         }
@@ -453,6 +463,15 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
 
         const columns = currentColumns()
         const parents = visible.filter((item) => item.kind === 'parent')
+
+        const inset = edgeInset()
+
+        columns
+            .filter((column) => column.id === TOGGLE_COLUMN || column.id === LINK_COLUMN)
+            .forEach((column) => {
+                column.fixedWidth = inset > 0 ? inset + TOGGLE_ICON_WIDTH + TOGGLE_BUTTON_INSET : (column.id === TOGGLE_COLUMN ? TOGGLE_WIDTH : LINK_WIDTH)
+            })
+
         const openRows = hasChildTable() ? parents.map((item) => item.row).filter((row) => expanded.has(row.key) && row.children.length > 0) : []
         const flexibleColumns = columns.filter((column) => column.fixedWidth === null)
         const childColumns = flexibleChildColumns()

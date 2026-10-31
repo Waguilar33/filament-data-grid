@@ -438,7 +438,7 @@ DataGridEntry::make('deliveries')
     ->compact()
 ```
 
-`compact()` also lines the grid up under that header: the first column (or the chevron, when rows open) starts on the icon's edge, 16px in, a first column after the chevron starts on the heading's edge, and the last column ends 16px from the right, like a compact section's content. Without a heading, description or icon there is no section header, but the columns still use these insets.
+The columns line up with the header the way a Filament table's do. The first column (or the chevron, when rows open) starts on the header icon's edge, and a first column after the chevron starts on the heading's edge. The last column (or the record link chevron) ends the same distance from the right. That distance is 24px on screens `sm` and wider and 16px below, like a Filament table, and always 16px with `compact()`, like a compact section.
 
 ### Filters
 

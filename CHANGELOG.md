@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.10 - unreleased
+
+- `DataGridEntry` grids without `compact()` now line their columns up with their header like a Filament table: the first column, or the chevron, starts on the header icon's edge (24px from `sm` up, 16px below), a first column after the chevron starts on the heading's edge, and the last column, or the record link chevron, ends the same distance from the right. Before, the edge columns used 12px cell padding. This works standalone and in `toTableContent()`.
+
 ## v1.0.0-beta.9 - 2026-10-31
 
 - A `compact()` grid now lines its columns up with the compact header above them, standalone and in `toTableContent()`. The first column, or the chevron of rows that open, starts on the header icon's edge (16px). After a chevron, the first column starts on the heading's edge (52px), and the last column ends 16px from the right. Before, they sat 4px to the left.

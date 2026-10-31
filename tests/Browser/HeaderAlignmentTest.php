@@ -43,9 +43,15 @@ it('lines a compact grid table header up with a compact section', function (): v
     expect($header)->toBe(['10px', 16, 52, '8px']);
 });
 
-function compactEdges(string $url, string $card): mixed
+function gridEdges(string $url, string $card, ?int $width = null): mixed
 {
-    return visit($url)->waitForEvent('networkidle')->wait(0.5)->script(sprintf(<<<'JS'
+    $page = visit($url);
+
+    if ($width !== null) {
+        $page->resize($width, 900);
+    }
+
+    return $page->waitForEvent('networkidle')->wait(0.5)->script(sprintf(<<<'JS'
         () => {
             const card = document.querySelector(%s)
             const { left, right } = card.getBoundingClientRect()
@@ -53,7 +59,8 @@ function compactEdges(string $url, string $card): mixed
             const grid = card.querySelector('.fi-data-grid-canvas')
             const row = grid.querySelector('.fi-data-grid-parent-row')
             const chevron = row.querySelector('.fi-data-grid-row-toggle svg')
-            const actions = row.querySelector('.fi-data-grid-record-actions')
+            const last = [...row.querySelectorAll('.slick-cell')].at(-1)
+            const lastContent = last.querySelector('.fi-data-grid-record-link svg') ?? last
 
             return {
                 icon: Math.round(card.querySelector('.fi-section-header > svg, .fi-ta-header svg').getBoundingClientRect().left - left),
@@ -61,18 +68,33 @@ function compactEdges(string $url, string $card): mixed
                 chevron: chevron ? Math.round(chevron.getBoundingClientRect().left - left) : null,
                 header: contentStart([...grid.querySelectorAll('.slick-header-column')].find((cell) => !cell.querySelector('.fi-sr-only'))),
                 cell: contentStart([...row.querySelectorAll('.slick-cell')].find((cell) => !cell.classList.contains('fi-data-grid-toggle-cell'))),
-                actionsEnd: actions ? Math.round(right - actions.getBoundingClientRect().right) : null,
+                lastEnd: Math.round(right - lastContent.getBoundingClientRect().right + (lastContent === last ? parseFloat(getComputedStyle(last).paddingRight) : 0)),
             }
         }
         JS, json_encode($card)));
 }
 
 it('starts a compact grid’s columns on the header icon line', function (): void {
-    expect(compactEdges('/demo/order-lines-demo', '.fi-data-grid-section'))
-        ->toBe(['icon' => 16, 'title' => 52, 'chevron' => null, 'header' => 16, 'cell' => 16, 'actionsEnd' => 16]);
+    expect(gridEdges('/demo/order-lines-demo', '.fi-data-grid-section'))
+        ->toBe(['icon' => 16, 'title' => 52, 'chevron' => null, 'header' => 16, 'cell' => 16, 'lastEnd' => 16]);
 });
 
 it('puts a compact table grid’s chevron on the icon line and its first column on the title line', function (): void {
-    expect(compactEdges('/demo/cash-shift-demo', '.fi-ta-ctn:has(.fi-data-grid-compact)'))
-        ->toBe(['icon' => 16, 'title' => 52, 'chevron' => 16, 'header' => 52, 'cell' => 52, 'actionsEnd' => null]);
+    expect(gridEdges('/demo/cash-shift-demo', '.fi-ta-ctn:has(.fi-data-grid-compact)'))
+        ->toBe(['icon' => 16, 'title' => 52, 'chevron' => 16, 'header' => 52, 'cell' => 52, 'lastEnd' => 16]);
+});
+
+it('starts a default grid’s columns on the header icon line, like a Filament table', function (): void {
+    expect(gridEdges('/demo/delivery-route-demo', '[id="content.deliveries"] .fi-ta-ctn'))
+        ->toBe(['icon' => 24, 'title' => 60, 'chevron' => 24, 'header' => 60, 'cell' => 60, 'lastEnd' => 24]);
+});
+
+it('starts a default table grid’s columns on the header icon line', function (): void {
+    expect(gridEdges('/demo/delivery-table-demo', '.fi-ta-ctn:has(.fi-data-grid-in-table)'))
+        ->toBe(['icon' => 24, 'title' => 60, 'chevron' => 24, 'header' => 60, 'cell' => 60, 'lastEnd' => 24]);
+});
+
+it('narrows a default grid’s insets to 16 pixels on small screens, like a Filament table', function (): void {
+    expect(gridEdges('/demo/delivery-route-demo', '[id="content.deliveries"] .fi-ta-ctn', width: 600))
+        ->toMatchArray(['icon' => 16, 'chevron' => 16, 'header' => 52, 'cell' => 52]);
 });

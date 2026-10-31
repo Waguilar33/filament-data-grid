@@ -46,7 +46,6 @@ final readonly class BuildEntryPayload
             'rows' => $this->rows($entry, $items),
             'childTable' => $entry->hasChildTable(),
             'childTablePadding' => $entry->getChildTablePadding(),
-            'compact' => $entry->isCompact(),
             'serverSide' => $entry->isServerSide(),
             'total' => $total,
             'page' => $page,
