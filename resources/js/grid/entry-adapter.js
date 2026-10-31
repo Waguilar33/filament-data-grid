@@ -115,6 +115,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
     const intrinsicWidths = new Map()
     const childTemplates = new Map()
     let totals = {}
+    let hasMatchingRows = true
 
     const hasNativeChildTable = () => Boolean(payload.childTable && childTables)
 
@@ -172,6 +173,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         const start = perPage() ? (page - 1) * perPage() : 0
 
         totals = sumTotals(matching, Object.keys(payload.totals?.columns ?? {}))
+        hasMatchingRows = matching.length > 0
 
         visible = []
 
@@ -292,6 +294,10 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
     const renderTotals = () => {
         if (!grid || !hasTotals()) {
             return
+        }
+
+        if (grid.getOptions().showFooterRow !== hasMatchingRows) {
+            grid.setFooterRowVisibility(hasMatchingRows)
         }
 
         grid.getColumns().forEach((column) => {
@@ -716,7 +722,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         showTopPanel: false,
         showPreHeaderPanel: false,
         createFooterRow: hasTotals(),
-        showFooterRow: hasTotals(),
+        showFooterRow: hasTotals() && hasMatchingRows,
         footerRowHeight: ROW_HEIGHT,
         enableTextSelectionOnCells: true,
         darkMode: isDarkMode,
@@ -903,7 +909,8 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
             payload = nextPayload
 
             if (hadTotals !== hasTotals()) {
-                grid.setOptions({ createFooterRow: hasTotals(), showFooterRow: hasTotals() })
+                grid.setOptions({ createFooterRow: hasTotals() })
+                grid.setFooterRowVisibility(hasTotals() && hasMatchingRows)
             }
 
             measuredHeights.clear()

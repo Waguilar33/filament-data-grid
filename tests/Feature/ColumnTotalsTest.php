@@ -60,7 +60,7 @@ it('leaves totals out of the payload when none are set', function (): void {
 });
 
 it('describes money in the locale the server formats it with', function (): void {
-    $format = Total::make('total')->money('GTQ', 'es_GT')->describe()['number'];
+    $format = Total::make('total')->money('GTQ', 'es_GT')->describe(totalsEntry())['number'];
 
     expect($format)->toMatchArray([
         'minFraction' => 2,
@@ -74,7 +74,7 @@ it('describes money in the locale the server formats it with', function (): void
 });
 
 it('describes numeric() with separators like number_format()', function (): void {
-    expect(Total::make('total')->numeric(2, ',', '.')->prefix('Q ')->describe())->toMatchArray([
+    expect(Total::make('total')->numeric(2, ',', '.')->prefix('Q ')->describe(totalsEntry()))->toMatchArray([
         'number' => TotalFormat::plain(2, ',', '.'),
         'prefix' => 'Q ',
         'suffix' => '',
@@ -83,15 +83,23 @@ it('describes numeric() with separators like number_format()', function (): void
 });
 
 it('passes a RawJs formatter through', function (): void {
-    expect(Total::make('total')->formatUsing(RawJs::make('(value) => value.toFixed(1)'))->describe()['js'])->toBe('(value) => value.toFixed(1)');
+    expect(Total::make('total')->formatUsing(RawJs::make('(value) => value.toFixed(1)'))->describe(totalsEntry())['js'])->toBe('(value) => value.toFixed(1)');
 });
 
 it('evaluates closures for the format', function (): void {
-    expect(Total::make('total')->money(fn (): string => 'EUR', fn (): string => 'de')->describe()['number'])->toMatchArray([
+    expect(Total::make('total')->money(fn (): string => 'EUR', fn (): string => 'de')->describe(totalsEntry())['number'])->toMatchArray([
         'decimal' => ',',
         'group' => '.',
         'positiveSuffix' => "\u{a0}€",
     ]);
+});
+
+it('injects the Livewire component into format closures, like the grid does', function (): void {
+    $payload = mountEntry(totalsEntry()->totals([
+        Total::make('total')->prefix(fn (EntryPage $livewire): string => $livewire::class.' '),
+    ]))->getGridPayload();
+
+    expect($payload['totals']['columns']['total']['prefix'])->toBe(EntryPage::class.' ');
 });
 
 it('refuses totals on a server-side grid', function (): void {

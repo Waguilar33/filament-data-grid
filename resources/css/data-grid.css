@@ -1164,6 +1164,10 @@
     box-sizing: border-box;
     padding-inline: calc(var(--spacing) * 3);
     overflow: hidden;
+    white-space: nowrap;
+}
+
+.fi-data-grid-canvas .fi-data-grid-total {
     font-size: var(--text-sm);
     line-height: var(--text-sm--line-height);
     font-weight: var(--font-weight-semibold);

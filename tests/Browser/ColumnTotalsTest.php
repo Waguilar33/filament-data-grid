@@ -38,6 +38,14 @@ function expectedTotals(string $locale, array $methods): array
     );
 }
 
+function clippedTotals(string $grid): string
+{
+    return sprintf(
+        '[...document.querySelectorAll(%s)].filter((total) => total.getBoundingClientRect().right > total.parentElement.getBoundingClientRect().right + 0.5 || total.scrollWidth > total.clientWidth).map((total) => total.textContent)',
+        json_encode($grid.' .fi-data-grid-total'),
+    );
+}
+
 function textEdges(string $selector): string
 {
     return sprintf(<<<'JS'
@@ -66,12 +74,18 @@ it('sums every column with a total and formats it like the column, under both gr
     $page->assertNoJavaScriptErrors();
 })->with(['en', 'es']);
 
-it('totals only the rows that match the search', function (): void {
+it('totals only the rows that match the search, and hides the totals when none match', function (): void {
     $page = visitTotals()
         ->type(STANDALONE_TOTALS.' .fi-ta-search-field input', 'card')
         ->wait(0.5);
 
     expect($page->script(totalTexts(STANDALONE_TOTALS)))->toBe(expectedTotals('en', ['card']));
+
+    $page->type(STANDALONE_TOTALS.' .fi-ta-search-field input', 'nothing matches')
+        ->wait(0.5)
+        ->assertSee('No results.');
+
+    expect($page->script(sprintf('getComputedStyle(document.querySelector(%s)).display', json_encode(STANDALONE_TOTALS.' .slick-footerrow'))))->toBe('none');
 
     $page->type(STANDALONE_TOTALS.' .fi-ta-search-field input', '')
         ->wait(0.5);
@@ -79,8 +93,8 @@ it('totals only the rows that match the search', function (): void {
     expect($page->script(totalTexts(STANDALONE_TOTALS)))->toBe(expectedTotals('en', ['cash', 'card', 'transfer', 'voucher']));
 });
 
-it('lines each total up with the values of its column', function (string $grid): void {
-    $page = visitTotals();
+it('lines each total up with the values of its column', function (string $grid, int $width, string $locale): void {
+    $page = visitTotals("?locale={$locale}")->resize($width, 900)->wait(0.5);
     $cell = fn (int $column): string => sprintf('%s .slick-row .l%d .fi-in-text-item', $grid, $column);
     $total = fn (int $column): string => sprintf('%s .slick-footerrow-column.l%d .fi-data-grid-total', $grid, $column);
 
@@ -89,7 +103,9 @@ it('lines each total up with the values of its column', function (string $grid):
     foreach ([2, ...MONEY_TOTALS] as $column) {
         expect($page->script(textEdges($total($column)))[1])->toBe($page->script(textEdges($cell($column)))[1]);
     }
-})->with([STANDALONE_TOTALS, TABLE_TOTALS]);
+
+    expect($page->script(clippedTotals($grid)))->toBe([]);
+})->with([STANDALONE_TOTALS, TABLE_TOTALS])->with([[1600, 'en'], [1024, 'es']]);
 
 it('keeps the totals under the rows while a child table is open', function (): void {
     $page = visitTotals()

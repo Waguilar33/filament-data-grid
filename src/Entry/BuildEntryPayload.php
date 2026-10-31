@@ -132,7 +132,7 @@ final readonly class BuildEntryPayload
         $columns = [];
 
         foreach ($totals as $total) {
-            $columns[$total->getField()] = $total->describe();
+            $columns[$total->getField()] = $total->describe($entry);
         }
 
         return ['label' => $entry->getTotalsLabel(), 'columns' => $columns];

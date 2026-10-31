@@ -6,13 +6,13 @@ namespace Waguilar\FilamentDataGrid\Totals;
 
 use BackedEnum;
 use Closure;
-use Filament\Support\Concerns\EvaluatesClosures;
+use Filament\Schemas\Components\Component;
 use Filament\Support\Enums\ArgumentValue;
 use Filament\Support\RawJs;
 
 final class Total
 {
-    use EvaluatesClosures;
+    private ?Component $component = null;
 
     private ?Closure $describeFormat = null;
 
@@ -90,8 +90,9 @@ final class Total
     /**
      * @return array{number: array<string, int|string|bool>, prefix: string, suffix: string, js: string|null}
      */
-    public function describe(): array
+    public function describe(Component $component): array
     {
+        $this->component = $component;
         $formatter = $this->evaluate($this->formatUsing);
 
         /** @var array<string, int|string|bool> $number */
@@ -103,6 +104,11 @@ final class Total
             'suffix' => $this->stringOrNull($this->suffix) ?? '',
             'js' => $formatter instanceof RawJs ? $formatter->toHtml() : null,
         ];
+    }
+
+    private function evaluate(mixed $value): mixed
+    {
+        return $this->component === null ? value($value) : $this->component->evaluate($value);
     }
 
     private function locale(string|BackedEnum|Closure|null $locale): string

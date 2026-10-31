@@ -526,7 +526,7 @@ DataGridEntry::make('receivables')
     ->totalsLabel('Total')
 ```
 
-The browser adds up the totals, so they change with the search and the filters. They cover every row that matches, not only the page you see. In `toTableContent()` the grid only holds the table's current page, so the totals cover that page. `serverSide()` grids can't have totals, because the browser only holds one page. Show totals you work out on the server in `description()` instead.
+The browser adds up the totals, so they change with the search and the filters. They cover every row that matches, not only the page you see. The footer hides while no row matches. In `toTableContent()` the grid only holds the table's current page, so the totals cover that page. `serverSide()` grids can't have totals, because the browser only holds one page. Show totals you work out on the server in `description()` instead.
 
 Format a total like its column. The options match Filament's own:
 
