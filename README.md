@@ -111,7 +111,7 @@ The grid chooses how to edit each cell from the component you put in the schema:
 
 | Component | In the grid |
 | --- | --- |
-| `TextInput` | Edited in place. With `numeric()` it aligns right and checks `minValue()`, `maxValue()`, `integer()` and `step()` as you type. |
+| `TextInput` | Edited in place. With `numeric()` it aligns right, checks `minValue()`, `maxValue()`, `integer()` and `step()` as you type, and steps with ArrowUp and ArrowDown like a native number input (by `step()`, or 1 when the step is `'any'`), staying within the min and max. |
 | `Select` | Filament's own select dropdown. It supports search, the clear button, `allowHtml()`, `multiple()`, `getSearchResultsUsing()`, `getOptionLabelUsing()` and `disableOptionWhen()`. |
 | `Radio`, `ToggleButtons` | The same dropdown, listing their options. |
 | `Toggle`, `Checkbox` | A switch you click, or flip with Space. |
