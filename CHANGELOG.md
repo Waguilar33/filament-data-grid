@@ -9,6 +9,7 @@ All notable changes to `filament-data-grid` will be documented in this file.
 - Row chevrons (`ROW_EXPAND`, `ROW_OPEN`) line up by their drawn shape, whatever icon is registered: each chevron's box is fitted to its shape, and the shape starts where the header icon's shape starts.
 - The grid payload keeps non-ASCII characters unescaped, so `assertSee()` matches accented cell text.
 - `DataGridEntry` grids without `compact()` now line their columns up with their header like a Filament table: the first column, or the chevron, starts on the header icon's edge (24px from `sm` up, 16px below), a first column after the chevron starts on the heading's edge, and the last column, or the record link chevron, ends the same distance from the right. Before, the edge columns used 12px cell padding. This works standalone and in `toTableContent()`.
+- A numeric `TextInput` cell now uses its own `mask()` and `stripCharacters()`. The editor masks what you type or paste with Filament's Alpine mask, the cell shows the masked text, and a commit stores the number with the strip characters removed, so `minValue()` and `maxValue()` still check the number. Cells without a mask work as before.
 
 ## v1.0.0-beta.9 - 2026-10-31
 

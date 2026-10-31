@@ -85,6 +85,7 @@ return [
         'lines' => 'Products',
         'saved_state' => 'Last saved state',
         'adjustments' => 'Adjustments',
+        'counts' => 'Stock counts',
     ],
     'actions' => [
         'save' => 'Save',
@@ -93,6 +94,7 @@ return [
         'stock' => 'Stock',
         'salesperson' => 'Salesperson',
         'add_adjustment' => 'Add adjustment',
+        'add_count' => 'Add count',
     ],
     'columns' => [
         'product' => 'Product',
@@ -111,6 +113,12 @@ return [
         'available' => 'Available',
         'salesperson' => 'Salesperson',
         'approved' => 'Approved',
+        'location' => 'Location',
+        'counted' => 'Counted',
+    ],
+    'separators' => [
+        'decimal' => '.',
+        'thousands' => ',',
     ],
     'kinds' => [
         'credit' => 'Credit',

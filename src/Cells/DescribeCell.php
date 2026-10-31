@@ -13,6 +13,7 @@ use Filament\Forms\Components\ToggleButtons;
 use Filament\Infolists\Components\Entry;
 use Filament\Schemas\Components\Component;
 use Filament\Support\Components\Contracts\HasEmbeddedView;
+use Filament\Support\RawJs;
 use Illuminate\Support\MessageBag;
 
 final readonly class DescribeCell
@@ -62,6 +63,7 @@ final readonly class DescribeCell
                 'min' => $component->getMinValue(),
                 'max' => $component->getMaxValue(),
                 'step' => $component->getStep(),
+                ...$this->mask($component),
             ],
             $component instanceof Select || $component instanceof Radio || $component instanceof ToggleButtons => $this->describeSelect->cell($component),
             $component instanceof DateTimePicker => $this->describeDate->handle($component),
@@ -70,6 +72,24 @@ final readonly class DescribeCell
             ],
             default => [],
         };
+    }
+
+    /**
+     * @return array{mask?: string, maskDynamic?: bool, stripCharacters?: list<string>}
+     */
+    private function mask(TextInput $component): array
+    {
+        $mask = $component->getMask();
+
+        if (blank($mask)) {
+            return [];
+        }
+
+        return [
+            'mask' => $mask instanceof RawJs ? $mask->toHtml() : $mask,
+            'maskDynamic' => $mask instanceof RawJs,
+            'stripCharacters' => array_values($component->getStripCharacters()),
+        ];
     }
 
     private function entryHtml(Entry $entry): string

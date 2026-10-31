@@ -22,6 +22,7 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Filament\Support\RawJs;
 use Illuminate\Support\Str;
 use Waguilar\FilamentDataGrid\DataGrid;
 use Workbench\App\Catalog\FakeProducts;
@@ -61,6 +62,10 @@ final class DataGridDemo extends Page
                 ['reason' => 'Damaged box', 'kind' => 'credit', 'status' => 'draft', 'date' => now()->toDateString(), 'color' => '#f59e0b', 'amount' => 12.5, 'approved' => false],
                 ['reason' => 'Late delivery', 'kind' => 'debit', 'status' => 'sent', 'date' => null, 'color' => null, 'amount' => 4, 'approved' => true],
             ],
+            'counts' => [
+                ['location' => 'Aisle 1', 'counted' => 1500],
+                ['location' => 'Aisle 2', 'counted' => 250.7525],
+            ],
         ]);
     }
 
@@ -70,6 +75,7 @@ final class DataGridDemo extends Page
             ->components([
                 Section::make(__('demo::demo.sections.lines'))->schema([self::linesGrid()]),
                 Section::make(__('demo::demo.sections.adjustments'))->schema([self::adjustmentsGrid()]),
+                Section::make(__('demo::demo.sections.counts'))->schema([self::countsGrid()]),
             ])
             ->statePath('data');
     }
@@ -214,6 +220,30 @@ final class DataGridDemo extends Page
                 ColorPicker::make('color'),
                 TextInput::make('amount')->numeric()->minValue(0)->step(0.01)->required(),
                 Toggle::make('approved'),
+            ]);
+    }
+
+    public static function countsGrid(): DataGrid
+    {
+        $decimalSeparator = __('demo::demo.separators.decimal');
+        $thousandsSeparator = __('demo::demo.separators.thousands');
+
+        return DataGrid::make('counts')
+            ->hiddenLabel()
+            ->defaultItems(0)
+            ->addActionLabel(__('demo::demo.actions.add_count'))
+            ->table([
+                TableColumn::make(__('demo::demo.columns.location'))->markAsRequired(),
+                TableColumn::make(__('demo::demo.columns.counted'))->width('10rem')->alignEnd(),
+            ])
+            ->schema([
+                TextInput::make('location')->required(),
+                TextInput::make('counted')
+                    ->numeric()
+                    ->minValue(0)
+                    ->maxValue(10_000_000)
+                    ->mask(RawJs::make("\$money(\$input, '{$decimalSeparator}', '{$thousandsSeparator}', 3)"))
+                    ->stripCharacters($thousandsSeparator),
             ]);
     }
 
