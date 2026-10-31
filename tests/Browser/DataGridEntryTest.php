@@ -329,3 +329,31 @@ it('sizes the columns of each open child table to its own rows', function (): vo
         ->and($templates)->each->toMatch('/^\d+px 144px \d+px$/')
         ->and($page->script(clippedContentIn(ROUTE)))->toBe([]);
 });
+
+function linkUnderline(string $selector): string
+{
+    return sprintf(
+        'getComputedStyle(document.querySelector(%s)).textDecorationLine',
+        json_encode(ROUTE.' .fi-data-grid-parent-row '.$selector),
+    );
+}
+
+it('underlines entry links on hover and keyboard focus, like table links, but not their badges', function (): void {
+    $page = visitRoute();
+
+    expect($page->script(linkUnderline('.l1 .fi-in-text-item')))->toBe('none');
+
+    $page->script(sprintf('document.querySelector(%s).focus()', json_encode(ROUTE.' .fi-data-grid-parent-row .l1 a')));
+
+    expect($page->script(linkUnderline('.l1 .fi-in-text-item')))->toBe('underline');
+
+    $page->script('document.activeElement.blur()');
+    $page->hover(ROUTE.' .fi-data-grid-parent-row >> nth=0 >> .l1 a');
+
+    expect($page->script(linkUnderline('.l1 .fi-in-text-item')))->toBe('underline');
+
+    $page->hover(ROUTE.' .fi-data-grid-parent-row >> nth=0 >> .l5 a');
+
+    expect($page->script(linkUnderline('.l5 .fi-in-text-item')))->toBe('none')
+        ->and($page->script(linkUnderline('.l5 .fi-badge')))->toBe('none');
+});
