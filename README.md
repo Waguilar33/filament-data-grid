@@ -455,16 +455,16 @@ The grid applies `SelectFilter` and `TernaryFilter` itself, by comparing each ro
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 
-DataGridEntry::make('payments')
-    ->state(fn (Order $record) => $record->payments()->latest()->get())
+DataGridEntry::make('lines')
+    ->state(fn (Order $record) => $record->lines()->latest()->get())
     ->table([...])
     ->schema([...])
     ->recordActions([
-        Action::make('complete')
-            ->visible(fn (Payment $record): bool => $record->hasPendingDetails())
-            ->authorize(fn (Payment $record): bool => auth()->user()->can('update', $record))
-            ->schema(fn (Payment $record): array => [...])
-            ->action(fn (array $data, Payment $record) => $record->complete($data)),
+        Action::make('adjust')
+            ->visible(fn (OrderLine $record): bool => $record->quantity < 10)
+            ->authorize(fn (OrderLine $record): bool => auth()->user()->can('update', $record))
+            ->schema(fn (OrderLine $record): array => [TextInput::make('quantity')->numeric()])
+            ->action(fn (array $data, OrderLine $record) => $record->update($data)),
         ActionGroup::make([...]),
     ])
 ```
@@ -482,13 +482,21 @@ use Filament\Actions\Testing\TestAction;
 
 livewire(ViewOrder::class, ['record' => $order->getKey()])
     ->callAction(
-        TestAction::make('complete')->schemaComponent('payments', schema: 'infolist')->arguments(['row' => $payment->getKey()]),
-        data: ['reference' => 'R-1'],
+        TestAction::make('adjust')->schemaComponent('lines', schema: 'infolist')->arguments(['row' => $line->getKey()]),
+        data: ['quantity' => 7],
     )
     ->assertHasNoActionErrors();
 ```
 
-`assertActionVisible()`, `assertActionHidden()` and `mountAction()` take the same `TestAction`. `'payments'` is the entry's key, which is its name unless a parent sets a key.
+`assertActionVisible()`, `assertActionHidden()`, `mountAction()` and `fillForm()` with a fake `FileUpload` work as usual. `'lines'` is the entry's key, which is its name unless a parent sets a key: check the `schemaComponent` value in the rendered button's `wire:click` if unsure.
+
+How it differs from a table's record actions:
+
+- The grid sets each action's `record()` and `bootUsing()` itself and reserves the `row` argument, so don't set those on the actions you pass in.
+- A click on a row that has gone away closes quietly. Filament's test helpers resolve the action outside that guard, so `callAction()` or `assertActionVisible()` for a missing row throws `ActionNotResolvableException` instead.
+- `$livewire` is the page that holds the entry. There is no `$table`, and on a page that replaces a relation manager there is no `getOwnerRecord()`: use the page's `$record`.
+- There are no bulk actions, `recordUrl()`, clickable rows, or settings for the actions column's position, label or alignment.
+- Filament's prebuilt actions such as `EditAction` and `DeleteAction` expect a table or a resource record. Build your own `Action`s for the grid.
 
 ### Inside a Filament table
 

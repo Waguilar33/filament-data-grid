@@ -5,10 +5,13 @@ declare(strict_types=1);
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\Testing\TestAction;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\RepeatableEntry\TableColumn;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
 use Waguilar\FilamentDataGrid\DataGridEntry;
@@ -228,4 +231,26 @@ it('authorizes each row on its own record', function (): void {
 
     $component->call('mountAction', 'adjust', ['row' => $salt->getKey()], ['schemaComponent' => 'infolist.lines'])
         ->assertSet('mountedActions', []);
+});
+
+it('uploads a file from the action modal for its row', function (): void {
+    Storage::fake('local');
+    $order = orderWithLines();
+    $tea = $order->lines()->where('product', 'Tea')->sole();
+    mountOrderLines($order, fn (DataGridEntry $entry): DataGridEntry => $entry->recordActions([
+        Action::make('attach')
+            ->schema([FileUpload::make('receipt')->disk('local')->directory('receipts')->required()])
+            ->action(fn (array $data, DemoOrderLine $record): bool => $record->update(['product' => $data['receipt']])),
+    ]))
+        ->mountAction(TestAction::make('attach')->schemaComponent('lines', schema: 'infolist')->arguments(['row' => $tea->getKey()]))
+        ->fillForm(['receipt' => UploadedFile::fake()->image('receipt.png')])
+        ->callMountedAction()
+        ->assertHasNoActionErrors();
+
+    $receipt = $tea->refresh()->product;
+
+    expect($receipt)->toStartWith('receipts/')
+        ->and($order->lines()->whereIn('product', ['Coffee', 'Salt'])->count())->toBe(2);
+
+    Storage::disk('local')->assertExists($receipt);
 });
