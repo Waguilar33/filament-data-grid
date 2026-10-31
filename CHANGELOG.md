@@ -2,7 +2,7 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
-## v1.0.0-beta.10 - unreleased
+## v1.0.0-beta.10 - 2026-10-31
 
 - Editable `DataGrid` rows, parent and child, grow to fit their tallest cell (44px minimum), so `belowContent()` and wrapped text are no longer cut off. They are measured again on state changes, when rows open or close, and on resize.
 - The editable `DataGrid` has `heading()`, `description()`, `icon()` and `compact()`, drawn as Filament's section header around the grid, with the same column alignment as `DataGridEntry`.
