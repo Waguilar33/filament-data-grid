@@ -46,6 +46,12 @@ final class CashShiftDemo extends Page implements HasTable
                 ->description(__('demo::demo.shift.descriptions.standalone'))
                 ->icon(Heroicon::OutlinedBanknotes)
                 ->searchable()
+                ->totals([
+                    Total::make('money_in')->money('USD'),
+                    Total::make('money_out')->money('USD'),
+                    Total::make('balance')->money('USD'),
+                ])
+                ->totalsLabelColumn('movements')
                 ->totalsLabelAlignment(Alignment::End)
                 ->state(FakeCashShift::methods()),
         ]);

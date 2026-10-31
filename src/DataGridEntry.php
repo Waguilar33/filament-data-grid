@@ -109,6 +109,8 @@ class DataGridEntry extends RepeatableEntry
 
     protected Alignment|string|Closure|null $totalsLabelAlignment = null;
 
+    protected string|Closure|null $totalsLabelColumn = null;
+
     /**
      * @param  array<Total>|Closure  $totals
      */
@@ -145,6 +147,20 @@ class DataGridEntry extends RepeatableEntry
             is_string($label) => $label,
             default => null,
         };
+    }
+
+    public function totalsLabelColumn(string|Closure|null $field): static
+    {
+        $this->totalsLabelColumn = $field;
+
+        return $this;
+    }
+
+    public function getTotalsLabelColumn(): ?string
+    {
+        $field = $this->evaluate($this->totalsLabelColumn);
+
+        return is_string($field) ? $field : null;
     }
 
     public function totalsLabelAlignment(Alignment|string|Closure|null $alignment): static

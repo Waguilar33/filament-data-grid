@@ -119,7 +119,7 @@ final readonly class BuildEntryPayload
     }
 
     /**
-     * @return array{label: string|null, labelAlignment: string|null, columns: array<string, array<string, mixed>>}|null
+     * @return array{label: string|null, labelAlignment: string|null, labelColumn: string|null, columns: array<string, array<string, mixed>>}|null
      */
     private function describeTotals(DataGridEntry $entry): ?array
     {
@@ -135,7 +135,7 @@ final readonly class BuildEntryPayload
             $columns[$total->getField()] = $total->describe($entry);
         }
 
-        return ['label' => $entry->getTotalsLabel(), 'labelAlignment' => $entry->getTotalsLabelAlignment(), 'columns' => $columns];
+        return ['label' => $entry->getTotalsLabel(), 'labelAlignment' => $entry->getTotalsLabelAlignment(), 'labelColumn' => $entry->getTotalsLabelColumn(), 'columns' => $columns];
     }
 
     /**

@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.17 - 2026-10-31
+
+- `DataGridEntry::totalsLabelColumn('field')` puts the totals label in that column's footer cell, for example next to the first total. It works with `totalsLabelAlignment()`. By default the label stays in the first column.
+
 ## v1.0.0-beta.16 - 2026-10-31
 
 - `DataGridEntry::totalsLabelAlignment()` aligns the totals label in its cell, for example `Alignment::End`. By default the label follows its column's alignment.

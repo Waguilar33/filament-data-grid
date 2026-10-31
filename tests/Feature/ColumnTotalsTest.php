@@ -113,3 +113,8 @@ it('sends the label alignment, start by default', function (): void {
     expect(mountEntry(totalsEntry()->totals([Total::make('total')]))->getGridPayload()['totals']['labelAlignment'])->toBeNull()
         ->and(mountEntry(totalsEntry()->totals([Total::make('total')])->totalsLabelAlignment(Alignment::End))->getGridPayload()['totals']['labelAlignment'])->toBe('end');
 });
+
+it('sends the column the label goes in, none by default', function (): void {
+    expect(mountEntry(totalsEntry()->totals([Total::make('total')]))->getGridPayload()['totals']['labelColumn'])->toBeNull()
+        ->and(mountEntry(totalsEntry()->totals([Total::make('total')])->totalsLabelColumn('note'))->getGridPayload()['totals']['labelColumn'])->toBe('note');
+});

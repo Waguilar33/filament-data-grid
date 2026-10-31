@@ -268,7 +268,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
 
     const hasTotals = () => Boolean(payload.totals)
 
-    const firstDataField = () => payload.columns[0]?.field
+    const labelField = () => payload.totals?.labelColumn ?? payload.columns[0]?.field
 
     const totalText = (field) => {
         const format = payload.totals?.columns?.[field]
@@ -277,7 +277,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
             return formatTotal(totals[field] ?? 0, format)
         }
 
-        return field === firstDataField() ? (payload.totals?.label ?? '') : ''
+        return field === labelField() ? (payload.totals?.label ?? '') : ''
     }
 
     const totalHtml = (field) => {
@@ -289,7 +289,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
     const totalCellClasses = (column) => {
         const labelAlignment = payload.totals?.labelAlignment
 
-        if (!labelAlignment || column.field !== firstDataField() || payload.totals?.columns?.[column.field]) {
+        if (!labelAlignment || column.field !== labelField() || payload.totals?.columns?.[column.field]) {
             return column.cssClass
         }
 
