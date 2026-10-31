@@ -89,7 +89,7 @@ const probeRequest = (wrapper, classes, content) => ({ key: `${wrapper}|${classe
 
 const cellContent = (cell) => (cell && cell.visible !== false ? (cell.html ?? '') : '')
 
-const childCellClasses = (column) => `fi-data-grid-child-cell fi-align-${column.alignment ?? 'start'}`
+const childCellClasses = (column) => `fi-data-grid-child-cell fi-align-${column.alignment ?? 'start'}${column.actions ? ' fi-data-grid-child-actions-cell' : ''}`
 
 const childCellHtml = (cell, column, isHeader) => {
     const classes = childCellClasses(column)
@@ -514,7 +514,17 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         ...row.children.map((cells) => probeRequest('', childCellClasses(column), cellContent(cells[index]))),
     ]
 
-    const flexibleChildColumns = () => payload.childColumns.flatMap((column, index) => (column.width ? [] : [{ column, index }]))
+    const flexibleChildColumns = () => payload.childColumns.flatMap((column, index) => (column.width || column.actions ? [] : [{ column, index }]))
+
+    const childActionsIndex = () => payload.childColumns.findIndex((column) => column.actions)
+
+    const childActionsRequests = (openRows) => {
+        const index = childActionsIndex()
+
+        return index === -1 ? [] : openRows.flatMap((row) => row.children.map((cells) => probeRequest('', childCellClasses(payload.childColumns[index]), cellContent(cells[index]))))
+    }
+
+    let childActionsWidth = 0
 
     const explicitChildWidths = (rowWidth) => {
         const unresolved = payload.childColumns.filter((column) => column.width && toPixels(column.width) === null)
@@ -530,7 +540,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
             probe.remove()
         }
 
-        return payload.childColumns.map((column) => (column.width ? (toPixels(column.width) ?? resolved.shift()) : null))
+        return payload.childColumns.map((column) => (column.actions ? childActionsWidth : column.width ? (toPixels(column.width) ?? resolved.shift()) : null))
     }
 
     const childTemplate = (spans, available, explicitWidths) => {
@@ -562,8 +572,11 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         const parentRequestsByColumn = flexibleColumns.map((column) => parentRequests(column, parents))
         const childRequestsByRow = openRows.map((row) => childColumns.map(({ column, index }) => childRequests(row, column, index)))
         const actions = actionsRequests()
+        const childActions = childActionsRequests(openRows)
 
-        measureIntrinsicWidths([...parentRequestsByColumn.flat(), ...childRequestsByRow.flat(2), ...actions])
+        measureIntrinsicWidths([...parentRequestsByColumn.flat(), ...childRequestsByRow.flat(2), ...actions, ...childActions])
+
+        childActionsWidth = childActions.length > 0 ? spanOf(childActions).max : 0
 
         columns
             .filter((column) => column.id === ACTIONS_COLUMN)

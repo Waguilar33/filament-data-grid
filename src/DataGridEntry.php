@@ -49,6 +49,8 @@ class DataGridEntry extends RepeatableEntry
 
     public const RECORD_ACTION_ROW_ARGUMENT = 'row';
 
+    public const CHILD_RECORD_ACTION_ARGUMENT = 'child';
+
     private const MAX_SEARCH_LENGTH = 255;
 
     /**
@@ -600,6 +602,17 @@ class DataGridEntry extends RepeatableEntry
         return Schema::make($livewire)->components([$this]);
     }
 
+    public function getChildRowsEntry(Schema $item): ?RepeatableEntry
+    {
+        foreach ($item->getComponents(withHidden: true) as $component) {
+            if ($component instanceof RepeatableEntry && $component->isTable()) {
+                return $component;
+            }
+        }
+
+        return null;
+    }
+
     /**
      * @return array{actions: string|null, link: string|null}
      */
@@ -630,10 +643,20 @@ class DataGridEntry extends RepeatableEntry
             throw UnsupportedTotals::serverSide((string) $this->getName());
         }
 
-        if ($this->hasRecordActions() && ($this->isServerSide() || $this->isTableContent)) {
+        $hasChildRecordActions = $this->hasChildRecordActions();
+
+        if (($this->hasRecordActions() || $hasChildRecordActions) && ($this->isServerSide() || $this->isTableContent)) {
             throw $this->isServerSide()
                 ? UnsupportedRecordActions::serverSide((string) $this->getName())
                 : UnsupportedRecordActions::tableContent((string) $this->getName());
+        }
+
+        if ($hasChildRecordActions && $this->hasChildTable()) {
+            throw UnsupportedRecordActions::childTable((string) $this->getName());
+        }
+
+        if ($hasChildRecordActions && ($template = $this->getChildSchema()) !== null && $this->getChildRowsEntry($template) === null) {
+            throw UnsupportedRecordActions::withoutChildRows((string) $this->getName());
         }
 
         if ($items !== null) {

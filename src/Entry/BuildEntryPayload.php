@@ -30,7 +30,7 @@ final readonly class BuildEntryPayload
     {
         $template = $entry->getChildSchema();
         $tableColumns = array_values($entry->getTableColumns() ?? []);
-        $children = $template === null ? null : $this->childRowsEntry($template);
+        $children = $template === null ? null : $entry->getChildRowsEntry($template);
         $columns = [];
 
         foreach ($this->cellComponents($template, $children) as $index => $component) {
@@ -39,10 +39,13 @@ final readonly class BuildEntryPayload
 
         return [
             'columns' => $columns,
-            'childColumns' => array_map(
-                fn (TableColumn $column): array => $this->describeTableColumn($column),
-                array_values($children?->getTableColumns() ?? []),
-            ),
+            'childColumns' => [
+                ...array_map(
+                    fn (TableColumn $column): array => $this->describeTableColumn($column),
+                    array_values($children?->getTableColumns() ?? []),
+                ),
+                ...($children !== null && $entry->hasChildRecordActions() ? [$this->describeChildActionsColumn()] : []),
+            ],
             'rows' => $this->rows($entry, $items),
             'childTable' => $entry->hasChildTable(),
             'childTablePadding' => $entry->getChildTablePadding(),
@@ -78,7 +81,7 @@ final readonly class BuildEntryPayload
         }
 
         $fields = $entry->getSearchableFields();
-        $children = $this->childRowsEntry($item);
+        $children = $entry->getChildRowsEntry($item);
         $texts = [];
 
         foreach ($this->cellComponents($item, $children) as $component) {
@@ -97,7 +100,7 @@ final readonly class BuildEntryPayload
     {
         $cells = [];
         $components = [];
-        $children = $this->childRowsEntry($item);
+        $children = $entry->getChildRowsEntry($item);
 
         foreach ($this->cellComponents($item, $children) as $component) {
             $components[$this->fieldName($component)] = $component;
@@ -110,7 +113,7 @@ final readonly class BuildEntryPayload
             'totals' => $this->totalValues($entry, $components, $cells),
             'search' => $entry->isServerSide() ? '' : $this->searchText($entry, $item),
             'filterValues' => $entry->isServerSide() ? [] : $entry->getEntryFilters()->rawValues($item),
-            'children' => $children === null ? [] : $this->describeChildren($children),
+            'children' => $children === null ? [] : $this->describeChildren($entry, $key, $item, $children),
             'above' => $entry->renderExpandedAbove($item),
             'below' => $entry->renderExpandedBelow($item),
             'height' => $entry->getRowHeight($entry->hasRowHeightPerRow() ? $this->rawState($item) : []),
@@ -161,18 +164,27 @@ final readonly class BuildEntryPayload
     /**
      * @return list<list<array<string, mixed>>>
      */
-    private function describeChildren(RepeatableEntry $children): array
+    private function describeChildren(DataGridEntry $entry, string $key, Schema $parent, RepeatableEntry $children): array
     {
         $columnCount = count($children->getTableColumns() ?? []);
+        $hasActions = $entry->hasChildRecordActions();
         $rows = [];
 
-        foreach ($children->getItems() as $item) {
+        foreach ($children->getItems() as $childKey => $item) {
             $components = array_slice($this->cellComponents($item, null), 0, $columnCount);
-
-            $rows[] = array_map(
+            $cells = array_map(
                 fn (Component $component): array => $this->describeCell->handle($component, new MessageBag),
                 $components,
             );
+
+            if ($hasActions) {
+                $cells = [
+                    ...array_pad($cells, $columnCount, ['visible' => false]),
+                    ['visible' => true, 'html' => $entry->renderChildRecordActions($key, $parent, (string) $childKey, $item) ?? ''],
+                ];
+            }
+
+            $rows[] = $cells;
         }
 
         return $rows;
@@ -190,17 +202,6 @@ final readonly class BuildEntryPayload
             is_object($state) => get_object_vars($state),
             default => $state,
         };
-    }
-
-    private function childRowsEntry(Schema $schema): ?RepeatableEntry
-    {
-        foreach ($schema->getComponents(withHidden: true) as $component) {
-            if ($component instanceof RepeatableEntry && $component->isTable()) {
-                return $component;
-            }
-        }
-
-        return null;
     }
 
     /**
@@ -243,6 +244,20 @@ final readonly class BuildEntryPayload
             'alignment' => $alignment instanceof Alignment ? $alignment->value : $alignment,
             'width' => $column->getWidth(),
             'headerHidden' => $column->isHeaderLabelHidden(),
+        ];
+    }
+
+    /**
+     * @return array{label: string, alignment: string, width: null, headerHidden: true, actions: true}
+     */
+    private function describeChildActionsColumn(): array
+    {
+        return [
+            'label' => $this->text(__('filament-data-grid::data-grid.columns.actions')),
+            'alignment' => Alignment::End->value,
+            'width' => null,
+            'headerHidden' => true,
+            'actions' => true,
         ];
     }
 

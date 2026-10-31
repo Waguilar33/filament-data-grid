@@ -200,6 +200,22 @@ return [
             'remove' => 'Quitar',
         ],
     ],
+    'payments' => [
+        'navigation' => 'Pagos',
+        'heading' => 'Pagos por método',
+        'description' => 'Pagos sin guardar, agrupados por método. Edita o elimina uno.',
+        'total' => 'Total pagado',
+        'columns' => [
+            'method' => 'Método de pago',
+            'total' => 'Total',
+            'amount' => 'Monto',
+            'reference' => 'Referencia',
+        ],
+        'actions' => [
+            'edit' => 'Editar',
+            'delete' => 'Eliminar',
+        ],
+    ],
     'placeholders' => [
         'scan' => 'Escanea o escribe',
     ],
