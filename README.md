@@ -512,7 +512,7 @@ The grid applies `SelectFilter` and `TernaryFilter` itself, by comparing each ro
 
 ### Totals
 
-`totals()` adds a footer row under the grid with the sum of the columns you list. Each `Total` names an entry of `schema()` and sums that entry's state, before `formatStateUsing()`. A blank or non-numeric state counts as 0. Columns without a total stay empty, and `totalsLabel()` goes in the first column when it has no total of its own:
+`totals()` adds a footer row under the grid with the sum of the columns you list. Each `Total` names an entry of `schema()` and sums that entry's state, before `formatStateUsing()`. A blank or non-numeric state counts as 0. Columns without a total stay empty, and `totalsLabel()` goes in the first column when it has no total of its own. The label follows that column's alignment, or `totalsLabelAlignment(Alignment::End)`:
 
 ```php
 use Waguilar\FilamentDataGrid\Totals\Total;

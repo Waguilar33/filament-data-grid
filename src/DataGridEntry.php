@@ -11,6 +11,7 @@ use Filament\Schemas\Components\Livewire as LivewireComponent;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Filament\Support\Components\Attributes\ExposedLivewireMethod;
+use Filament\Support\Enums\Alignment;
 use Filament\Support\Facades\FilamentAsset;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Contracts\HasTable;
@@ -106,6 +107,8 @@ class DataGridEntry extends RepeatableEntry
 
     protected string|Htmlable|Closure|null $totalsLabel = null;
 
+    protected Alignment|string|Closure|null $totalsLabelAlignment = null;
+
     /**
      * @param  array<Total>|Closure  $totals
      */
@@ -140,6 +143,24 @@ class DataGridEntry extends RepeatableEntry
         return match (true) {
             $label instanceof Htmlable => strip_tags($label->toHtml()),
             is_string($label) => $label,
+            default => null,
+        };
+    }
+
+    public function totalsLabelAlignment(Alignment|string|Closure|null $alignment): static
+    {
+        $this->totalsLabelAlignment = $alignment;
+
+        return $this;
+    }
+
+    public function getTotalsLabelAlignment(): ?string
+    {
+        $alignment = $this->evaluate($this->totalsLabelAlignment);
+
+        return match (true) {
+            $alignment instanceof Alignment => $alignment->value,
+            is_string($alignment) => $alignment,
             default => null,
         };
     }

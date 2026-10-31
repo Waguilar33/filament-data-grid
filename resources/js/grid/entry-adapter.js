@@ -286,8 +286,18 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         return text === '' ? '' : `<span class="fi-data-grid-total">${escapeHtml(text)}</span>`
     }
 
+    const totalCellClasses = (column) => {
+        const labelAlignment = payload.totals?.labelAlignment
+
+        if (!labelAlignment || column.field !== firstDataField() || payload.totals?.columns?.[column.field]) {
+            return column.cssClass
+        }
+
+        return column.cssClass.replace(/\bfi-align-\S+/, `fi-align-${labelAlignment}`)
+    }
+
     const renderTotal = (node, column) => {
-        node.className = `slick-footerrow-column ${node.className.match(/\bl\d+ r\d+\b/)?.[0] ?? ''} ${column.cssClass} fi-data-grid-total-cell`
+        node.className = `slick-footerrow-column ${node.className.match(/\bl\d+ r\d+\b/)?.[0] ?? ''} ${totalCellClasses(column)} fi-data-grid-total-cell`
         node.innerHTML = totalHtml(column.field)
     }
 
