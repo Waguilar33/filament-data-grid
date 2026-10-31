@@ -7,6 +7,10 @@ namespace Workbench\App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property string $product
+ * @property float|int|string $quantity
+ */
 final class DemoOrderLine extends Model
 {
     protected $guarded = [];

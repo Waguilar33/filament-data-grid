@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.7 - 2026-10-31
+
+- `DataGridEntry::recordActions()` adds Filament Actions and `ActionGroup` menus to each row of a standalone grid, with that row as `$record` for `visible()`, `authorize()`, `schema()` and `action()`. They look and size like a table's record actions. Eloquent rows are found again by model key and array rows by array key, so an action never runs on a different row or on the page's record. Test them with `TestAction::make('name')->schemaComponent('entry', schema: 'infolist')->arguments(['row' => $key])`. Not available with `serverSide()` or `toTableContent()` (`UnsupportedRecordActions`).
+
 ## v1.0.0-beta.6 - 2026-10-30
 
 - On a page with a record, such as a View page, `DataGridEntry` rows given as plain arrays now reach `childTable()`, `expandedAbove()`, `expandedBelow()`, `rowHeight()` and the filters as the row itself. Before, they got the page's record instead.
