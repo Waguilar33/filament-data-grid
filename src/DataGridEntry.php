@@ -111,9 +111,9 @@ class DataGridEntry extends RepeatableEntry
 
     private bool $isRendering = false;
 
-    private bool $hasRenderedState = false;
+    private bool $hasCachedState = false;
 
-    private mixed $renderedState = null;
+    private mixed $cachedState = null;
 
     /**
      * @param  array<Total>|Closure  $totals
@@ -645,18 +645,35 @@ class DataGridEntry extends RepeatableEntry
         return app(BuildEntryPayload::class)->handle($this, $entryPage->items, total: $entryPage->total, page: $entryPage->page);
     }
 
+    public function getConstantStateUsing(mixed $callback): static
+    {
+        $this->flushCachedState();
+
+        return parent::getConstantStateUsing($callback);
+    }
+
+    public function getClone(): static
+    {
+        $clone = parent::getClone();
+        $clone->flushCachedState();
+
+        return $clone;
+    }
+
+    public function flushCachedState(): void
+    {
+        $this->hasCachedState = false;
+        $this->cachedState = null;
+    }
+
     public function getState(): mixed
     {
-        if (! $this->isRendering) {
-            return parent::getState();
+        if (! $this->hasCachedState) {
+            $this->cachedState = parent::getState();
+            $this->hasCachedState = true;
         }
 
-        if (! $this->hasRenderedState) {
-            $this->renderedState = parent::getState();
-            $this->hasRenderedState = true;
-        }
-
-        return $this->renderedState;
+        return $this->cachedState;
     }
 
     public function toEmbeddedHtml(): string
@@ -666,13 +683,12 @@ class DataGridEntry extends RepeatableEntry
         }
 
         $this->isRendering = true;
+        $this->flushCachedState();
 
         try {
             return $this->renderEmbeddedHtml();
         } finally {
             $this->isRendering = false;
-            $this->hasRenderedState = false;
-            $this->renderedState = null;
         }
     }
 
