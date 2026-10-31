@@ -16,6 +16,7 @@ use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Waguilar\FilamentDataGrid\DataGridEntry;
 use Waguilar\FilamentDataGrid\Support\IconHeading;
+use Waguilar\FilamentDataGrid\Totals\Total;
 use Workbench\App\Catalog\FakeCashShift;
 use Workbench\App\Livewire\ShiftMovementsTable;
 
@@ -43,6 +44,7 @@ final class CashShiftDemo extends Page implements HasTable
                 ->heading(__('demo::demo.shift.sections.standalone'))
                 ->description(__('demo::demo.shift.descriptions.standalone'))
                 ->icon(Heroicon::OutlinedBanknotes)
+                ->searchable()
                 ->state(FakeCashShift::methods()),
         ]);
     }
@@ -67,6 +69,13 @@ final class CashShiftDemo extends Page implements HasTable
         return DataGridEntry::make($name)
             ->hiddenLabel()
             ->childTable(ShiftMovementsTable::class, fn (array $record): array => ['method' => $record['key']])
+            ->totals([
+                Total::make('movements'),
+                Total::make('money_in')->money('USD'),
+                Total::make('money_out')->money('USD'),
+                Total::make('balance')->money('USD'),
+            ])
+            ->totalsLabel(__('demo::demo.shift.total'))
             ->table([
                 TableColumn::make(__('demo::demo.shift.columns.method')),
                 TableColumn::make(__('demo::demo.shift.columns.movements'))->alignEnd(),

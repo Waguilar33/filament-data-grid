@@ -1143,3 +1143,41 @@
 .fi-data-grid a.fi-in-entry-content:is(:hover, :focus-visible) .fi-in-text-item:not(.fi-in-text-has-badges, .fi-in-text-has-badges *) {
     text-decoration-line: underline;
 }
+
+.fi-data-grid-canvas .slick-footerrow {
+    overflow: hidden;
+    background-color: var(--fi-data-grid-header-bg);
+    border-top: 1px solid var(--fi-data-grid-border);
+}
+
+.fi-data-grid-canvas .slick-footerrow-columns {
+    position: relative;
+    white-space: nowrap;
+}
+
+.fi-data-grid-canvas .slick-footerrow-column {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    padding-inline: calc(var(--spacing) * 3);
+    overflow: hidden;
+    font-size: var(--text-sm);
+    line-height: var(--text-sm--line-height);
+    font-weight: var(--font-weight-semibold);
+    color: var(--fi-data-grid-header-text);
+    white-space: nowrap;
+}
+
+.fi-data-grid-canvas .slick-footerrow-column.fi-align-end,
+.fi-data-grid-canvas .slick-footerrow-column.fi-align-right {
+    justify-content: flex-end;
+    text-align: end;
+    font-variant-numeric: tabular-nums;
+}
+
+.fi-data-grid-canvas .slick-footerrow-column.fi-align-center {
+    justify-content: center;
+}

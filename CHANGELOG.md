@@ -2,6 +2,11 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.15 - 2026-10-31
+
+- `DataGridEntry::totals()` adds a footer row with the sum of the columns you list, each a `Total::make('field')`. Each total is lined up and aligned with its column, and `totalsLabel()` goes in the first column. The browser adds up the totals, so they follow the search and filters and cover every matching row, not just the page. In `toTableContent()` they cover the table's page. `serverSide()` grids throw `UnsupportedTotals`.
+- A `Total` is formatted like its column, with `money()`, `numeric()`, `prefix()`, `suffix()` or a `RawJs` `formatUsing()`. The server reads the locale's symbols, grouping and decimals from PHP `intl`, so a total matches `Number::currency()` and `Number::format()` even where the browser's `Intl` differs.
+
 ## v1.0.0-beta.14 - 2026-10-31
 
 - A grid cell whose entry has `url()` now underlines its text on hover and keyboard focus, like a link in a Filament table column. Its icons and badges stay without underline. Before, Filament's infolist link showed only its color.

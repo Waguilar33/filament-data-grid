@@ -33,6 +33,8 @@ use Waguilar\FilamentDataGrid\Entry\EntryFilters;
 use Waguilar\FilamentDataGrid\Entry\EntryPage;
 use Waguilar\FilamentDataGrid\Exceptions\UnsupportedChildTable;
 use Waguilar\FilamentDataGrid\Exceptions\UnsupportedRecordActions;
+use Waguilar\FilamentDataGrid\Exceptions\UnsupportedTotals;
+use Waguilar\FilamentDataGrid\Totals\Total;
 use Waguilar\FilamentDataGrid\View\DataGridIconAlias;
 
 use function Filament\Support\generate_icon_html;
@@ -96,6 +98,51 @@ class DataGridEntry extends RepeatableEntry
      * @var list<BaseFilter>|Closure
      */
     protected array|Closure $filters = [];
+
+    /**
+     * @var array<Total>|Closure
+     */
+    protected array|Closure $totals = [];
+
+    protected string|Htmlable|Closure|null $totalsLabel = null;
+
+    /**
+     * @param  array<Total>|Closure  $totals
+     */
+    public function totals(array|Closure $totals): static
+    {
+        $this->totals = $totals;
+
+        return $this;
+    }
+
+    /**
+     * @return list<Total>
+     */
+    public function getTotals(): array
+    {
+        $totals = $this->evaluate($this->totals);
+
+        return is_array($totals) ? array_values(array_filter($totals, fn (mixed $total): bool => $total instanceof Total)) : [];
+    }
+
+    public function totalsLabel(string|Htmlable|Closure|null $label): static
+    {
+        $this->totalsLabel = $label;
+
+        return $this;
+    }
+
+    public function getTotalsLabel(): ?string
+    {
+        $label = $this->evaluate($this->totalsLabel);
+
+        return match (true) {
+            $label instanceof Htmlable => strip_tags($label->toHtml()),
+            is_string($label) => $label,
+            default => null,
+        };
+    }
 
     /**
      * @param  bool|int|list<int|string>|Closure  $condition
@@ -550,6 +597,10 @@ class DataGridEntry extends RepeatableEntry
     {
         if ($this->isServerSide() && $this->hasChildTable()) {
             throw UnsupportedChildTable::serverSide((string) $this->getName());
+        }
+
+        if ($this->isServerSide() && $this->getTotals() !== []) {
+            throw UnsupportedTotals::serverSide((string) $this->getName());
         }
 
         if ($this->hasRecordActions() && ($this->isServerSide() || $this->isTableContent)) {

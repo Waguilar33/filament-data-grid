@@ -510,6 +510,35 @@ DataGridEntry::make('deliveries')
 
 The grid applies `SelectFilter` and `TernaryFilter` itself, by comparing each row's `attribute()` (the filter's name by default) with the chosen value. Any other filter, such as a plain `Filter` with a custom query, needs `records()`. As with Filament's custom data tables, `records()` receives the filter state as `$filters`, for example `['fill_status' => ['value' => 'partial'], 'customer' => ['values' => ['Ana']]]`, and applies it itself.
 
+### Totals
+
+`totals()` adds a footer row under the grid with the sum of the columns you list. Each `Total` names an entry of `schema()` and sums that entry's state, before `formatStateUsing()`. A blank or non-numeric state counts as 0. Columns without a total stay empty, and `totalsLabel()` goes in the first column when it has no total of its own:
+
+```php
+use Waguilar\FilamentDataGrid\Totals\Total;
+
+DataGridEntry::make('receivables')
+    ->totals([
+        Total::make('total')->money('GTQ', 'es_GT'),
+        Total::make('paid')->money('GTQ', 'es_GT'),
+        Total::make('owed')->money('GTQ', 'es_GT'),
+    ])
+    ->totalsLabel('Total')
+```
+
+The browser adds up the totals, so they change with the search and the filters. They cover every row that matches, not only the page you see. In `toTableContent()` the grid only holds the table's current page, so the totals cover that page. `serverSide()` grids can't have totals, because the browser only holds one page. Show totals you work out on the server in `description()` instead.
+
+Format a total like its column. The options match Filament's own:
+
+| Method | Formats like |
+| --- | --- |
+| `money($currency, $locale = null, $decimalPlaces = null)` | `TextEntry::money()` and Laravel's `Number::currency()` |
+| `numeric($decimalPlaces = null, $decimalSeparator, $thousandsSeparator, $maxDecimalPlaces = null, $locale = null)` | `TextEntry::numeric()`. With separators it formats like PHP's `number_format()`. |
+| `prefix()` and `suffix()` | Text before and after the number |
+| `formatUsing(RawJs::make('(value) => ...'))` | Your own JavaScript function, which gets the sum as a number |
+
+Without a method, a total is formatted like `numeric()` in the app's locale. Every argument also takes a closure, so a format can come from tenant settings. The server reads the locale's symbols, grouping and decimals from PHP's `intl`, and the browser formats with them. So a total matches the server's formatting even where the browser's own `Intl` differs from PHP's, for example `1.234` in Spanish.
+
 ### Record actions
 
 `recordActions()` puts Filament Actions at the end of each row, as a table's `recordActions()` does. Each action gets that row as its `$record`, so `visible()`, `authorize()`, `schema()`, `fillForm()` and `action()` work per row, and modals, slide-overs and `ActionGroup` menus work as usual:
@@ -727,7 +756,7 @@ The server renders the rows, the cell descriptions and the row actions, and send
 ## Limitations
 
 - The whole grid is sent again on every update. 200 rows take about 47 ms on the server and 11 KB gzipped, which is fine for grids the size of an order. Grids with thousands of rows aren't a good fit yet.
-- There are no footer totals yet. Show totals with an entry or a field outside the grid.
+- Totals are for `DataGridEntry` only. The editable `DataGrid` and child rows from a nested `RepeatableEntry` don't have them yet. A `childTable()` that is itself a `DataGridEntry` can have its own.
 - The compiled JavaScript is about 88 KB gzipped for `DataGrid` and 57 KB for `DataGridEntry`, most of it SlickGrid-Universal's grid. It loads only on pages with a grid.
 - The select dropdown is Filament's own JavaScript, copied into the plugin's build from Filament 5. The same build runs on Filament 4. Check the grid after upgrading Filament.
 
