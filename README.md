@@ -438,7 +438,7 @@ DataGridEntry::make('deliveries')
     ->compact()
 ```
 
-`compact()` only changes the header. Without a heading, description or icon there is no header, and the grid looks the same either way.
+`compact()` also lines the grid up under that header: the first column (or the chevron, when rows open) starts on the icon's edge, 16px in, a first column after the chevron starts on the heading's edge, and the last column ends 16px from the right, like a compact section's content. Without a heading, description or icon there is no section header, but the columns still use these insets.
 
 ### Filters
 
