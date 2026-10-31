@@ -1139,3 +1139,7 @@
     height: 1.5rem;
     color: var(--gray-400);
 }
+
+.fi-data-grid a.fi-in-entry-content:is(:hover, :focus-visible) .fi-in-text-item:not(.fi-in-text-has-badges, .fi-in-text-has-badges *) {
+    text-decoration-line: underline;
+}

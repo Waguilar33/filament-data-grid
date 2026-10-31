@@ -94,7 +94,7 @@ final class DeliveryRouteDemo extends Page
                 TableColumn::make(__('demo::demo.route.columns.preparation'))->width('12rem'),
             ])
             ->schema([
-                TextEntry::make('delivery_number')->weight('medium'),
+                TextEntry::make('delivery_number')->weight('medium')->url('#deliveries'),
                 TextEntry::make('customer')->icon(Heroicon::OutlinedUser),
                 TextEntry::make('fill_status')
                     ->badge()
@@ -107,6 +107,7 @@ final class DeliveryRouteDemo extends Page
                     ->color('gray'),
                 TextEntry::make('holds')
                     ->badge()
+                    ->url('#deliveries')
                     ->formatStateUsing(fn (string $state): string => __("demo::demo.route.holds.{$state}"))
                     ->color(fn (string $state): string => $state === 'ready' ? 'success' : 'warning'),
                 RepeatableEntry::make('lines')

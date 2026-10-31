@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.14 - 2026-10-31
+
+- A grid cell whose entry has `url()` now underlines its text on hover and keyboard focus, like a link in a Filament table column. Its icons and badges stay without underline. Before, Filament's infolist link showed only its color.
+
 ## v1.0.0-beta.13 - 2026-10-31
 
 - A selected cell, for example one left with Escape after editing, now draws its whole 1px outline in every row. Before, its bottom edge was hidden: under the next row, which overlaps it by 1px, or, in the last row, by the grid's rounded frame. The outline is now drawn inside the cell, and the selected cell sits above its neighbours.

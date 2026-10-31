@@ -615,6 +615,8 @@ IconEntry::make('kind')
 TextEntry::make('holds')->badge(),
 ```
 
+An entry with `url()` is a link. Like a table column's link, its text underlines on hover and keyboard focus; its icons and badges don't.
+
 To use the same child table on its own elsewhere, build its `table()` columns and `schema()` entries in a method of your own that returns new instances on every call, and pass them both to a nested `RepeatableEntry` and to a standalone `DataGridEntry`.
 
 ### Searching, filtering and paging it yourself
