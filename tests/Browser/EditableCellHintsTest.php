@@ -104,3 +104,19 @@ it('steps an unmasked number with the editor’s buttons within its minimum', fu
         ->click(cell(0, 1).' .fi-data-grid-stepper-down')
         ->assertValue(cell(0, 1).' input', '1');
 });
+
+it('draws the whole selection outline of a keyboard-selected cell in the last row', function (int $column): void {
+    $page = visitDemo()
+        ->click(cell(1, $column, COUNTS))
+        ->keys(cell(1, $column, COUNTS).' input', 'Escape');
+
+    expect($page->script(sprintf(<<<'JS'
+        (() => {
+            const cell = document.querySelector(%s)
+            const outline = getComputedStyle(cell, '::after')
+            const clip = cell.closest('.slick-viewport').getBoundingClientRect()
+
+            return cell.classList.contains('active') && outline.boxShadow.includes('inset') && cell.getBoundingClientRect().bottom - parseFloat(outline.bottom) <= clip.bottom
+        })()
+        JS, json_encode(cell(1, $column, COUNTS)))))->toBeTrue();
+})->with(['location' => 1, 'counted' => 2]);

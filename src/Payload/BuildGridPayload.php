@@ -27,12 +27,6 @@ final readonly class BuildGridPayload
     public function handle(DataGrid $grid): array
     {
         $tableColumns = array_values($grid->getTableColumns() ?? []);
-        $columns = [];
-
-        foreach ($this->cellComponents($grid->getChildSchema()) as $index => $component) {
-            $columns[] = $this->describeColumn->handle($component, $this->tableColumn($tableColumns, $index));
-        }
-
         $errors = $grid->getLivewire()->getErrorBag();
         $errors = $errors instanceof MessageBag ? $errors : new MessageBag;
         $rows = [];
@@ -41,6 +35,16 @@ final readonly class BuildGridPayload
 
         foreach ($grid->getItems() as $key => $item) {
             $rows[] = $this->describeRow($grid, (string) $key, $item, $errors, $actionTemplates, $cellIcons);
+        }
+
+        $columns = [];
+
+        foreach ($this->cellComponents($grid->getChildSchema()) as $index => $component) {
+            $column = $this->describeColumn->handle($component, $this->tableColumn($tableColumns, $index));
+
+            if ($this->isShownInAnyRow($component, $column['field'], $rows)) {
+                $columns[] = $column;
+            }
         }
 
         return [
@@ -94,6 +98,26 @@ final readonly class BuildGridPayload
             'hasChildErrors' => $child !== null && $this->hasErrorsUnder((string) $child->getStatePath(), $errors),
             'expanded' => ! $isTrailingBlank && $grid->shouldExpandRow($key, $state),
         ];
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $rows
+     */
+    private function isShownInAnyRow(Component $component, string $field, array $rows): bool
+    {
+        if ($rows === []) {
+            return ! $component->isHidden();
+        }
+
+        foreach ($rows as $row) {
+            $cells = $row['cells'];
+
+            if (is_array($cells) && is_array($cells[$field] ?? null) && ($cells[$field]['visible'] ?? false) === true) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function visibleChildGrid(Schema $item): ?DataGrid

@@ -2,6 +2,11 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.13 - 2026-10-31
+
+- A keyboard-selected cell in the last row now draws its whole 1px outline. Before, the grid's rounded frame clipped the bottom edge.
+- An editable grid leaves out a column whose field is hidden in every row, for example `visible(false)` or a closure that is false for all rows. A column shown in at least one row stays, with empty cells where it is hidden. With no rows, the column follows the field's visibility in the row template.
+
 ## v1.0.0-beta.12 - 2026-10-31
 
 - Editable grid cells no longer look like input boxes. The value of an editable cell is underlined with a dashed line, which turns solid in the primary color on hover or keyboard selection while the cell lightens slightly. The cell is outlined only while its editor is open; a keyboard-selected cell keeps a 1px outline. An empty editable cell shows its `placeholder()`, or a short underline. Editable and read-only cells now share one background (`--fi-data-grid-editable-bg` and `--fi-data-grid-readonly-bg` default to transparent), and the 1px hover ring is gone.

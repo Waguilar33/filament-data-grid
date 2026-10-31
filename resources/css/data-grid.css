@@ -218,7 +218,8 @@
     border-bottom: 0;
 }
 
-.fi-data-grid-canvas .fi-data-grid-row-last .slick-cell::after {
+.fi-data-grid-canvas .fi-data-grid-row-last .slick-cell::after,
+.fi-data-grid-canvas .fi-data-grid-row-last .slick-cell.active:not(.editable)::after {
     bottom: 0;
 }
 
