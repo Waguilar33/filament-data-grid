@@ -85,6 +85,7 @@ return [
         'lines' => 'Productos',
         'saved_state' => 'Último estado guardado',
         'adjustments' => 'Ajustes',
+        'counts' => 'Recuentos de existencias',
     ],
     'actions' => [
         'save' => 'Guardar',
@@ -93,6 +94,7 @@ return [
         'stock' => 'Existencias',
         'salesperson' => 'Vendedor',
         'add_adjustment' => 'Agregar ajuste',
+        'add_count' => 'Agregar recuento',
     ],
     'columns' => [
         'product' => 'Producto',
@@ -111,6 +113,12 @@ return [
         'available' => 'Disponibles',
         'salesperson' => 'Vendedor',
         'approved' => 'Aprobado',
+        'location' => 'Ubicación',
+        'counted' => 'Contado',
+    ],
+    'separators' => [
+        'decimal' => ',',
+        'thousands' => '.',
     ],
     'kinds' => [
         'credit' => 'Crédito',

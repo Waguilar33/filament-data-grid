@@ -1,3 +1,5 @@
+import { applyMask, hasMask, maskedText, maskInputText, releaseMask, stripMask } from './mask.js'
+
 const commitOnFocusLeave = (editor, element) => {
     element.addEventListener('focusout', (event) => {
         if (editor.args.container.contains(event.relatedTarget)) {
@@ -69,10 +71,63 @@ export class NumberEditor extends InputEditor {
     configure(input) {
         input.inputMode = this.options.integer ? 'numeric' : 'decimal'
         input.classList.add('fi-data-grid-editor-number')
+
+        if (hasMask(this.options)) {
+            applyMask(input, this.options)
+        }
+    }
+
+    destroy() {
+        if (hasMask(this.options)) {
+            releaseMask(this.input)
+        }
+
+        super.destroy()
+    }
+
+    loadValue(item) {
+        if (!hasMask(this.options)) {
+            super.loadValue(item)
+
+            return
+        }
+
+        const load = {}
+
+        this.load = load
+        this.initialValue = blankToNull(item[this.field])
+        this.loadedText = this.initialValue === null ? '' : maskInputText(this.initialValue, this.options)
+        this.input.value = this.loadedText
+        this.input.select()
+
+        if (this.initialValue === null) {
+            return
+        }
+
+        const { text, ready } = maskedText(this.initialValue, this.options)
+        const settle = (masked) => {
+            if (this.load !== load) {
+                return
+            }
+
+            const untouched = this.input.value === masked
+
+            this.loadedText = masked
+
+            if (untouched && document.activeElement === this.input) {
+                this.input.select()
+            }
+        }
+
+        if (ready) {
+            ready.then(settle)
+        } else {
+            queueMicrotask(() => settle(text))
+        }
     }
 
     serializeValue() {
-        const raw = this.input.value.trim().replace(',', '.')
+        const raw = stripMask(this.input.value, this.options).trim().replace(',', '.')
 
         if (raw === '') {
             return null
@@ -84,6 +139,10 @@ export class NumberEditor extends InputEditor {
     }
 
     isValueChanged() {
+        if (hasMask(this.options)) {
+            return stripMask(this.input.value, this.options) !== stripMask(this.loadedText, this.options)
+        }
+
         return String(this.serializeValue() ?? '') !== String(this.initialValue ?? '')
     }
 

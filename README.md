@@ -158,6 +158,20 @@ Select::make('product_id')
     ->afterStateUpdated(fn (Set $set) => $set('quantity', 1)),
 ```
 
+### Masked numbers
+
+A numeric `TextInput` keeps its `mask()` and `stripCharacters()` in the grid. The cell's editor uses Filament's own Alpine mask, so the value is masked as you type or paste, and the cell shows the same masked text when you are not editing it. On commit, the strip characters are removed and the cell stores a number, which `minValue()` and `maxValue()` then check.
+
+```php
+TextInput::make('counted')
+    ->numeric()
+    ->maxValue(10_000_000)
+    ->mask(RawJs::make("\$money(\$input, '{$decimal}', '{$thousands}', 3)"))
+    ->stripCharacters($thousands),
+```
+
+With `$decimal = '.'` and `$thousands = ','`, typing 1234567 shows "1,234,567" and is saved as `1234567`. When the decimal separator is a comma, list the dot in `stripCharacters()`. The grid then shows a stored `1234.5` as "1.234,5". A plain Filament `TextInput` with that mask shows the same value as "12.345". The grid differs because it redraws each cell from the stored number after every commit, so it must give the mask that number with the decimal separator the mask expects, or a saved "1.234,5" would come back as "12.345" and be stored as 12345 on the next edit. Masks on non-numeric cells are ignored.
+
 ### Hiding a column header
 
 Use `hiddenHeaderLabel()` on the `TableColumn`, as with `Repeater`. Screen readers still read the header.

@@ -2,6 +2,7 @@ import { SlickEditorLock, SlickGrid, SlickRowMoveManager } from '@slickgrid-univ
 import { cellLabel, escapeHtml, fitIconHtml, headerGlyphOffset, headerHtml, isBlank, renderActions, renderCell } from './cells.js'
 import { DateEditor, NumberEditor, TextEditor } from './editors.js'
 import { mountSelectCell } from './select-cell.js'
+import { hasMask, maskedText } from './mask.js'
 import { createChildRows } from './child-rows.js'
 
 const ACTIONS_COLUMN = '__actions'
@@ -64,6 +65,7 @@ export function createGrid(
     let frozenLength = null
     let pendingRowHeights = false
     const selects = new Map()
+    const maskedCellsToRender = new Map()
     const userWidths = new Map()
     const expanded = new Set()
     const seen = new Set()
@@ -267,13 +269,43 @@ export function createGrid(
               })
             : null
         const placeholder = row.isTrailingBlank || ['date', 'modal'].includes(type) ? (column.source.editor.placeholder ?? '') : ''
-        const fullText = type === 'entry' || type === 'toggle' ? '' : (label ?? (isBlank(value) ? '' : String(value)))
+        const shown = type === 'number' && hasMask(cell) && !isBlank(value) ? maskedCellText(item.__key, column.field, value, cell) : value
+        const fullText = type === 'entry' || type === 'toggle' ? '' : (label ?? (isBlank(shown) ? '' : String(shown)))
 
         return {
-            html: renderCell({ type, value, cell, label, placeholder, translations, icons }),
+            html: renderCell({ type, value: shown, cell, label, placeholder, translations, icons }),
             addClasses: classes,
             toolTip: cell.error ?? fullText,
         }
+    }
+
+    function maskedCellText(rowKey, field, value, cell) {
+        const { text, ready } = maskedText(value, cell)
+
+        if (ready) {
+            maskedCellsToRender.set(`${rowKey}.${field}`, [rowKey, field])
+            ready.then(renderMaskedCells)
+        }
+
+        return text ?? value
+    }
+
+    function renderMaskedCells() {
+        const cells = [...maskedCellsToRender.values()]
+        const active = grid.getCellEditor() ? grid.getActiveCell() : null
+
+        maskedCellsToRender.clear()
+
+        cells.forEach(([rowKey, field]) => {
+            const rowIndex = items.findIndex((item) => item.__key === rowKey)
+            const cellIndex = grid.getColumnIndex(field)
+
+            if (rowIndex !== -1 && cellIndex !== undefined && !(active?.row === rowIndex && active?.cell === cellIndex)) {
+                grid.updateCell(rowIndex, cellIndex)
+            }
+        })
+
+        syncRowHeights()
     }
 
     function selectCellElement(item, column, cell, value) {
@@ -714,7 +746,14 @@ export function createGrid(
             return false
         }
 
-        Object.assign(column.editor, { min: cell.min, max: cell.max, step: cell.step })
+        Object.assign(column.editor, {
+            min: cell.min,
+            max: cell.max,
+            step: cell.step,
+            mask: cell.mask,
+            maskDynamic: cell.maskDynamic,
+            stripCharacters: cell.stripCharacters,
+        })
 
         return true
     })
