@@ -39,6 +39,7 @@
             ];
         });
     $addAction = $grid->getAction($grid->getAddActionName());
+    $hasHeader = $grid->hasGridHeader();
 @endphp
 
 <div
@@ -46,7 +47,11 @@
     id="{{ $grid->getId() }}"
     role="group"
     aria-labelledby="{{ $grid->getId() }}-label"
-    class="fi-data-grid fi-fixed-positioning-context"
+    @class([
+        'fi-data-grid fi-fixed-positioning-context',
+        'fi-data-grid-has-header' => $hasHeader,
+        'fi-data-grid-compact' => $hasHeader && $grid->isCompact(),
+    ])
 >
     <div
         x-load
@@ -55,7 +60,14 @@
         x-on:keydown.capture="rememberEditingState()"
         x-on:keydown.escape="stopEscapeWhileEditing($event)"
     >
-        <div x-ref="payload" hidden data-payload="{{ json_encode($payload, JSON_THROW_ON_ERROR) }}"></div>
+        <div x-ref="payload" hidden data-payload="{{ json_encode($payload, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE) }}"></div>
+
+        @if ($hasHeader)
+            <section @class(['fi-section fi-section-has-header fi-data-grid-section', 'fi-compact' => $grid->isCompact()])>
+                @include('filament-data-grid::section-header', ['heading' => $grid->getHeading(), 'description' => $grid->getDescription(), 'icon' => $grid->getIcon()])
+
+                <div class="fi-section-content-ctn">
+        @endif
 
         <div wire:ignore class="fi-data-grid-viewport">
             <div
@@ -64,6 +76,11 @@
                 style="min-height: calc(2.75rem + 1px + {{ count($payload['rows']) * 44 }}px)"
             ></div>
         </div>
+
+        @if ($hasHeader)
+                </div>
+            </section>
+        @endif
     </div>
 
     @if ($cellErrors->isNotEmpty())

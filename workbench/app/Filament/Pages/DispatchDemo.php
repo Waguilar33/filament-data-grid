@@ -12,6 +12,7 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Text;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Waguilar\FilamentDataGrid\DataGrid;
@@ -58,7 +59,7 @@ final class DispatchDemo extends Page
             ->statePath('data');
     }
 
-    public static function productsGrid(): DataGrid
+    public static function productsGrid(bool $detailed = false): DataGrid
     {
         return DataGrid::make('products')
             ->hiddenLabel()
@@ -75,7 +76,8 @@ final class DispatchDemo extends Page
             ->schema([
                 Hidden::make('id'),
                 Hidden::make('has_codes'),
-                TextEntry::make('name'),
+                TextEntry::make('name')
+                    ->belowContent(fn (Get $get): ?Text => $detailed ? Text::make(sprintf('SKU-%04d', self::integer($get('id'))))->badge()->color('gray') : null),
                 TextEntry::make('requested')->numeric(),
                 TextEntry::make('assigned')
                     ->state(fn (Get $get): int => self::assigned($get))
@@ -89,12 +91,12 @@ final class DispatchDemo extends Page
                         'partial' => 'warning',
                         default => 'gray',
                     }),
-                self::placesGrid(),
+                self::placesGrid($detailed),
                 self::unitsGrid(),
             ]);
     }
 
-    private static function placesGrid(): DataGrid
+    private static function placesGrid(bool $detailed): DataGrid
     {
         return DataGrid::make('places')
             ->hiddenLabel()
@@ -108,7 +110,8 @@ final class DispatchDemo extends Page
                 TableColumn::make(__('demo::demo.dispatch.columns.quantity'))->width('8rem')->alignEnd(),
             ])
             ->schema([
-                TextEntry::make('place'),
+                TextEntry::make('place')
+                    ->belowContent(fn (Get $get): ?Text => $detailed ? Text::make(__('demo::demo.dispatch.on_hand', ['count' => self::integer($get('available'))]))->color('gray') : null),
                 TextEntry::make('available')->numeric(),
                 TextInput::make('quantity')
                     ->numeric()

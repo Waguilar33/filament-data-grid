@@ -1,5 +1,5 @@
 import { SlickGrid } from '@slickgrid-universal/common'
-import { escapeHtml } from './cells.js'
+import { escapeHtml, fitIconHtml, headerGlyphOffset } from './cells.js'
 
 const TOGGLE_COLUMN = '__toggle'
 const ACTIONS_COLUMN = '__actions'
@@ -229,7 +229,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         const isExpanded = expanded.has(item.row.key)
         const label = isExpanded ? translations.collapse : translations.expand
 
-        return `<button type="button" class="fi-data-grid-row-toggle ${isExpanded ? 'fi-data-grid-row-toggle-expanded' : ''}" aria-expanded="${isExpanded ? 'true' : 'false'}" aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}">${icons.expand}</button>`
+        return `<button type="button" class="fi-data-grid-row-toggle ${isExpanded ? 'fi-data-grid-row-toggle-expanded' : ''}" aria-expanded="${isExpanded ? 'true' : 'false'}" aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}">${fitIconHtml(icons.expand, 'start', element)}</button>`
     }
 
     const formatChildRow = (item) => {
@@ -337,7 +337,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
                 selectable: false,
                 cssClass: 'fi-data-grid-cell fi-data-grid-record-link-cell',
                 headerCssClass: 'fi-data-grid-header',
-                formatter: (rowIndex, cellIndex, value, column, item) => (item.kind === 'parent' ? (item.row.link ?? '') : ''),
+                formatter: (rowIndex, cellIndex, value, column, item) => (item.kind === 'parent' ? fitIconHtml(item.row.link ?? '', 'end', element) : ''),
             })
         }
 
@@ -766,7 +766,12 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
 
     let resizeFrame = null
 
+    const alignGlyphs = () => element.style.setProperty('--fi-data-grid-glyph-offset', `${headerGlyphOffset(element)}px`)
+
+    alignGlyphs()
+
     const resizeObserver = new ResizeObserver(() => {
+        alignGlyphs()
         cancelAnimationFrame(resizeFrame)
         resizeFrame = requestAnimationFrame(fitColumns)
     })

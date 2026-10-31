@@ -1,5 +1,5 @@
 import { SlickEditorLock, SlickGrid, SlickRowMoveManager } from '@slickgrid-universal/common'
-import { cellLabel, escapeHtml, headerHtml, isBlank, renderActions, renderCell } from './cells.js'
+import { cellLabel, escapeHtml, fitIconHtml, headerGlyphOffset, headerHtml, isBlank, renderActions, renderCell } from './cells.js'
 import { DateEditor, NumberEditor, TextEditor } from './editors.js'
 import { mountSelectCell } from './select-cell.js'
 import { createChildRows } from './child-rows.js'
@@ -12,6 +12,8 @@ const ROW_HEIGHT = 44
 const FLEXIBLE_MIN_WIDTH = 240
 const ACTIONS_WIDTH = 56
 const MOVE_WIDTH = 36
+const EDGE_ICON_WIDTH = 20
+const EDGE_ICON_GAP = 4
 const EDITABLE_TYPES = ['text', 'number', 'select', 'toggle', 'date', 'modal']
 
 const toPixels = (width) => {
@@ -47,6 +49,18 @@ export function createGrid(
 ) {
     let rows = new Map()
     let items = []
+    let definedEdgeInset = 0
+    const measuredHeights = new Map()
+
+    const edgeInset = () => {
+        const probe = document.createElement('div')
+        probe.style.paddingInlineStart = 'var(--fi-data-grid-edge-inset, 0px)'
+        element.appendChild(probe)
+        const inset = parseFloat(getComputedStyle(probe).paddingInlineStart) || 0
+        probe.remove()
+
+        return inset
+    }
     let frozenLength = null
     let pendingRowHeights = false
     const selects = new Map()
@@ -158,6 +172,12 @@ export function createGrid(
             })
         }
 
+        definedEdgeInset = edgeInset()
+
+        if (definedEdgeInset > 0) {
+            insetEdgeColumns(columns, definedEdgeInset)
+        }
+
         const frozenCount = frozenColumns() + (payload.reorderable && frozenColumns() > 0 ? 1 : 0)
 
         if (frozenCount > 0) {
@@ -175,6 +195,28 @@ export function createGrid(
         })
     }
 
+    function insetEdgeColumns(columns, inset) {
+        const first = columns[0]
+        const last = columns.at(-1)
+        const iconColumnWidth = inset + EDGE_ICON_WIDTH + EDGE_ICON_GAP
+
+        if (first.id === TOGGLE_COLUMN || first.id === MOVE_COLUMN) {
+            first.width = first.fixedWidth = iconColumnWidth
+            first.cssClass += ' fi-data-grid-icon-cell-inset-start'
+        } else {
+            first.cssClass += ' fi-data-grid-inset-start'
+            first.headerCssClass += ' fi-data-grid-inset-start'
+        }
+
+        if (last.id === ACTIONS_COLUMN) {
+            last.width = last.fixedWidth = ACTIONS_WIDTH + inset
+            last.cssClass += ' fi-data-grid-actions-cell-inset-end'
+        } else if (last !== first) {
+            last.cssClass += ' fi-data-grid-inset-end'
+            last.headerCssClass += ' fi-data-grid-inset-end'
+        }
+    }
+
     function formatToggle(item) {
         if (!rows.get(item.__key)?.child) {
             return ''
@@ -183,7 +225,7 @@ export function createGrid(
         const isExpanded = isOpen(item.__key)
         const label = isExpanded ? translations.entry.collapse : translations.entry.expand
 
-        return `<button type="button" class="fi-data-grid-row-toggle ${isExpanded ? 'fi-data-grid-row-toggle-expanded' : ''}" aria-expanded="${isExpanded ? 'true' : 'false'}" aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}">${icons.expand ?? ''}</button>`
+        return `<button type="button" class="fi-data-grid-row-toggle ${isExpanded ? 'fi-data-grid-row-toggle-expanded' : ''}" aria-expanded="${isExpanded ? 'true' : 'false'}" aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}">${fitIconHtml(icons.expand ?? '', 'start', element)}</button>`
     }
 
     const frozenColumnIndex = () => {
@@ -358,6 +400,7 @@ export function createGrid(
 
             const row = rows.get(items[index]?.__key)
             const columns = {}
+            const height = measuredHeights.get(items[index]?.__key)
 
             for (const column of payload.columns) {
                 const cell = row?.cells?.[column.field]
@@ -375,6 +418,7 @@ export function createGrid(
                     isLast ? 'fi-data-grid-row-last' : '',
                 ].join(' '),
                 columns,
+                ...(height ? { height } : {}),
             }
         },
     }
@@ -445,7 +489,7 @@ export function createGrid(
         enableAsyncPostRender: false,
         autoHeight: true,
         rowHeight: ROW_HEIGHT,
-        enableVariableRowHeight: hasChildRows(),
+        enableVariableRowHeight: true,
         showHeaderRow: false,
         showTopPanel: false,
         showPreHeaderPanel: false,
@@ -499,6 +543,55 @@ export function createGrid(
         })
     }
 
+    function probeCellHtml(item, column, cellIndex) {
+        const cell = column.source ? rows.get(item.__key)?.cells?.[column.field] : null
+        let html = ''
+
+        if (cell?.visible && column.source.editor.type === 'select') {
+            html = escapeHtml(stripHtml(cell.label ?? ''))
+        } else if (cell?.visible) {
+            const output = formatCell(0, cellIndex, item[column.field], column, item)
+            const content = typeof output === 'string' || output instanceof Element ? output : output?.html
+
+            html = content instanceof Element ? content.outerHTML : typeof content === 'string' ? content : ''
+        }
+
+        return `<div class="slick-cell ${column.cssClass}" style="width: ${column.width}px">${html}</div>`
+    }
+
+    function measureRows() {
+        if (element.clientWidth === 0) {
+            return false
+        }
+
+        const columns = grid.getColumns()
+        const targets = items.filter((item) => !isPlaceholder(item))
+        const probe = document.createElement('div')
+        probe.className = 'fi-data-grid-row-probe'
+        probe.innerHTML = targets
+            .map((item) => `<div class="slick-row fi-data-grid-parent-row">${columns.map((column, index) => probeCellHtml(item, column, index)).join('')}</div>`)
+            .join('')
+        element.appendChild(probe)
+
+        const heights = [...probe.children].map((row) => Math.max(ROW_HEIGHT, Math.ceil(row.getBoundingClientRect().height)))
+
+        probe.remove()
+
+        const next = new Map(targets.map((item, index) => [item.__key, heights[index]]).filter(([, height]) => height > ROW_HEIGHT))
+        const changed = next.size !== measuredHeights.size || [...next].some(([key, height]) => measuredHeights.get(key) !== height)
+
+        measuredHeights.clear()
+        next.forEach((height, key) => measuredHeights.set(key, height))
+
+        return changed
+    }
+
+    function syncRowHeights() {
+        if (measureRows()) {
+            refreshRowHeights()
+        }
+    }
+
     function refreshRowHeights() {
         if (isBusy()) {
             pendingRowHeights = true
@@ -509,6 +602,7 @@ export function createGrid(
         pendingRowHeights = false
         grid.invalidateRowHeights()
         grid.updateRowCount()
+        grid.invalidate()
         grid.resizeCanvas()
         positionChildren()
     }
@@ -537,6 +631,10 @@ export function createGrid(
     let headerHeight = null
 
     const fitColumns = () => {
+        if (definedEdgeInset !== edgeInset() && !isBusy()) {
+            grid.setColumns(columnDefinitions())
+        }
+
         const columns = grid.getColumns()
         const available = element.clientWidth
         const fixed = columns.reduce((sum, column) => sum + (column.fixedWidth ?? 0), 0)
@@ -576,10 +674,16 @@ export function createGrid(
 
     let resizeFrame = null
 
+    const alignGlyphs = () => element.style.setProperty('--fi-data-grid-glyph-offset', `${headerGlyphOffset(element)}px`)
+
+    alignGlyphs()
+
     const resizeObserver = new ResizeObserver(() => {
+        alignGlyphs()
         cancelAnimationFrame(resizeFrame)
         resizeFrame = requestAnimationFrame(() => {
             fitColumns()
+            syncRowHeights()
             markHorizontalOverflow()
             positionChildren()
         })
@@ -619,6 +723,7 @@ export function createGrid(
         const cell = rows.get(item.__key)?.cells?.[column.field]
 
         onCellChange(item.__key, column.field, isBlank(item[column.field]) ? null : item[column.field], Boolean(cell?.live))
+        syncRowHeights()
     })
 
     const releaseFrozenLength = () =>
@@ -825,7 +930,107 @@ export function createGrid(
         }
     })
 
+    function applyPayload(nextPayload, localChanges, force = false) {
+        const columnsChanged = JSON.stringify(nextPayload.columns) !== JSON.stringify(payload.columns)
+        const structureChanged =
+            nextPayload.reorderable !== payload.reorderable ||
+            nextPayload.hasActions !== payload.hasActions ||
+            nextPayload.frozenColumns !== payload.frozenColumns ||
+            Boolean(nextPayload.hasChildRows) !== Boolean(payload.hasChildRows)
+        const editor = grid.getCellEditor()
+        const active = grid.getActiveCell()
+        const open = openSelect()
+        const busyKey = editor && active ? items[active.row]?.__key : (open ? [...selects.entries()].find(([, entry]) => entry === open)?.[0].split('.')[0] : null)
+        const busyItem = busyKey ? items.find((item) => item.__key === busyKey) : null
+        const busyField = editor && active ? grid.getColumns()[active.cell]?.field : null
+        const renderedLength = dataProvider.getLength()
+
+        payload = nextPayload
+        indexRows()
+        items = buildItems(localChanges)
+
+        const heightsChanged = syncChildren(force)
+
+        if (columnsChanged || structureChanged) {
+            grid.getEditorLock().cancelCurrentEdit()
+            frozenLength = null
+            grid.setOptions({ frozenColumn: frozenColumnIndex() })
+            grid.setColumns(columnDefinitions())
+            fitColumns()
+            grid.invalidateRowHeights()
+            grid.invalidate()
+            grid.resizeCanvas()
+
+            return
+        }
+
+        const busyIndex = busyItem ? items.findIndex((item) => item.__key === busyItem.__key) : -1
+        const busyRowIndexBefore = editor && active ? active.row : busyIndex
+
+        if (busyIndex === -1 || busyIndex !== busyRowIndexBefore) {
+            if (editor) {
+                grid.getEditorLock().cancelCurrentEdit()
+            }
+
+            frozenLength = null
+            pendingRowHeights = false
+            grid.invalidateRowHeights()
+            grid.invalidate()
+            grid.resizeCanvas()
+
+            return
+        }
+
+        pendingRowHeights ||= heightsChanged
+
+        const keepsTypedValue = editor ? editor.isValueChanged() : false
+        const typedFieldValue = busyField ? busyItem[busyField] : undefined
+
+        Object.keys(busyItem).forEach((key) => delete busyItem[key])
+        Object.assign(busyItem, items[busyIndex])
+
+        if (keepsTypedValue) {
+            busyItem[busyField] = typedFieldValue
+        }
+
+        items[busyIndex] = busyItem
+
+        if (editor && renderedLength !== items.length && !keepsTypedValue) {
+            frozenLength = null
+            grid.invalidate()
+            grid.resizeCanvas()
+            grid.setActiveCell(active.row, active.cell)
+            grid.editActiveCell()
+
+            return
+        }
+
+        if (renderedLength !== items.length) {
+            if (editor) {
+                frozenLength = renderedLength
+            } else {
+                grid.updateRowCount()
+                grid.resizeCanvas()
+            }
+        }
+
+        grid.invalidateRows(
+            items.map((item, index) => index).filter((index) => index !== busyIndex && index < dataProvider.getLength()),
+        )
+
+        if (editor) {
+            grid.getColumns().forEach((column, index) => {
+                if (index !== active.cell || !keepsTypedValue) {
+                    grid.updateCell(busyIndex, index)
+                }
+            })
+        }
+
+        grid.render()
+    }
+
     fitColumns()
+    syncRowHeights()
     markHorizontalOverflow()
     positionChildren()
 
@@ -835,102 +1040,8 @@ export function createGrid(
         childControllers: () => childRows?.controllers() ?? [],
 
         setPayload(nextPayload, localChanges, force = false) {
-            const columnsChanged = JSON.stringify(nextPayload.columns) !== JSON.stringify(payload.columns)
-            const structureChanged =
-                nextPayload.reorderable !== payload.reorderable ||
-                nextPayload.hasActions !== payload.hasActions ||
-                nextPayload.frozenColumns !== payload.frozenColumns ||
-                Boolean(nextPayload.hasChildRows) !== Boolean(payload.hasChildRows)
-            const editor = grid.getCellEditor()
-            const active = grid.getActiveCell()
-            const open = openSelect()
-            const busyKey = editor && active ? items[active.row]?.__key : (open ? [...selects.entries()].find(([, entry]) => entry === open)?.[0].split('.')[0] : null)
-            const busyItem = busyKey ? items.find((item) => item.__key === busyKey) : null
-            const busyField = editor && active ? grid.getColumns()[active.cell]?.field : null
-            const renderedLength = dataProvider.getLength()
-
-            payload = nextPayload
-            indexRows()
-            items = buildItems(localChanges)
-
-            const heightsChanged = syncChildren(force)
-
-            if (columnsChanged || structureChanged) {
-                grid.getEditorLock().cancelCurrentEdit()
-                frozenLength = null
-                grid.setOptions({ frozenColumn: frozenColumnIndex(), enableVariableRowHeight: hasChildRows() })
-                grid.setColumns(columnDefinitions())
-                fitColumns()
-                grid.invalidateRowHeights()
-                grid.invalidate()
-                grid.resizeCanvas()
-
-                return
-            }
-
-            const busyIndex = busyItem ? items.findIndex((item) => item.__key === busyItem.__key) : -1
-            const busyRowIndexBefore = editor && active ? active.row : busyIndex
-
-            if (busyIndex === -1 || busyIndex !== busyRowIndexBefore) {
-                if (editor) {
-                    grid.getEditorLock().cancelCurrentEdit()
-                }
-
-                frozenLength = null
-                pendingRowHeights = false
-                grid.invalidateRowHeights()
-                grid.invalidate()
-                grid.resizeCanvas()
-
-                return
-            }
-
-            pendingRowHeights ||= heightsChanged
-
-            const keepsTypedValue = editor ? editor.isValueChanged() : false
-            const typedFieldValue = busyField ? busyItem[busyField] : undefined
-
-            Object.keys(busyItem).forEach((key) => delete busyItem[key])
-            Object.assign(busyItem, items[busyIndex])
-
-            if (keepsTypedValue) {
-                busyItem[busyField] = typedFieldValue
-            }
-
-            items[busyIndex] = busyItem
-
-            if (editor && renderedLength !== items.length && !keepsTypedValue) {
-                frozenLength = null
-                grid.invalidate()
-                grid.resizeCanvas()
-                grid.setActiveCell(active.row, active.cell)
-                grid.editActiveCell()
-
-                return
-            }
-
-            if (renderedLength !== items.length) {
-                if (editor) {
-                    frozenLength = renderedLength
-                } else {
-                    grid.updateRowCount()
-                    grid.resizeCanvas()
-                }
-            }
-
-            grid.invalidateRows(
-                items.map((item, index) => index).filter((index) => index !== busyIndex && index < dataProvider.getLength()),
-            )
-
-            if (editor) {
-                grid.getColumns().forEach((column, index) => {
-                    if (index !== active.cell || !keepsTypedValue) {
-                        grid.updateCell(busyIndex, index)
-                    }
-                })
-            }
-
-            grid.render()
+            applyPayload(nextPayload, localChanges, force)
+            syncRowHeights()
         },
 
         setDarkMode(isDark) {

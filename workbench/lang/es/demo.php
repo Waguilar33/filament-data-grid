@@ -3,7 +3,13 @@
 declare(strict_types=1);
 
 return [
+    'allocation' => [
+        'navigation' => 'Asignación',
+        'heading' => 'Existencias por asignar',
+        'description' => 'Asigna cuántas unidades salen de cada lugar.',
+    ],
     'dispatch' => [
+        'on_hand' => ':count en existencia',
         'navigation' => 'Despacho',
         'section' => 'Productos por despachar',
         'description' => 'Abre un producto para elegir cuántas unidades salen de cada lugar, o para ingresar el código de cada unidad.',

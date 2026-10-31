@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace Waguilar\FilamentDataGrid;
 
-use BackedEnum;
 use Closure;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Schemas\Components\Component as SchemaComponent;
-use Filament\Schemas\Components\Concerns\CanBeCompact;
 use Filament\Schemas\Components\Livewire as LivewireComponent;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
@@ -27,6 +25,7 @@ use Illuminate\Support\Js;
 use Livewire\Attributes\Renderless;
 use Livewire\Component;
 use Traversable;
+use Waguilar\FilamentDataGrid\Concerns\HasGridHeader;
 use Waguilar\FilamentDataGrid\Entry\BuildEntryPayload;
 use Waguilar\FilamentDataGrid\Entry\Concerns\HasRecordActions;
 use Waguilar\FilamentDataGrid\Entry\DescribeTableRecord;
@@ -40,7 +39,7 @@ use function Filament\Support\generate_icon_html;
 
 class DataGridEntry extends RepeatableEntry
 {
-    use CanBeCompact;
+    use HasGridHeader;
     use HasRecordActions;
 
     public const ALL_RECORDS = 'all';
@@ -90,12 +89,6 @@ class DataGridEntry extends RepeatableEntry
      * @var array<string, array{actions: string|null, link: string|null}>
      */
     protected array $tableRecords = [];
-
-    protected string|Htmlable|Closure|null $heading = null;
-
-    protected string|Htmlable|Closure|null $description = null;
-
-    protected string|BackedEnum|Htmlable|Closure|null $icon = null;
 
     protected ?Closure $getRecordsUsing = null;
 
@@ -179,48 +172,6 @@ class DataGridEntry extends RepeatableEntry
         $searchable = $this->evaluate($this->searchable);
 
         return is_array($searchable) ? array_values(array_filter($searchable, is_string(...))) : null;
-    }
-
-    public function heading(string|Htmlable|Closure|null $heading): static
-    {
-        $this->heading = $heading;
-
-        return $this;
-    }
-
-    public function getHeading(): string|Htmlable|null
-    {
-        $heading = $this->evaluate($this->heading);
-
-        return is_string($heading) || $heading instanceof Htmlable ? $heading : null;
-    }
-
-    public function description(string|Htmlable|Closure|null $description): static
-    {
-        $this->description = $description;
-
-        return $this;
-    }
-
-    public function getDescription(): string|Htmlable|null
-    {
-        $description = $this->evaluate($this->description);
-
-        return is_string($description) || $description instanceof Htmlable ? $description : null;
-    }
-
-    public function icon(string|BackedEnum|Htmlable|Closure|null $icon): static
-    {
-        $this->icon = $icon;
-
-        return $this;
-    }
-
-    public function getIcon(): string|BackedEnum|Htmlable|null
-    {
-        $icon = $this->evaluate($this->icon);
-
-        return is_string($icon) || $icon instanceof BackedEnum || $icon instanceof Htmlable ? $icon : null;
     }
 
     public function serverSide(bool|Closure $condition = true): static

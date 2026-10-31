@@ -20,25 +20,11 @@
     id="{{ $entry->getId() }}"
     @class(['fi-data-grid fi-data-grid-entry-grid', 'fi-data-grid-compact' => $entry->isCompact()])
 >
-    <div x-ref="payload" hidden data-payload="{{ json_encode($payload, JSON_THROW_ON_ERROR) }}"></div>
+    <div x-ref="payload" hidden data-payload="{{ json_encode($payload, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE) }}"></div>
 
     @if ($isSection)
         <section class="fi-section fi-compact fi-section-has-header fi-data-grid-section">
-            <header class="fi-section-header">
-                {{ \Filament\Support\generate_icon_html($icon, attributes: (new ComponentAttributeBag)->color(\Filament\Support\View\Components\SectionComponent\IconComponent::class, 'gray'), size: \Filament\Support\Enums\IconSize::Large) }}
-
-                <div class="fi-section-header-content fi-section-header-content-has-heading">
-                    <div class="fi-section-header-text-ctn">
-                        @if (filled($heading))
-                            <h3 class="fi-section-header-heading">{{ $heading }}</h3>
-                        @endif
-
-                        @if (filled($description))
-                            <p class="fi-section-header-description">{{ $description }}</p>
-                        @endif
-                    </div>
-                </div>
-            </header>
+            @include('filament-data-grid::section-header', ['heading' => $heading, 'description' => $description, 'icon' => $icon])
 
             <div class="fi-section-content-ctn">
     @endif

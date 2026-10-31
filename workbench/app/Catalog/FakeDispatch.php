@@ -9,9 +9,10 @@ final class FakeDispatch
     /**
      * @return list<array<string, mixed>>
      */
-    public static function products(): array
+    public static function products(bool $longNames = false): array
     {
         return [
+            ...($longNames ? [self::stocked(7, 'Extra virgin olive oil, cold pressed, family-size tin for restaurants and catering 5 L', 4, [['North · Aisle 2', 6, 2]])] : []),
             self::stocked(1, 'Olive oil 1 L', 12, [['North · Aisle 2', 8, 8], ['South · Main', 10, 4]]),
             self::stocked(2, 'Basmati rice 5 kg', 20, [['North · Aisle 6', 6, 0], ['South · Main', 9, 5], ['East · Shop', 4, 0], ['West · Dock', 12, 0]]),
             self::coded(3, 'Espresso machine', [['South · Main', 'EM-4471'], ['East · Shop', null]]),

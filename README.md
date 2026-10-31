@@ -123,6 +123,23 @@ Editable cells have the background of a Filament input, while read-only and disa
 
 A component that is neither a form field nor an infolist entry throws `Waguilar\FilamentDataGrid\Exceptions\UnsupportedCellComponent`.
 
+Rows grow to fit their tallest cell, with 44px as the minimum, so an entry with `belowContent()` or a long name that wraps is never cut off. This applies to child rows too. The grid measures the rows again when the state changes, when a row opens or closes, and when the grid is resized.
+
+### Heading, description and icon
+
+Like `DataGridEntry`, the editable grid can draw its own Filament section header, so it doesn't need wrapping in a `Section`, which would show a card inside a card:
+
+```php
+DataGrid::make('products')
+    ->hiddenLabel()
+    ->heading('Stock to allocate')
+    ->description('Assign how many units leave each place.')
+    ->icon(Heroicon::OutlinedArchiveBox)
+    ->compact()
+```
+
+The header uses Filament's section markup, and the columns line up with it as they do in `DataGridEntry`: 24px from `sm` up (16px below), or always 16px with `compact()`. A grid without a heading, description or icon looks as before.
+
 ### Per-row logic
 
 Closures run once per row, with that row's state:
@@ -655,6 +672,8 @@ FilamentIcon::register([
 
 The search, filter and pagination icons are Filament's own, under its table and pagination aliases.
 
+The row chevrons line up with the header icon by what they draw, not by their box. Icons have different empty space around the shape inside their box, so the grid fits each chevron's box to its shape and aligns that shape with the header icon's. This works with whatever icon you register.
+
 ## How it works
 
 The grid is drawn with [SlickGrid-Universal](https://github.com/ghiscoding/slickgrid-universal) inside a `wire:ignore` element. SlickGrid-Universal is bundled with the plugin, so your app doesn't install it.
@@ -677,6 +696,8 @@ composer test
 ```
 
 The browser tests use [Pest's browser plugin](https://pestphp.com/docs/browser-testing). Install Chromium once with `npx playwright install chromium`.
+
+The grid's payload keeps accented and other non-ASCII characters as they are, so Livewire's `assertSee('Árbol natural')` matches the text of a cell.
 
 To try the grid in a demo panel:
 

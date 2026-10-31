@@ -15,6 +15,7 @@ use Filament\Support\Facades\FilamentAsset;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Js;
 use Waguilar\FilamentDataGrid\Actions\BuildEditCellAction;
+use Waguilar\FilamentDataGrid\Concerns\HasGridHeader;
 use Waguilar\FilamentDataGrid\Payload\BuildGridPayload;
 use Waguilar\FilamentDataGrid\Rows\EnsureTrailingEmptyRow;
 use Waguilar\FilamentDataGrid\Rows\IsRowBlank;
@@ -26,6 +27,8 @@ use function Filament\Support\generate_icon_html;
 
 class DataGrid extends Repeater
 {
+    use HasGridHeader;
+
     protected bool|Closure $hasTrailingEmptyRow = false;
 
     /**

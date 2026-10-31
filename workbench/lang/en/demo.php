@@ -3,7 +3,13 @@
 declare(strict_types=1);
 
 return [
+    'allocation' => [
+        'navigation' => 'Allocation',
+        'heading' => 'Stock to allocate',
+        'description' => 'Assign how many units leave each place.',
+    ],
     'dispatch' => [
+        'on_hand' => ':count on hand',
         'navigation' => 'Dispatch',
         'section' => 'Products to dispatch',
         'description' => 'Open a product to choose how many units leave each place, or to enter the code of each unit.',

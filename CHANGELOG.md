@@ -4,6 +4,10 @@ All notable changes to `filament-data-grid` will be documented in this file.
 
 ## v1.0.0-beta.10 - unreleased
 
+- Editable `DataGrid` rows, parent and child, grow to fit their tallest cell (44px minimum), so `belowContent()` and wrapped text are no longer cut off. They are measured again on state changes, when rows open or close, and on resize.
+- The editable `DataGrid` has `heading()`, `description()`, `icon()` and `compact()`, drawn as Filament's section header around the grid, with the same column alignment as `DataGridEntry`.
+- Row chevrons (`ROW_EXPAND`, `ROW_OPEN`) line up by their drawn shape, whatever icon is registered: each chevron's box is fitted to its shape, and the shape starts where the header icon's shape starts.
+- The grid payload keeps non-ASCII characters unescaped, so `assertSee()` matches accented cell text.
 - `DataGridEntry` grids without `compact()` now line their columns up with their header like a Filament table: the first column, or the chevron, starts on the header icon's edge (24px from `sm` up, 16px below), a first column after the chevron starts on the heading's edge, and the last column, or the record link chevron, ends the same distance from the right. Before, the edge columns used 12px cell padding. This works standalone and in `toTableContent()`.
 
 ## v1.0.0-beta.9 - 2026-10-31
