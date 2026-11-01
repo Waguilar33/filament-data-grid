@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.22 - 2026-10-31
+
+- Opening a row no longer scrolls the grid inside itself. Focusing a cell while an open row's child table was still being measured could scroll the grid's content a few pixels, and its column headers slid under the grid's own heading until the page was reloaded. The grid's containers now clip their content instead of hiding it, so the browser cannot scroll them.
+
 ## v1.0.0-beta.21 - 2026-10-31
 
 - In a `DataGridEntry`, each open row's child table leaves out the child columns that are hidden in all of that row's child rows. Other rows keep the columns their own children use, so one `table()` can list the detail fields of every kind of child, such as a payment's authorization or bank, and each group shows only its own.
