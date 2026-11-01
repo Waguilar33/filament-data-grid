@@ -685,7 +685,7 @@ public function table(Table $table): Table
 
 `toTableContent()` uses Filament's `content()` hook, so the table works the same as any other Filament table, with `query()` or `records()`. Each parent row also shows the table's `recordActions()` (Filament Actions, so their modals and slide-overs work as usual) and, when the table has a `recordUrl()`, a chevron that opens the record. Clicking the row opens the record too; the arrow at the start of the row opens its child rows. It works in a relation manager, whose table already has the relationship query. Define the grid's columns with `table()` and `schema()` as above. The table's `columns()` still decide what can be searched and sorted, but aren't shown. Leave `searchable()`, `filters()` and `paginated()` off the grid itself here, because the table does that work.
 
-To give the table's heading an icon, like a section's, pass the heading through `IconHeading`. It works on any Filament table, with or without the grid:
+To give the table's heading an icon, like a section's, pass the heading through `IconHeading`. It works on any Filament table, with or without the grid, including a plain table that lists its own rows:
 
 ```php
 use Waguilar\FilamentDataGrid\Support\IconHeading;

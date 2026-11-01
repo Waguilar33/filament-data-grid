@@ -8,10 +8,11 @@ use BackedEnum;
 use Filament\Support\Enums\IconSize;
 use Filament\Support\View\ComponentAttributeBag;
 use Illuminate\Contracts\Support\Htmlable;
+use Stringable;
 
 use function Filament\Support\generate_icon_html;
 
-final readonly class IconHeading implements Htmlable
+final readonly class IconHeading implements Htmlable, Stringable
 {
     public function __construct(
         private string|Htmlable $heading,
@@ -34,5 +35,10 @@ final readonly class IconHeading implements Htmlable
         $heading = $this->heading instanceof Htmlable ? $this->heading->toHtml() : e($this->heading);
 
         return $icon.$heading;
+    }
+
+    public function __toString(): string
+    {
+        return $this->toHtml();
     }
 }

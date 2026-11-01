@@ -8,6 +8,7 @@ use Illuminate\Support\HtmlString;
 use Livewire\Livewire;
 use Waguilar\FilamentDataGrid\Support\IconHeading;
 use Workbench\App\Filament\Pages\DeliveryTableDemo;
+use Workbench\App\Livewire\ShiftMovementsTable;
 
 it('puts the icon before an escaped heading', function (): void {
     $html = IconHeading::make('Orders <b>', Heroicon::OutlinedTruck)->toHtml();
@@ -26,4 +27,20 @@ it('shows the icon in a Filament table heading', function (): void {
 
     expect(Livewire::test(DeliveryTableDemo::class)->html())
         ->toMatch('/class="fi-ta-header-heading"[^>]*>\s*<svg[^>]*fi-data-grid-heading-icon/');
+});
+
+it('turns into its html where Filament casts the heading to a string', function (): void {
+    $heading = IconHeading::make('Orders <b>', Heroicon::OutlinedTruck);
+
+    expect((string) $heading)->toBe($heading->toHtml())
+        ->and(trim(strip_tags((string) $heading)))->toBe('Orders &lt;b&gt;');
+});
+
+it('renders as the heading of a plain Filament table with rows', function (): void {
+    Filament::setCurrentPanel('demo');
+
+    expect(Livewire::test(ShiftMovementsTable::class, ['method' => 'card', 'withHeading' => true])->html())
+        ->toMatch('/class="fi-ta-header-heading"[^>]*>\s*<svg[^>]*fi-data-grid-heading-icon/')
+        ->toContain('aria-label="'.e(__('demo::demo.shift.sections.movements')))
+        ->toContain('fi-ta-table');
 });

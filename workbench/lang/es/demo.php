@@ -147,6 +147,7 @@ return [
         'sections' => [
             'table' => 'Métodos de pago',
             'standalone' => 'Métodos de pago (infolist)',
+            'movements' => 'Movimientos con tarjeta (tabla simple)',
         ],
         'descriptions' => [
             'table' => 'Abre un método de pago para ver sus movimientos en una tabla de Filament.',

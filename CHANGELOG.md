@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.24 - 2026-11-01
+
+- `IconHeading` works as the heading of a plain Filament table that lists its own rows. Filament casts the heading to a string for the table's `aria-label`, and `IconHeading` couldn't be cast, so the page failed. It is now `Stringable`, and the label holds only the heading's text. Before, it only worked on tables whose `content()` is a grid, where Filament doesn't draw that label.
+
 ## v1.0.0-beta.23 - 2026-11-01
 
 - On the editable `DataGrid`, an open row with `expandedAbove()` or `expandedBelow()` content but no visible nested grid shows that content straight in the open row. It no longer gets the inset panel's background, border, rounded corners and padding, which only group content with a child grid. Rows with a nested grid keep the panel. `DataGridEntry` already showed its content without a panel.

@@ -171,3 +171,20 @@ it('never scrolls the grid inside itself when a focused element overflows it', f
 
     expect($scrolled)->not->toBeEmpty()->each->toBe(0);
 });
+
+it('lays out an IconHeading on a plain Filament table, icon then text on one line', function (): void {
+    $layout = visitShift()->script(<<<'JS'
+        () => {
+            const heading = [...document.querySelectorAll('.fi-ta-header-heading')].find((node) => node.textContent.includes('plain table'))
+            const icon = heading.querySelector('.fi-data-grid-heading-icon').getBoundingClientRect()
+            const range = document.createRange()
+            range.selectNodeContents([...heading.childNodes].find((node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim()))
+            const text = range.getBoundingClientRect()
+
+            return { gap: Math.round(text.left - icon.right), offset: Math.round(Math.abs((icon.top + icon.bottom) / 2 - (text.top + text.bottom) / 2)) }
+        }
+        JS);
+
+    expect($layout['gap'])->toBeGreaterThan(0)->toBeLessThanOrEqual(16)
+        ->and($layout['offset'])->toBeLessThanOrEqual(1);
+});
