@@ -63,3 +63,24 @@ it('keeps the content and the rows below in place when a row closes and opens ag
 
     expect(abs($gap))->toBeLessThanOrEqual(16);
 });
+
+it('shows content without a nested grid straight in the open row, without the panel', function (): void {
+    $styles = visitDispatch()->script(<<<'JS'
+        () => {
+            const style = (text) => {
+                const host = [...document.querySelectorAll('[id="form.products"] .fi-data-grid-child-host')].find((node) => node.textContent.includes(text))
+                const computed = getComputedStyle(host)
+                const slots = [...host.querySelectorAll('.fi-data-grid-child-host-slot')].filter((slot) => !slot.hidden)
+
+                return [computed.boxShadow, computed.backgroundColor, computed.borderTopLeftRadius, slots.map((slot) => getComputedStyle(slot).paddingTop)]
+            }
+
+            return { bare: style('PO-2026-0003'), panel: style('EM-4471') }
+        }
+        JS);
+
+    expect($styles['bare'])->toBe(['none', 'rgba(0, 0, 0, 0)', '0px', ['0px']])
+        ->and($styles['panel'][0])->not->toBe('none')
+        ->and($styles['panel'][2])->not->toBe('0px')
+        ->and($styles['panel'][3][0])->not->toBe('0px');
+});

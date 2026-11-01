@@ -71,7 +71,7 @@ export function createChildRows(element, { createChild, onResize, onFocus }) {
         const above = createSlot(host, 'above', row.above)
         let controller = null
 
-        host.className = 'fi-data-grid-child-host'
+        host.className = row.child ? 'fi-data-grid-child-host' : 'fi-data-grid-child-host fi-data-grid-child-host-bare'
         host.style.insetInline = `${padding}px`
 
         if (row.child) {
