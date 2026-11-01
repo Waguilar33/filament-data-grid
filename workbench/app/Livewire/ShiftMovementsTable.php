@@ -7,6 +7,7 @@ namespace Workbench\App\Livewire;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Notifications\Notification;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -14,15 +15,19 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Waguilar\FilamentDataGrid\ChildTable;
+use Waguilar\FilamentDataGrid\Support\IconHeading;
 use Workbench\App\Catalog\FakeCashShift;
 
 final class ShiftMovementsTable extends ChildTable
 {
     public string $method = 'cash';
 
+    public bool $withHeading = false;
+
     public function table(Table $table): Table
     {
         return $table
+            ->heading(fn (): ?IconHeading => $this->withHeading ? IconHeading::make(__('demo::demo.shift.sections.movements'), Heroicon::OutlinedBanknotes) : null)
             ->records(fn (?string $search, array $filters, int $page, int|string $recordsPerPage): LengthAwarePaginator => $this->movements($search, $filters, $page, $recordsPerPage))
             ->columns([
                 TextColumn::make('time')->label(__('demo::demo.shift.columns.time')),

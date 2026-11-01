@@ -147,6 +147,7 @@ return [
         'sections' => [
             'table' => 'Payment methods',
             'standalone' => 'Payment methods (infolist)',
+            'movements' => 'Card movements (plain table)',
         ],
         'descriptions' => [
             'table' => 'Open a payment method to see its movements as a full Filament table.',

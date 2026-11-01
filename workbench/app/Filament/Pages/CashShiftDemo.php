@@ -8,6 +8,7 @@ use Filament\Infolists\Components\RepeatableEntry\TableColumn;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\EmbeddedTable;
+use Filament\Schemas\Components\Livewire;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\Alignment;
 use Filament\Support\Icons\Heroicon;
@@ -53,6 +54,7 @@ final class CashShiftDemo extends Page implements HasTable
                 ])
                 ->totalsLabelAlignment(Alignment::End)
                 ->state(FakeCashShift::methods()),
+            Livewire::make(ShiftMovementsTable::class, ['method' => 'card', 'withHeading' => true])->key('plain-movements'),
         ]);
     }
 
