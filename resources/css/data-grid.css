@@ -759,6 +759,20 @@
     white-space: normal;
 }
 
+.fi-data-grid-child-host-bare {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing) * 3);
+    overflow: visible;
+    border-radius: 0;
+    background-color: transparent;
+    box-shadow: none;
+}
+
+.fi-data-grid-child-host-bare .fi-data-grid-child-host-slot {
+    padding: 0;
+}
+
 .fi-data-grid-child-host-slot-above:has(+ .fi-data-grid-canvas) {
     border-bottom: 1px solid var(--fi-data-grid-border);
 }

@@ -329,7 +329,7 @@ DataGrid::make('products')
 
 ### Content above and below the child grid
 
-`expandedAbove()` and `expandedBelow()` work as on [`DataGridEntry`](#content-above-and-below-the-child-rows). An open row shows your components above and below its child grid, in the same inset panel. Pass an array, or a closure that runs for each row. It gets the row's `array $state`, and `Get $get` reads that row's fields. Return an empty array or `null` for no content. A row that has content but no visible nested grid still opens, so it can explain why there is nothing to fill in:
+`expandedAbove()` and `expandedBelow()` work as on [`DataGridEntry`](#content-above-and-below-the-child-rows). An open row shows your components above and below its child grid, in the same inset panel. Pass an array, or a closure that runs for each row. It gets the row's `array $state`, and `Get $get` reads that row's fields. Return an empty array or `null` for no content. A row that has content but no visible nested grid still opens, so it can explain why there is nothing to fill in. Without a nested grid, the content sits straight in the open row, without the panel:
 
 ```php
 use Filament\Schemas\Components\Text;

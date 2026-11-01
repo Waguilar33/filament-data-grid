@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.23 - 2026-11-01
+
+- On the editable `DataGrid`, an open row with `expandedAbove()` or `expandedBelow()` content but no visible nested grid shows that content straight in the open row. It no longer gets the inset panel's background, border, rounded corners and padding, which only group content with a child grid. Rows with a nested grid keep the panel. `DataGridEntry` already showed its content without a panel.
+
 ## v1.0.0-beta.22 - 2026-10-31
 
 - Opening a row no longer scrolls the grid inside itself. Focusing a cell while an open row's child table was still being measured could scroll the grid's content a few pixels, and its column headers slid under the grid's own heading until the page was reloaded. The grid's containers now clip their content instead of hiding it, so the browser cannot scroll them.
