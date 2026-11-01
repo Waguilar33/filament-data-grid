@@ -151,3 +151,23 @@ it('opens child tables in a standalone entry too', function (): void {
     $page->assertSeeIn('.fi-data-grid-entry-grid:not(.fi-data-grid-in-table) [data-row-key="voucher"]', 'V-017')
         ->assertNoJavaScriptErrors();
 });
+
+it('never scrolls the grid inside itself when a focused element overflows it', function (): void {
+    $page = openMethod(visitShift(), 0, 'cash');
+
+    $scrolled = $page->script(<<<'JS'
+        () => [...document.querySelectorAll('.fi-data-grid-entry-content, .fi-data-grid-viewport, .fi-data-grid-child-host')].map((container) => {
+            const filler = document.createElement('div')
+            filler.style.cssText = 'position: absolute; top: 100%; height: 200px'
+            filler.tabIndex = -1
+            container.append(filler)
+            filler.focus()
+            const scrollTop = container.scrollTop
+            filler.remove()
+
+            return scrollTop
+        })
+        JS);
+
+    expect($scrolled)->not->toBeEmpty()->each->toBe(0);
+});

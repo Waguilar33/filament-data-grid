@@ -45,7 +45,7 @@
 }
 
 .fi-data-grid-viewport {
-    overflow: hidden;
+    overflow: clip;
     border-radius: var(--radius-xl);
     background-color: var(--fi-data-grid-bg);
     box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -622,7 +622,8 @@
 
 .fi-data-grid-entry-content {
     min-width: 0;
-    overflow: hidden;
+    /* hidden would let a focused cell scroll the grid under its own heading */
+    overflow: clip;
     border-end-start-radius: var(--radius-xl);
     border-end-end-radius: var(--radius-xl);
 }
@@ -746,7 +747,7 @@
 
 .fi-data-grid-child-host {
     position: absolute;
-    overflow: hidden;
+    overflow: clip;
     border-radius: var(--radius-lg);
     background-color: var(--fi-data-grid-bg);
     box-shadow: 0 0 0 1px var(--fi-data-grid-border);
