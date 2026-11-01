@@ -14,6 +14,7 @@ use Filament\Forms\Components\ToggleButtons;
 use Filament\Infolists\Components\Entry;
 use Filament\Schemas\Components\Component;
 use Filament\Support\Components\Contracts\HasEmbeddedView;
+use Filament\Support\Enums\IconSize;
 use Filament\Support\RawJs;
 use Illuminate\Support\MessageBag;
 
@@ -72,7 +73,7 @@ final readonly class DescribeCell
 
         $icon = $component->getSuffixIcon();
 
-        return $icon === null ? null : generate_icon_html($icon)?->toHtml();
+        return $icon === null ? null : generate_icon_html($icon, size: IconSize::Small)?->toHtml();
     }
 
     /**

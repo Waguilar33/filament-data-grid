@@ -104,7 +104,7 @@ export function createGrid(
         payload.highlightEditableColumns === true ||
         (Array.isArray(payload.highlightEditableColumns) && payload.highlightEditableColumns.includes(column.field))
 
-    const columnHeader = (column) => headerHtml(column, isColumnEditable(column) ? icons.edit : null)
+    const columnHeader = (column) => headerHtml(column, isColumnEditable(column) ? icons.headerEdit : null)
 
     const refreshColumnHeaders = () => {
         payload.columns.forEach((column) => {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\RepeatableEntry\TableColumn;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Support\Enums\IconSize;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
@@ -479,4 +480,11 @@ it('hands array rows, not the page record, to per-row closures on a page with a 
         expect(array_map(fn (array $call): array => [$call[0]['number'] ?? null, $call[1]['number'] ?? null], $calls))
             ->toContain(['DLV-1', 'DLV-1'], ['DLV-2', 'DLV-2']);
     }
+});
+
+it('sizes the expand icon small by default and per entry', function (): void {
+    $expandIcon = 'expand\u0022:\u0022\\\\u003Csvg class=\\\\u0022fi-icon fi-size-';
+
+    expect(mountDeliveries()->html())->toContain($expandIcon.'sm')
+        ->and(mountDeliveries(fn (DataGridEntry $entry): DataGridEntry => $entry->expandIconSize(IconSize::Large))->html())->toContain($expandIcon.'lg');
 });

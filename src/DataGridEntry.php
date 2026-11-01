@@ -12,7 +12,6 @@ use Filament\Schemas\Schema;
 use Filament\Support\Components\Attributes\ExposedLivewireMethod;
 use Filament\Support\Enums\Alignment;
 use Filament\Support\Facades\FilamentAsset;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\BaseFilter;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -26,6 +25,7 @@ use Livewire\Attributes\Renderless;
 use Livewire\Component;
 use Traversable;
 use Waguilar\FilamentDataGrid\Concerns\HasExpandedContent;
+use Waguilar\FilamentDataGrid\Concerns\HasExpandIconSize;
 use Waguilar\FilamentDataGrid\Concerns\HasGridHeader;
 use Waguilar\FilamentDataGrid\Entry\BuildEntryPayload;
 use Waguilar\FilamentDataGrid\Entry\Concerns\HasRecordActions;
@@ -36,13 +36,11 @@ use Waguilar\FilamentDataGrid\Exceptions\UnsupportedChildTable;
 use Waguilar\FilamentDataGrid\Exceptions\UnsupportedRecordActions;
 use Waguilar\FilamentDataGrid\Exceptions\UnsupportedTotals;
 use Waguilar\FilamentDataGrid\Totals\Total;
-use Waguilar\FilamentDataGrid\View\DataGridIconAlias;
-
-use function Filament\Support\generate_icon_html;
 
 class DataGridEntry extends RepeatableEntry
 {
     use HasExpandedContent;
+    use HasExpandIconSize;
     use HasGridHeader;
     use HasRecordActions;
 
@@ -686,7 +684,7 @@ class DataGridEntry extends RepeatableEntry
                     ],
                 ],
                 'icons' => [
-                    'expand' => generate_icon_html(Heroicon::ChevronRight, DataGridIconAlias::ROW_EXPAND)?->toHtml(),
+                    'expand' => $this->getExpandIconHtml(),
                 ],
             ]),
         ])->render();

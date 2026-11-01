@@ -812,6 +812,24 @@ FilamentIcon::register([
 
 The search, filter and pagination icons are Filament's own, under its table and pagination aliases.
 
+Icons are sized with Filament's `IconSize`, so your theme's icon sizes apply. The arrow that opens a row is `IconSize::Small` (16px), matching the 14px cell text and Filament's own group collapse button. Change it per grid with `expandIconSize()`, which also takes a closure. A nested `DataGrid` has its own setting:
+
+```php
+use Filament\Support\Enums\IconSize;
+
+DataGrid::make('products')->expandIconSize(IconSize::Medium)
+DataGridEntry::make('deliveries')->expandIconSize(IconSize::Medium)
+```
+
+To change it everywhere, use Filament's `configureUsing()` in a service provider:
+
+```php
+DataGrid::configureUsing(fn (DataGrid $grid) => $grid->expandIconSize(IconSize::Medium));
+DataGridEntry::configureUsing(fn (DataGridEntry $entry) => $entry->expandIconSize(IconSize::Medium));
+```
+
+The other icons use the size Filament uses for the same kind of control: small for cell icons and the drag handle, extra small for the header pencil and the number steppers, and medium for the record link.
+
 The row chevrons line up with the header icon by what they draw, not by their box. Icons have different empty space around the shape inside their box, so the grid fits each chevron's box to its shape and aligns that shape with the header icon's. An open row's chevron, turned to point down, is centered on the row instead. This works with whatever icon you register.
 
 ## How it works

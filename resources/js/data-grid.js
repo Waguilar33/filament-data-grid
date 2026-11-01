@@ -18,7 +18,7 @@ const afterEachRequest = (wire, startRequest) => {
     })
 }
 
-export default function dataGrid({ statePath, schemaComponent, actions, translations, icons }) {
+export default function dataGrid({ statePath, schemaComponent, actions, expandIcon, translations, icons }) {
     return {
         controller: null,
         observers: [],
@@ -27,7 +27,7 @@ export default function dataGrid({ statePath, schemaComponent, actions, translat
 
         init() {
             this.controller = createGridController(this.$refs.grid, {
-                config: { statePath, schemaComponent, actions },
+                config: { statePath, schemaComponent, actions, expandIcon },
                 payload: this.$refs.payload.dataset.payload,
                 wire: this.$wire,
                 translations,

@@ -494,11 +494,6 @@
     color: var(--fi-data-grid-hint-active);
 }
 
-.fi-data-grid-canvas .fi-data-grid-header-edit :is(svg, .fi-icon) {
-    width: 0.875rem;
-    height: 0.875rem;
-}
-
 .fi-data-grid-editor-input.fi-data-grid-editor-number {
     padding-inline-end: calc(var(--spacing) * 2 + 1.25rem);
 }
@@ -530,17 +525,6 @@
 .fi-data-grid-stepper-button:hover {
     background-color: var(--fi-data-grid-hover-bg);
     color: var(--fi-data-grid-hint-active);
-}
-
-.fi-data-grid-stepper-button :is(svg, .fi-icon) {
-    width: 0.875rem;
-    height: 0.875rem;
-}
-
-.fi-data-grid-canvas .fi-data-grid-cell-icon .fi-icon,
-.fi-data-grid-canvas .fi-data-grid-move-handle .fi-icon {
-    width: 1rem;
-    height: 1rem;
 }
 
 .fi-data-grid-canvas .fi-data-grid-move-cell {
@@ -828,11 +812,6 @@
     outline-offset: -2px;
 }
 
-.fi-data-grid-row-toggle .fi-icon {
-    width: calc(var(--spacing) * 5);
-    height: calc(var(--spacing) * 5);
-}
-
 .fi-data-grid-row-toggle-expanded svg {
     transform: rotate(90deg);
 }
@@ -1042,11 +1021,6 @@
 
 .fi-data-grid-record-link:hover {
     color: var(--fi-data-grid-text);
-}
-
-.fi-data-grid-record-link .fi-icon {
-    width: calc(var(--spacing) * 5);
-    height: calc(var(--spacing) * 5);
 }
 
 .fi-data-grid-entry-grid .fi-data-grid-parent-row:has(.fi-data-grid-record-link) .slick-cell {
