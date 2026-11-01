@@ -11,11 +11,13 @@ use Filament\Forms\Components\Repeater;
 use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\IconSize;
 use Filament\Support\Facades\FilamentAsset;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Js;
 use Waguilar\FilamentDataGrid\Actions\BuildEditCellAction;
 use Waguilar\FilamentDataGrid\Concerns\HasExpandedContent;
+use Waguilar\FilamentDataGrid\Concerns\HasExpandIconSize;
 use Waguilar\FilamentDataGrid\Concerns\HasGridHeader;
 use Waguilar\FilamentDataGrid\Payload\BuildGridPayload;
 use Waguilar\FilamentDataGrid\Rows\EnsureTrailingEmptyRow;
@@ -29,6 +31,7 @@ use function Filament\Support\generate_icon_html;
 class DataGrid extends Repeater
 {
     use HasExpandedContent;
+    use HasExpandIconSize;
     use HasGridHeader;
 
     protected bool|Closure $hasTrailingEmptyRow = false;
@@ -318,7 +321,7 @@ class DataGrid extends Repeater
     }
 
     /**
-     * @return array{statePath: ?string, schemaComponent: ?string, actions: array{editCell: string, reorder: string}}
+     * @return array{statePath: ?string, schemaComponent: ?string, actions: array{editCell: string, reorder: string}, expandIcon: ?string}
      */
     public function getGridConfig(): array
     {
@@ -329,6 +332,7 @@ class DataGrid extends Repeater
                 'editCell' => $this->getEditCellActionName(),
                 'reorder' => $this->getReorderActionName(),
             ],
+            'expandIcon' => $this->getExpandIconHtml(),
         ];
     }
 
@@ -344,12 +348,12 @@ class DataGrid extends Repeater
                 ...$this->getGridConfig(),
                 'translations' => __('filament-data-grid::data-grid'),
                 'icons' => [
-                    'reorder' => generate_icon_html(Heroicon::Bars2, DataGridIconAlias::CELL_REORDER)?->toHtml(),
-                    'date' => generate_icon_html(Heroicon::Calendar, DataGridIconAlias::CELL_DATE)?->toHtml(),
-                    'edit' => generate_icon_html(Heroicon::PencilSquare, DataGridIconAlias::CELL_EDIT)?->toHtml(),
-                    'expand' => generate_icon_html(Heroicon::ChevronRight, DataGridIconAlias::ROW_EXPAND)?->toHtml(),
-                    'stepUp' => generate_icon_html(Heroicon::ChevronUp, DataGridIconAlias::CELL_STEP_UP)?->toHtml(),
-                    'stepDown' => generate_icon_html(Heroicon::ChevronDown, DataGridIconAlias::CELL_STEP_DOWN)?->toHtml(),
+                    'reorder' => generate_icon_html(Heroicon::Bars2, DataGridIconAlias::CELL_REORDER, size: IconSize::Small)?->toHtml(),
+                    'date' => generate_icon_html(Heroicon::Calendar, DataGridIconAlias::CELL_DATE, size: IconSize::Small)?->toHtml(),
+                    'edit' => generate_icon_html(Heroicon::PencilSquare, DataGridIconAlias::CELL_EDIT, size: IconSize::Small)?->toHtml(),
+                    'headerEdit' => generate_icon_html(Heroicon::PencilSquare, DataGridIconAlias::CELL_EDIT, size: IconSize::ExtraSmall)?->toHtml(),
+                    'stepUp' => generate_icon_html(Heroicon::ChevronUp, DataGridIconAlias::CELL_STEP_UP, size: IconSize::ExtraSmall)?->toHtml(),
+                    'stepDown' => generate_icon_html(Heroicon::ChevronDown, DataGridIconAlias::CELL_STEP_DOWN, size: IconSize::ExtraSmall)?->toHtml(),
                 ],
             ]),
         ])->render();

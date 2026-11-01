@@ -14,7 +14,7 @@ export function createGridController(element, { config, payload, wire, translati
     const grid = createGrid(element, {
         payload: JSON.parse(payload),
         translations,
-        icons,
+        icons: { ...icons, expand: config.expandIcon },
         isDarkMode: isDarkMode(),
         onCellChange: writeCell,
         callSchemaComponentMethod: (key, method, args) =>

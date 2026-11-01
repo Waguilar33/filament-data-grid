@@ -7,6 +7,8 @@ use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Support\Enums\IconSize;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
@@ -83,7 +85,7 @@ it('builds the child grid with absolute state paths and component keys', functio
     $child = grid($component)->getGridPayload()['rows'][0]['child'];
     $place = $child['payload']['rows'][0]['key'];
 
-    expect($child['config'])->toBe([
+    expect(Arr::except($child['config'], 'expandIcon'))->toBe([
         'statePath' => "data.lines.{$oil}.places",
         'schemaComponent' => "form.lines.{$oil}.places",
         'actions' => ['editCell' => 'editCell', 'reorder' => 'reorder'],
@@ -210,4 +212,34 @@ it('opens the dispatch demo products that are short', function (): void {
         ->and(array_map(fn (array $row): ?string => $row['child'] === null ? null : Str::afterLast($row['child']['config']['statePath'], '.'), $rows))
         ->toBe(['places', 'places', 'units', 'places', 'units', 'places', null])
         ->and($rows[6]['below'])->toContain('PO-2026-0003');
+});
+
+function mountSizedIcons(?IconSize $parent = null, ?IconSize $child = null): DataGrid
+{
+    return grid(mountLines(dispatchLines(), fn (): array => [
+        DataGrid::make('lines')
+            ->when($parent, fn (DataGrid $grid): DataGrid => $grid->expandIconSize($parent))
+            ->schema([
+                TextEntry::make('name'),
+                DataGrid::make('places')
+                    ->when($child, fn (DataGrid $grid): DataGrid => $grid->expandIconSize($child))
+                    ->schema([TextEntry::make('place'), TextInput::make('quantity')]),
+            ]),
+    ]));
+}
+
+it('sizes the expand icon small by default, per grid, per nested grid and through configureUsing', function (): void {
+    expect(mountSizedIcons()->getGridConfig()['expandIcon'])->toContain('fi-size-sm');
+
+    $sized = mountSizedIcons(IconSize::Large, IconSize::ExtraSmall);
+
+    expect($sized->getGridConfig()['expandIcon'])->toContain('fi-size-lg')
+        ->and($sized->getGridPayload()['rows'][0]['child']['config']['expandIcon'])->toContain('fi-size-xs');
+
+    $configured = DataGrid::configureUsing(
+        fn (DataGrid $grid): DataGrid => $grid->expandIconSize(IconSize::Medium),
+        fn (): string => (string) mountSizedIcons()->getGridConfig()['expandIcon'],
+    );
+
+    expect($configured)->toContain('fi-size-md');
 });

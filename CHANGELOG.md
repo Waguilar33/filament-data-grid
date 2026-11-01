@@ -5,6 +5,7 @@ All notable changes to `filament-data-grid` will be documented in this file.
 ## v1.0.0-beta.23 - 2026-11-01
 
 - On the editable `DataGrid`, an open row with `expandedAbove()` or `expandedBelow()` content but no visible nested grid shows that content straight in the open row. It no longer gets the inset panel's background, border, rounded corners and padding, which only group content with a child grid. Rows with a nested grid keep the panel. `DataGridEntry` already showed its content without a panel.
+- Icons are sized with Filament's `IconSize` instead of the plugin's CSS, so they follow your theme's icon sizes. The arrow that opens a row is now `IconSize::Small` (16px, was 20px), so it matches the 14px cell text. Set it per grid with `expandIconSize()` on `DataGrid` and `DataGridEntry`, nested grids included, or everywhere with `configureUsing()`. The header pencil and the number steppers are now `IconSize::ExtraSmall` (12px, was 14px). The other icons keep their size.
 
 ## v1.0.0-beta.22 - 2026-10-31
 
