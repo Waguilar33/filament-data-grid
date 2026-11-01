@@ -212,6 +212,8 @@ return [
             'total' => 'Total',
             'amount' => 'Amount',
             'reference' => 'Reference',
+            'authorization' => 'Authorization',
+            'bank' => 'Bank',
         ],
         'actions' => [
             'edit' => 'Edit',
