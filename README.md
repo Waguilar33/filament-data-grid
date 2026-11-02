@@ -279,7 +279,7 @@ DataGrid::make('lines')
     ])
 ```
 
-Upgrading from an earlier beta: rows used to put every extra action and delete in a menu automatically. Wrap them in an `ActionGroup` to keep that, and style the group's trigger as you like. `DataGridIconAlias::ROW_ACTIONS` and the `row_menu` translation are gone.
+Upgrading from an earlier beta: rows used to put every extra action and delete in a menu automatically. Wrap them in an `ActionGroup` to keep that, and style the group's trigger as you like. The `row_menu` translation is gone, and `DataGridIconAlias::ROW_ACTIONS` is no longer used.
 
 ## Reordering
 
@@ -820,6 +820,7 @@ FilamentIcon::register([
 | --- | --- |
 | `DataGridIconAlias::ROW_EXPAND` (`filament-data-grid::row.expand`) | The arrow that opens a row's child rows. |
 | `DataGridIconAlias::ROW_OPEN` (`filament-data-grid::row.open`) | The chevron that opens a record, inside a Filament table. |
+| `DataGridIconAlias::ROW_ACTIONS` (`filament-data-grid::row.actions`) | Not used since the row menu is gone. Kept so existing registrations still work. |
 | `DataGridIconAlias::CELL_REORDER` (`filament-data-grid::cell.reorder`) | The drag handle. |
 | `DataGridIconAlias::CELL_DATE` (`filament-data-grid::cell.date`) | The calendar in date cells. |
 | `DataGridIconAlias::CELL_EDIT` (`filament-data-grid::cell.edit`) | The pencil in cells that open a modal, and after the header label of editable columns. |

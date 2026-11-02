@@ -4,7 +4,7 @@ All notable changes to `filament-data-grid` will be documented in this file.
 
 ## v1.0.0-beta.25 - 2026-11-01
 
-- Breaking: the editable `DataGrid` shows a row's actions as you build them. Each action in `extraItemActions()` renders on the row in its own style, a link with label and icon by default, then delete. Before, they were always inside an automatic ⋮ menu. To get a menu, pass an `ActionGroup` to `extraItemActions()`, and it renders as that dropdown, next to any other actions. `extraItemActions()` now accepts `ActionGroup`. Delete is no longer grouped. `DataGridIconAlias::ROW_ACTIONS` and the `actions.row_menu.label` translation are removed.
+- Breaking: the editable `DataGrid` shows a row's actions as you build them. Each action in `extraItemActions()` renders on the row in its own style, a link with label and icon by default, then delete. Before, they were always inside an automatic ⋮ menu. To get a menu, pass an `ActionGroup` to `extraItemActions()`, and it renders as that dropdown, next to any other actions. `extraItemActions()` now accepts `ActionGroup`. Delete is no longer grouped. The `actions.row_menu.label` translation is removed, and `DataGridIconAlias::ROW_ACTIONS` is no longer used but still defined.
 - The actions column is as wide as the widest row's actions.
 
 ## v1.0.0-beta.24 - 2026-11-01
