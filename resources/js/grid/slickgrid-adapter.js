@@ -12,6 +12,8 @@ const TOGGLE_WIDTH = 44
 const ROW_HEIGHT = 44
 const FLEXIBLE_MIN_WIDTH = 240
 const ACTIONS_WIDTH = 56
+const INLINE_ACTIONS_PADDING = 24
+const INLINE_ACTIONS_CLASS = 'fi-data-grid-inline-actions'
 const MOVE_WIDTH = 36
 const EDGE_ICON_WIDTH = 20
 const EDGE_ICON_GAP = 4
@@ -117,6 +119,25 @@ export function createGrid(
         })
     }
 
+    const actionsWidth = () => {
+        const inline = Object.values(payload.actionTemplates ?? {}).filter((template) => template.includes(INLINE_ACTIONS_CLASS))
+
+        if (inline.length === 0) {
+            return ACTIONS_WIDTH
+        }
+
+        const probe = document.createElement('div')
+        probe.className = 'fi-data-grid-canvas fi-data-grid-actions-probe'
+        probe.innerHTML = inline.map((template) => `<div>${template.replaceAll(payload.rowKeyPlaceholder, '')}</div>`).join('')
+        element.appendChild(probe)
+
+        const widest = Math.max(...[...probe.children].map((row) => Math.ceil(row.firstElementChild.getBoundingClientRect().width)))
+
+        probe.remove()
+
+        return Math.max(ACTIONS_WIDTH, widest + INLINE_ACTIONS_PADDING)
+    }
+
     const columnDefinitions = () => {
         const columns = payload.columns.map((column) => ({
             id: column.field,
@@ -187,8 +208,8 @@ export function createGrid(
                 id: ACTIONS_COLUMN,
                 field: ACTIONS_COLUMN,
                 name: `<span class="fi-sr-only">${escapeHtml(translations.columns.actions)}</span>`,
-                fixedWidth: ACTIONS_WIDTH,
-                width: ACTIONS_WIDTH,
+                fixedWidth: actionsWidth(),
+                width: actionsWidth(),
                 resizable: false,
                 sortable: false,
                 focusable: false,
@@ -240,7 +261,7 @@ export function createGrid(
         }
 
         if (last.id === ACTIONS_COLUMN) {
-            last.width = last.fixedWidth = ACTIONS_WIDTH + inset
+            last.width = last.fixedWidth = last.fixedWidth + inset
             last.cssClass += ' fi-data-grid-actions-cell-inset-end'
         } else if (last !== first) {
             last.cssClass += ' fi-data-grid-inset-end'

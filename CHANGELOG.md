@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.25 - 2026-11-01
+
+- On the editable `DataGrid`, a row with two or fewer visible actions (its `extraItemActions()` plus delete) shows them inline as link actions with label and icon, like `DataGridEntry`'s `recordActions()`. Before, they were always inside the row menu, and delete alone was an icon button. A row with three or more still uses the menu. The actions column sizes to its inline actions.
+
 ## v1.0.0-beta.24 - 2026-11-01
 
 - `IconHeading` works as the heading of a plain Filament table that lists its own rows. Filament casts the heading to a string for the table's `aria-label`, and `IconHeading` couldn't be cast, so the page failed. It is now `Stringable`, and the label holds only the heading's text. Before, it only worked on tables whose `content()` is a grid, where Filament doesn't draw that label.

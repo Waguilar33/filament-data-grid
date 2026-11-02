@@ -15,6 +15,10 @@ final class RenderRowActions
 {
     public const ROW_KEY_PLACEHOLDER = '__fi_data_grid_row_key__';
 
+    public const INLINE_ACTIONS_CLASS = 'fi-data-grid-inline-actions';
+
+    private const MAX_INLINE_ACTIONS = 2;
+
     public function hasActions(DataGrid $grid): bool
     {
         return $grid->isDeletable() || $grid->getExtraItemActions() !== [];
@@ -38,8 +42,16 @@ final class RenderRowActions
             $deleteAction = null;
         }
 
-        if ($extraActions === []) {
-            return $this->compact($deleteAction?->toHtml());
+        $actions = [...$extraActions, ...($deleteAction ? [$deleteAction] : [])];
+
+        if ($actions === []) {
+            return null;
+        }
+
+        if (count($actions) <= self::MAX_INLINE_ACTIONS) {
+            $html = implode('', array_map(fn (Action $action): string => $action->link()->toHtml(), $actions));
+
+            return $this->compact('<div class="fi-ta-actions '.self::INLINE_ACTIONS_CLASS.'">'.$html.'</div>');
         }
 
         $menuLabel = __('filament-data-grid::data-grid.actions.row_menu.label');

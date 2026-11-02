@@ -245,7 +245,7 @@ When the grid is reorderable, the count includes the drag handle column.
 
 ## Row actions
 
-Each row has a menu with the delete action and any `extraItemActions()`. These are normal Filament Actions, so they can open modals and slide-overs. The row's key is in `$arguments['item']`:
+Each row shows its delete action and any `extraItemActions()`. These are normal Filament Actions, so they can open modals and slide-overs. The row's key is in `$arguments['item']`:
 
 ```php
 use Filament\Actions\Action;
@@ -262,7 +262,7 @@ DataGrid::make('lines')
     ])
 ```
 
-If delete is the only action, it appears as a button instead of a menu.
+A row with two or fewer visible actions shows them inline as link actions with their label and icon, the same as `DataGridEntry`'s `recordActions()`. A row with three or more puts them in a menu. The count is per row, so a row whose actions are hidden by `visible()` can be inline while another row has a menu.
 
 ## Reordering
 
