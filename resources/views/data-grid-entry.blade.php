@@ -10,6 +10,7 @@
     $hasHeader = filled($heading) || filled($description);
     $hasToolbar = $entry->isSearchable() || filled($payload['filters']);
     $isSection = $hasHeader && $entry->isCompact();
+    $showsEmptyState = $payload['hasEmptyState'] && $payload['isEmpty'];
 @endphp
 
 <div
@@ -185,11 +186,12 @@
             >
                 <div
                     x-ref="grid"
+                    x-show="! showsEmptyState"
                     class="fi-data-grid-canvas"
-                    style="min-height: calc(2.75rem + 1px + {{ is_int($payload['recordsPerPage']) ? min(count($payload['rows']), $payload['recordsPerPage']) * 44 : count($payload['rows']) * 44 }}px)"
+                    style="min-height: calc(2.75rem + 1px + {{ is_int($payload['recordsPerPage']) ? min(count($payload['rows']), $payload['recordsPerPage']) * 44 : count($payload['rows']) * 44 }}px){{ $showsEmptyState ? '; display: none' : '' }}"
                 ></div>
 
-                <p x-cloak x-show="isMounted && total === 0" class="fi-data-grid-empty">
+                <p x-cloak x-show="isMounted && total === 0 && ! showsEmptyState" class="fi-data-grid-empty">
                     {{ __('filament-data-grid::data-grid.entry.empty') }}
                 </p>
 
@@ -307,6 +309,34 @@
                 </nav>
             @endif
             </div>
+
+            @if ($showsEmptyState)
+                <div class="fi-ta-empty-state fi-data-grid-empty-state" role="status">
+                    <div class="fi-ta-empty-state-content">
+                        <div class="fi-ta-empty-state-icon-bg">
+                            {{ \Filament\Support\generate_icon_html($entry->getEmptyStateIcon(), size: \Filament\Support\Enums\IconSize::Large) }}
+                        </div>
+
+                        <{{ filled($heading) ? 'h4' : 'h3' }} class="fi-ta-empty-state-heading">
+                            {{ $entry->getEmptyStateHeading() }}
+                        </{{ filled($heading) ? 'h4' : 'h3' }}>
+
+                        @if (filled($emptyStateDescription = $entry->getEmptyStateDescription()))
+                            <p class="fi-ta-empty-state-description">
+                                {{ $emptyStateDescription }}
+                            </p>
+                        @endif
+
+                        @if ($emptyStateActions = array_filter($entry->getEmptyStateActions(), fn (\Filament\Actions\Action | \Filament\Actions\ActionGroup $action): bool => $action->isVisible()))
+                            <div class="fi-ta-actions fi-align-center fi-wrapped">
+                                @foreach ($emptyStateActions as $action)
+                                    {{ $action }}
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endif
 
             @include('filament-data-grid::child-tables')
             </div>

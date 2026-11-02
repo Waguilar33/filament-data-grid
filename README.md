@@ -539,6 +539,28 @@ DataGridEntry::make('deliveries')
 
 The columns line up with the header the way a Filament table's do. The first column (or the chevron, when rows open) starts on the header icon's edge, and a first column after the chevron starts on the heading's edge. The last column (or the record link chevron) ends the same distance from the right. That distance is 24px on screens `sm` and wider and 16px below, like a Filament table, and always 16px with `compact()`, like a compact section.
 
+### Empty state
+
+When the grid has no rows at all, it can show the same empty state as a Filament table: an icon in a grey circle, a heading, a description and actions. The methods match Filament's `Table`, and each takes a value or a closure:
+
+```php
+use Filament\Actions\Action;
+
+DataGridEntry::make('history')
+    ->heading('History')
+    ->icon(Heroicon::OutlinedClock)
+    ->emptyStateIcon(Heroicon::OutlinedClock)
+    ->emptyStateHeading('Nothing moved yet')
+    ->emptyStateDescription('Movements show up here once the shipment leaves.')
+    ->emptyStateActions([
+        Action::make('addMovement')->action(fn () => /* ... */),
+    ])
+```
+
+The grid's heading, description and icon stay above the empty state, and the column headers and pagination are hidden, as on a Filament table. With only some of these set, the icon falls back to Filament's `tables::empty-state` icon and the heading to "No records". Without any of them, an empty grid shows "No results." as before. Empty state actions can be `Action`s or `ActionGroup`s, and their names must differ from the record actions' names.
+
+The empty state is only for a grid whose rows are empty. When a search or filter matches nothing but rows exist, the grid keeps its column headers and says "No results.". This works with `serverSide()` too: the grid learns whether the source is empty when Livewire renders it, from the unfiltered first page. A grid used as a Filament table's `content()` shows the table's own empty state, so these methods do nothing there.
+
 ### Filters
 
 `filters()` takes Filament's own table filters. They appear behind the filter button next to the search field, with the same form, "Apply filters" and "Reset" as a Filament table:

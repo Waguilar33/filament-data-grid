@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.28 - 2026-11-02
+
+- `DataGridEntry` can show an empty state like a Filament table's when it has no rows at all, with `emptyStateIcon()`, `emptyStateHeading()`, `emptyStateDescription()` and `emptyStateActions()`. It uses Filament's table empty state markup, below the grid's heading, without column headers or pagination. A search or filter that matches nothing still shows "No results.", in the browser and with `serverSide()`. Without any of these set, an empty grid looks as before.
+
 ## v1.0.0-beta.27 - 2026-11-02
 
 - On the editable `DataGrid`, Enter and Shift+Enter on an input skip rows where that column has no input (hidden or disabled), so a scan lands on the next row that can take it. With no such row in that direction, the active cell stays put. Before, Enter moved to the next row even when its cell had no input, and the next scan was lost.

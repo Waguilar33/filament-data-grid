@@ -28,6 +28,7 @@ use Waguilar\FilamentDataGrid\Concerns\HasExpandedContent;
 use Waguilar\FilamentDataGrid\Concerns\HasExpandIconSize;
 use Waguilar\FilamentDataGrid\Concerns\HasGridHeader;
 use Waguilar\FilamentDataGrid\Entry\BuildEntryPayload;
+use Waguilar\FilamentDataGrid\Entry\Concerns\HasEmptyState;
 use Waguilar\FilamentDataGrid\Entry\Concerns\HasRecordActions;
 use Waguilar\FilamentDataGrid\Entry\DescribeTableRecord;
 use Waguilar\FilamentDataGrid\Entry\EntryFilters;
@@ -39,6 +40,7 @@ use Waguilar\FilamentDataGrid\Totals\Total;
 
 class DataGridEntry extends RepeatableEntry
 {
+    use HasEmptyState;
     use HasExpandedContent;
     use HasExpandIconSize;
     use HasGridHeader;
@@ -608,12 +610,24 @@ class DataGridEntry extends RepeatableEntry
         }
 
         if ($items !== null) {
-            return app(BuildEntryPayload::class)->handle($this, $items, total: null, page: 1);
+            return $this->withEmptyState(app(BuildEntryPayload::class)->handle($this, $items, total: null, page: 1), $items === []);
         }
 
         $entryPage = $this->resolvePage('', 1, $this->getDefaultPaginationPageOption(), $this->getEntryFilters()->sanitize([]));
 
-        return app(BuildEntryPayload::class)->handle($this, $entryPage->items, total: $entryPage->total, page: $entryPage->page);
+        return $this->withEmptyState(
+            app(BuildEntryPayload::class)->handle($this, $entryPage->items, total: $entryPage->total, page: $entryPage->page),
+            $entryPage->total === 0,
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    private function withEmptyState(array $payload, bool $isEmpty): array
+    {
+        return [...$payload, 'isEmpty' => $isEmpty, 'hasEmptyState' => ! $this->isTableContent() && $this->hasEmptyState()];
     }
 
     public function getConstantStateUsing(mixed $callback): static

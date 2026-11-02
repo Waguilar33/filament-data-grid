@@ -108,6 +108,17 @@ trait HasRecordActions
                     throw DuplicateRecordActionName::make((string) $this->getName(), (string) $flatAction->getName());
                 }
 
+                $parentNames[(string) $flatAction->getName()] = true;
+                $actions[] = $flatAction;
+            }
+        }
+
+        foreach ($this->getEmptyStateActions() as $action) {
+            foreach ($this->flatten($action) as $flatAction) {
+                if (isset($parentNames[(string) $flatAction->getName()])) {
+                    throw DuplicateRecordActionName::emptyState((string) $this->getName(), (string) $flatAction->getName());
+                }
+
                 $actions[] = $flatAction;
             }
         }
