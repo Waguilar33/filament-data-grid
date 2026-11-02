@@ -6,14 +6,17 @@ namespace Waguilar\FilamentDataGrid;
 
 use Closure;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Forms\Components\Field;
 use Filament\Forms\Components\Repeater;
 use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\IconSize;
+use Filament\Support\Enums\Size;
 use Filament\Support\Facades\FilamentAsset;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Js;
 use Waguilar\FilamentDataGrid\Actions\BuildEditCellAction;
 use Waguilar\FilamentDataGrid\Concerns\HasExpandedContent;
@@ -33,6 +36,23 @@ class DataGrid extends Repeater
     use HasExpandedContent;
     use HasExpandIconSize;
     use HasGridHeader;
+
+    /**
+     * @var array<Action|ActionGroup|Closure>
+     *
+     * @phpstan-ignore property.phpDocType
+     */
+    protected array $extraItemActions = [];
+
+    /**
+     * @var array<string, Action>|null
+     */
+    protected ?array $cachedExtraItemActions = null;
+
+    /**
+     * @var list<Action|ActionGroup>|null
+     */
+    protected ?array $cachedRowActions = null;
 
     protected bool|Closure $hasTrailingEmptyRow = false;
 
@@ -64,6 +84,58 @@ class DataGrid extends Repeater
             $component->hydrateItems();
             $component->ensureTrailingEmptyRow();
         });
+    }
+
+    /**
+     * @param  array<Action|ActionGroup|Closure>  $actions
+     */
+    public function extraItemActions(array $actions): static
+    {
+        $this->extraItemActions = [...$this->extraItemActions, ...$actions];
+
+        return $this;
+    }
+
+    /**
+     * @return list<Action|ActionGroup>
+     */
+    public function getRowActions(): array
+    {
+        $this->getExtraItemActions();
+
+        return $this->cachedRowActions ?? [];
+    }
+
+    /**
+     * @return array<string, Action>
+     */
+    public function cacheExtraItemActions(): array
+    {
+        $this->cachedExtraItemActions = [];
+        $this->cachedRowActions = [];
+
+        foreach ($this->extraItemActions as $extraItemAction) {
+            /** @var list<Action|ActionGroup> $evaluated */
+            $evaluated = Arr::wrap($this->evaluate($extraItemAction));
+
+            foreach ($evaluated as $action) {
+                if ($action instanceof ActionGroup) {
+                    foreach ($action->getFlatActions() as $flatAction) {
+                        $this->cachedExtraItemActions[$flatAction->getName()] = $this->prepareAction($flatAction);
+                    }
+
+                    $this->cachedRowActions[] = $this->prepareActionGroup($action->defaultDropdownPlacement('bottom-end')->defaultDropdownTeleport(true));
+
+                    continue;
+                }
+
+                $this->cachedExtraItemActions[$action->getName()] = $this->cachedRowActions[] = $this->prepareAction(
+                    $action->defaultSize(Size::Small)->defaultView(Action::LINK_VIEW),
+                );
+            }
+        }
+
+        return $this->cachedExtraItemActions;
     }
 
     /**

@@ -7,9 +7,6 @@ return [
         'edit_cell' => [
             'label' => 'Edit :label',
         ],
-        'row_menu' => [
-            'label' => 'Row actions',
-        ],
     ],
     'columns' => [
         'reorder' => 'Reorder',

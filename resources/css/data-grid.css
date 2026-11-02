@@ -1001,12 +1001,17 @@
     color: var(--gray-500);
 }
 
-.fi-data-grid-canvas .fi-data-grid-record-actions {
+.fi-data-grid-canvas .fi-data-grid-record-actions,
+.fi-data-grid-canvas .fi-data-grid-inline-actions {
     display: inline-flex;
     flex-wrap: nowrap;
     align-items: center;
     gap: calc(var(--spacing) * 3);
     width: max-content;
+}
+
+.fi-data-grid-canvas .fi-data-grid-inline-actions {
+    white-space: nowrap;
 }
 
 .fi-data-grid-canvas .fi-data-grid-record-link-cell {
@@ -1050,6 +1055,18 @@
     left: 0;
     visibility: hidden;
     pointer-events: none;
+}
+
+.fi-data-grid-canvas .fi-data-grid-actions-probe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.fi-data-grid-canvas .fi-data-grid-actions-probe > div {
+    display: flex;
 }
 
 .fi-data-grid-canvas .fi-data-grid-width-probe .slick-cell {

@@ -125,17 +125,15 @@ it('shows a server error on the cell of its row and keeps it after deleting anot
 
     $page->assertSee('Row 2 · Quantity: The quantity field is required.')
         ->assertAttributeContains(cell(1, 1), 'class', 'fi-data-grid-cell-invalid')
-        ->click(cell(0, 7).' .fi-dropdown-trigger button')
-        ->click('Delete')
+        ->click(cell(0, 7).' a:has-text("Delete"), '.cell(0, 7).' button:has-text("Delete")')
         ->wait(1.5)
         ->assertSee('Row 1 · Quantity: The quantity field is required.')
         ->assertAttributeContains(cell(0, 1), 'class', 'fi-data-grid-cell-invalid');
 });
 
-it('opens row actions from the row menu', function (): void {
+it('opens a row action shown on the row', function (): void {
     visitDemo()
-        ->click(cell(0, 7).' .fi-dropdown-trigger button')
-        ->click('Stock')
+        ->click(cell(0, 7).' a:has-text("Stock"), '.cell(0, 7).' button:has-text("Stock")')
         ->wait(1)
         ->assertSee('Creamy Coffee 100 g')
         ->assertSee('Available');
@@ -240,4 +238,17 @@ it('starts editing a text cell by typing on it', function (): void {
         ->click('Save')
         ->wait(1.5)
         ->assertScript(savedState().'[0].quantity', 9);
+});
+
+it('sizes the actions column to the inline row actions', function (): void {
+    $fits = visitDemo()->script(<<<'JS'
+        () => [...document.querySelectorAll('.fi-data-grid-inline-actions')].every((actions) => {
+            const cell = actions.closest('.fi-data-grid-actions-cell').getBoundingClientRect()
+            const box = actions.getBoundingClientRect()
+
+            return cell.width > 56 && box.left >= cell.left && box.right <= cell.right
+        })
+        JS);
+
+    expect($fits)->toBeTrue();
 });
