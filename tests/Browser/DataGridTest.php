@@ -252,3 +252,19 @@ it('sizes the actions column to the inline row actions', function (): void {
 
     expect($fits)->toBeTrue();
 });
+
+it('fits a narrow container with the flexible column below the old 240px floor', function (): void {
+    $measure = visitDemo()->script(<<<'JS'
+        () => {
+            const viewport = document.querySelector('[id="form.adjustments"] .slick-viewport-right')
+
+            return {
+                overflow: viewport.scrollWidth - viewport.clientWidth,
+                flexible: Math.round(document.querySelectorAll('[id="form.adjustments"] .slick-header-column')[1].getBoundingClientRect().width),
+            }
+        }
+        JS);
+
+    expect($measure['overflow'])->toBeLessThanOrEqual(0)
+        ->and($measure['flexible'])->toBeGreaterThanOrEqual(160)->toBeLessThan(240);
+});

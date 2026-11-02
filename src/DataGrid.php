@@ -63,6 +63,8 @@ class DataGrid extends Repeater
 
     protected int|Closure $frozenColumns = 0;
 
+    protected string|int|Closure $flexibleColumnMinWidth = 160;
+
     protected int|Closure $childTablePadding = 15;
 
     protected bool|Closure $shouldExpandRows = false;
@@ -198,6 +200,20 @@ class DataGrid extends Repeater
         $count = $this->evaluate($this->frozenColumns);
 
         return is_int($count) ? max(0, $count) : 0;
+    }
+
+    public function flexibleColumnMinWidth(string|int|Closure $width): static
+    {
+        $this->flexibleColumnMinWidth = $width;
+
+        return $this;
+    }
+
+    public function getFlexibleColumnMinWidth(): string|int
+    {
+        $width = $this->evaluate($this->flexibleColumnMinWidth);
+
+        return is_string($width) || is_int($width) ? $width : 160;
     }
 
     public function childTablePadding(int|Closure $pixels): static

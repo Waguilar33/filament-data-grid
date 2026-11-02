@@ -243,6 +243,15 @@ DataGrid::make('lines')
 
 When the grid is reorderable, the count includes the drag handle column.
 
+## Flexible column width
+
+The editable `DataGrid` has one flexible column: the one without a `width()`. It takes the room the fixed-width columns leave, and never gets narrower than 160px; if the grid is narrower than that, it scrolls sideways. Change the floor per grid, in pixels or rem:
+
+```php
+DataGrid::make('lines')
+    ->flexibleColumnMinWidth('12rem')
+```
+
 ## Row actions
 
 Each row shows its `extraItemActions()` followed by the delete action, exactly as you build them. These are normal Filament Actions, so they can open modals and slide-overs. The row's key is in `$arguments['item']`:

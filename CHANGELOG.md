@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.26 - 2026-11-02
+
+- The editable `DataGrid` gives its flexible column a minimum width of 160px (was 240px), so a grid with several fixed-width columns fits a narrower container, such as a page with the sidebar open. Set it per grid with `flexibleColumnMinWidth()`, in pixels or rem.
+
 ## v1.0.0-beta.25 - 2026-11-01
 
 - Breaking: the editable `DataGrid` shows a row's actions as you build them. Each action in `extraItemActions()` renders on the row in its own style, a link with label and icon by default, then delete. Before, they were always inside an automatic ⋮ menu. To get a menu, pass an `ActionGroup` to `extraItemActions()`, and it renders as that dropdown, next to any other actions. `extraItemActions()` now accepts `ActionGroup`. Delete is no longer grouped. The `actions.row_menu.label` translation is removed, and `DataGridIconAlias::ROW_ACTIONS` is no longer used but still defined.
