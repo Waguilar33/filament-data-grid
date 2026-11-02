@@ -89,6 +89,7 @@ return [
         'adjustments' => 'Ajustes',
         'counts' => 'Recuentos de existencias',
         'receipts' => 'Recepción',
+        'scans' => 'Escaneo',
     ],
     'actions' => [
         'save' => 'Guardar',
@@ -119,6 +120,7 @@ return [
         'location' => 'Ubicación',
         'counted' => 'Contado',
         'code' => 'Código',
+        'scan' => 'Escaneo',
         'received' => 'Recibido',
         'expected' => 'Esperado',
     ],

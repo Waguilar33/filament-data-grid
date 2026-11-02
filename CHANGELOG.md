@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.27 - 2026-11-02
+
+- On the editable `DataGrid`, Enter and Shift+Enter on an input skip rows where that column has no input (hidden or disabled), so a scan lands on the next row that can take it. With no such row in that direction, the active cell stays put. Before, Enter moved to the next row even when its cell had no input, and the next scan was lost.
+
 ## v1.0.0-beta.26 - 2026-11-02
 
 - The editable `DataGrid` gives its flexible column a minimum width of 160px (was 240px), so a grid with several fixed-width columns fits a narrower container, such as a page with the sidebar open. Set it per grid with `flexibleColumnMinWidth()`, in pixels or rem.

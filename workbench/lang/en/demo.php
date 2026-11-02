@@ -89,6 +89,7 @@ return [
         'adjustments' => 'Adjustments',
         'counts' => 'Stock counts',
         'receipts' => 'Receiving',
+        'scans' => 'Scanning',
     ],
     'actions' => [
         'save' => 'Save',
@@ -119,6 +120,7 @@ return [
         'location' => 'Location',
         'counted' => 'Counted',
         'code' => 'Code',
+        'scan' => 'Scan',
         'received' => 'Received',
         'expected' => 'Expected',
     ],

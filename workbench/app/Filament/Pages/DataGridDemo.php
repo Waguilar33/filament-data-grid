@@ -70,6 +70,11 @@ final class DataGridDemo extends Page
                 ['code' => null, 'received' => null, 'expected' => 4],
                 ['code' => null, 'received' => null, 'expected' => 2],
             ],
+            'scans' => [
+                ['code' => 'FF-01', 'scan' => null],
+                ['code' => null, 'scan' => null],
+                ['code' => 'FF-03', 'scan' => null],
+            ],
         ]);
     }
 
@@ -81,6 +86,7 @@ final class DataGridDemo extends Page
                 Section::make(__('demo::demo.sections.adjustments'))->schema([self::adjustmentsGrid()]),
                 Section::make(__('demo::demo.sections.counts'))->schema([self::countsGrid()]),
                 Section::make(__('demo::demo.sections.receipts'))->schema([self::receiptsGrid()]),
+                Section::make(__('demo::demo.sections.scans'))->schema([self::scansGrid()]),
             ])
             ->statePath('data');
     }
@@ -277,6 +283,25 @@ final class DataGridDemo extends Page
                 TextInput::make('expected')
                     ->numeric()
                     ->disabled(),
+            ]);
+    }
+
+    public static function scansGrid(): DataGrid
+    {
+        return DataGrid::make('scans')
+            ->hiddenLabel()
+            ->addable(false)
+            ->deletable(false)
+            ->reorderable(false)
+            ->table([
+                TableColumn::make(__('demo::demo.columns.code')),
+                TableColumn::make(__('demo::demo.columns.scan'))->width('10rem'),
+            ])
+            ->schema([
+                TextEntry::make('code')->placeholder('—'),
+                TextInput::make('scan')
+                    ->placeholder(__('demo::demo.placeholders.scan'))
+                    ->visible(fn (Get $get): bool => filled($get('code'))),
             ]);
     }
 

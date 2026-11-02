@@ -976,9 +976,16 @@ export function createGrid(
         }
 
         const active = grid.getActiveCell()
+        const column = active ? grid.getColumns()[active.cell] : null
+        const skipsRowsWithoutInput = EDITABLE_TYPES.includes(column?.source?.editor?.type)
+        const hasInput = (item) => {
+            const cell = rows.get(item.__key)?.cells?.[column.field]
+
+            return Boolean(cell?.visible) && !cell.disabled
+        }
         let target = active ? active.row + direction : -1
 
-        while (isPlaceholder(items[target])) {
+        while (target >= 0 && target < grid.getDataLength() && (isPlaceholder(items[target]) || (skipsRowsWithoutInput && !hasInput(items[target])))) {
             target += direction
         }
 
