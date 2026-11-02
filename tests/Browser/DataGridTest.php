@@ -8,6 +8,8 @@ const LINES = '[id="form.lines"]';
 
 const ADJUSTMENTS = '[id="form.adjustments"]';
 
+const SCANS = '[id="form.scans"]';
+
 function cell(int $row, int $column, string $grid = LINES): string
 {
     return sprintf('%s .slick-row[style*="top: %dpx"] .slick-cell.l%d', $grid, $row * 44, $column);
@@ -91,6 +93,22 @@ it('moves down with Enter and up with Shift+Enter while typing', function (): vo
         ->wait(1.5)
         ->assertScript(savedState().'[0].quantity', 3)
         ->assertScript(savedState().'[1].quantity', 4);
+});
+
+it('skips rows without an input in the column on Enter and Shift+Enter', function (): void {
+    visitDemo()
+        ->click(cell(0, 1, SCANS))
+        ->keys(cell(0, 1, SCANS).' input', ['A', 'Enter'])
+        ->assertScript('document.querySelector(\''.SCANS.' .slick-cell.active\').closest(".slick-row").style.top', '88px')
+        ->keys(cell(2, 1, SCANS), ['C', 'Shift+Enter'])
+        ->assertScript('document.querySelector(\''.SCANS.' .slick-cell.active\').closest(".slick-row").style.top', '0px');
+});
+
+it('stays on the row when no row below has an input in the column', function (): void {
+    visitDemo()
+        ->click(cell(1, 5))
+        ->keys(cell(1, 5).' input', ['!', 'Enter'])
+        ->assertScript('document.querySelector(\''.LINES.' .slick-cell.active\').closest(".slick-row").style.top', '44px');
 });
 
 it('opens a select cell from the keyboard and moves on after picking', function (): void {
