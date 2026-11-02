@@ -241,3 +241,16 @@ it('starts editing a text cell by typing on it', function (): void {
         ->wait(1.5)
         ->assertScript(savedState().'[0].quantity', 9);
 });
+
+it('sizes the actions column to the inline row actions', function (): void {
+    $fits = visitDemo()->script(<<<'JS'
+        () => [...document.querySelectorAll('.fi-data-grid-inline-actions')].every((actions) => {
+            const cell = actions.closest('.fi-data-grid-actions-cell').getBoundingClientRect()
+            const box = actions.getBoundingClientRect()
+
+            return cell.width > 56 && box.left >= cell.left && box.right <= cell.right
+        })
+        JS);
+
+    expect($fits)->toBeTrue();
+});

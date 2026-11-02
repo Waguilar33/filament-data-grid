@@ -1057,7 +1057,7 @@
     pointer-events: none;
 }
 
-.fi-data-grid-canvas.fi-data-grid-actions-probe {
+.fi-data-grid-canvas .fi-data-grid-actions-probe {
     position: absolute;
     top: 0;
     left: 0;
@@ -1065,7 +1065,7 @@
     pointer-events: none;
 }
 
-.fi-data-grid-canvas.fi-data-grid-actions-probe > div {
+.fi-data-grid-canvas .fi-data-grid-actions-probe > div {
     display: flex;
 }
 

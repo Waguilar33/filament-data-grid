@@ -127,9 +127,11 @@ export function createGrid(
         }
 
         const probe = document.createElement('div')
-        probe.className = 'fi-data-grid-canvas fi-data-grid-actions-probe'
+        probe.className = 'fi-data-grid-actions-probe'
         probe.innerHTML = inline.map((template) => `<div>${template.replaceAll(payload.rowKeyPlaceholder, '')}</div>`).join('')
-        element.appendChild(probe)
+        const canvas = element.querySelector('.fi-data-grid-canvas') ?? element
+
+        canvas.appendChild(probe)
 
         const widest = Math.max(...[...probe.children].map((row) => Math.ceil(row.firstElementChild.getBoundingClientRect().width)))
 
