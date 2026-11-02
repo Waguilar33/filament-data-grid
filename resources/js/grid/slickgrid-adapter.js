@@ -10,7 +10,7 @@ const MOVE_COLUMN = '__move'
 const TOGGLE_COLUMN = '__toggle'
 const TOGGLE_WIDTH = 44
 const ROW_HEIGHT = 44
-const FLEXIBLE_MIN_WIDTH = 240
+const FLEXIBLE_MIN_WIDTH = 160
 const ACTIONS_WIDTH = 56
 const INLINE_ACTIONS_PADDING = 24
 const INLINE_ACTIONS_CLASS = 'fi-data-grid-inline-actions'
@@ -140,13 +140,15 @@ export function createGrid(
         return Math.max(ACTIONS_WIDTH, widest + INLINE_ACTIONS_PADDING)
     }
 
+    const flexibleMinWidth = () => toPixels(payload.flexibleColumnMinWidth) ?? FLEXIBLE_MIN_WIDTH
+
     const columnDefinitions = () => {
         const columns = payload.columns.map((column) => ({
             id: column.field,
             field: column.field,
             name: columnHeader(column),
             fixedWidth: userWidths.get(column.field) ?? toPixels(column.width),
-            width: userWidths.get(column.field) ?? toPixels(column.width) ?? FLEXIBLE_MIN_WIDTH,
+            width: userWidths.get(column.field) ?? toPixels(column.width) ?? flexibleMinWidth(),
             minWidth: 60,
             resizable: true,
             sortable: false,
@@ -726,7 +728,7 @@ export function createGrid(
         const fixed = columns.reduce((sum, column) => sum + (column.fixedWidth ?? 0), 0)
         const flexible = columns.filter((column) => !column.fixedWidth)
         const flexibleWidth = Math.max(
-            FLEXIBLE_MIN_WIDTH,
+            flexibleMinWidth(),
             Math.floor((available - fixed) / Math.max(flexible.length, 1)),
         )
 
