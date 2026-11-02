@@ -245,7 +245,7 @@ When the grid is reorderable, the count includes the drag handle column.
 
 ## Row actions
 
-Each row shows its delete action and any `extraItemActions()`. These are normal Filament Actions, so they can open modals and slide-overs. The row's key is in `$arguments['item']`:
+Each row shows its `extraItemActions()` followed by the delete action, exactly as you build them. These are normal Filament Actions, so they can open modals and slide-overs. The row's key is in `$arguments['item']`:
 
 ```php
 use Filament\Actions\Action;
@@ -262,7 +262,24 @@ DataGrid::make('lines')
     ])
 ```
 
-A row with two or fewer visible actions shows them inline as link actions with their label and icon, the same as `DataGridEntry`'s `recordActions()`. A row with three or more puts them in a menu. The count is per row, so a row whose actions are hidden by `visible()` can be inline while another row has a menu.
+An action without a style renders as a link with its label and icon, the same as a record action in a Filament table and in `DataGridEntry`. `->button()`, `->iconButton()` and the other styles are respected. The actions column is as wide as the widest row's actions, and the plugin never groups them for you: 15 actions show 15 actions.
+
+To put actions in a menu, wrap them in an `ActionGroup`. It renders as the dropdown you configured, next to any other actions:
+
+```php
+use Filament\Actions\ActionGroup;
+
+DataGrid::make('lines')
+    ->extraItemActions([
+        Action::make('stock'),
+        ActionGroup::make([
+            Action::make('duplicate'),
+            Action::make('archive'),
+        ]),
+    ])
+```
+
+Upgrading from an earlier beta: rows used to put every extra action and delete in a menu automatically. Wrap them in an `ActionGroup` to keep that, and style the group's trigger as you like. `DataGridIconAlias::ROW_ACTIONS` and the `row_menu` translation are gone.
 
 ## Reordering
 
@@ -803,7 +820,6 @@ FilamentIcon::register([
 | --- | --- |
 | `DataGridIconAlias::ROW_EXPAND` (`filament-data-grid::row.expand`) | The arrow that opens a row's child rows. |
 | `DataGridIconAlias::ROW_OPEN` (`filament-data-grid::row.open`) | The chevron that opens a record, inside a Filament table. |
-| `DataGridIconAlias::ROW_ACTIONS` (`filament-data-grid::row.actions`) | The row menu of the editable grid. |
 | `DataGridIconAlias::CELL_REORDER` (`filament-data-grid::cell.reorder`) | The drag handle. |
 | `DataGridIconAlias::CELL_DATE` (`filament-data-grid::cell.date`) | The calendar in date cells. |
 | `DataGridIconAlias::CELL_EDIT` (`filament-data-grid::cell.edit`) | The pencil in cells that open a modal, and after the header label of editable columns. |

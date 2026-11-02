@@ -6,10 +6,7 @@ namespace Waguilar\FilamentDataGrid\Payload;
 
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
-use Filament\Support\Facades\FilamentIcon;
-use Filament\Support\Icons\Heroicon;
 use Waguilar\FilamentDataGrid\DataGrid;
-use Waguilar\FilamentDataGrid\View\DataGridIconAlias;
 
 final class RenderRowActions
 {
@@ -17,11 +14,9 @@ final class RenderRowActions
 
     public const INLINE_ACTIONS_CLASS = 'fi-data-grid-inline-actions';
 
-    private const MAX_INLINE_ACTIONS = 2;
-
     public function hasActions(DataGrid $grid): bool
     {
-        return $grid->isDeletable() || $grid->getExtraItemActions() !== [];
+        return $grid->isDeletable() || $grid->getRowActions() !== [];
     }
 
     public function handle(DataGrid $grid, string $key): ?string
@@ -30,42 +25,21 @@ final class RenderRowActions
             return null;
         }
 
-        $extraActions = array_values(array_filter(
-            array_map(fn (Action $action): Action => $action(['item' => $key]), $grid->getExtraItemActions()),
-            fn (Action $action): bool => $action->isVisible(),
-        ));
+        $actions = array_map(fn (Action|ActionGroup $action): Action|ActionGroup => $this->forRow($action, $key), $grid->getRowActions());
 
         $deleteAction = $grid->isDeletable() ? $grid->getAction($grid->getDeleteActionName()) : null;
-        $deleteAction = $deleteAction?->__invoke(['item' => $key]);
 
-        if ($deleteAction !== null && ! $deleteAction->isVisible()) {
-            $deleteAction = null;
+        if ($deleteAction !== null) {
+            $actions[] = $deleteAction(['item' => $key])->link();
         }
 
-        $actions = [...$extraActions, ...($deleteAction ? [$deleteAction] : [])];
+        $html = implode('', array_map(fn (Action|ActionGroup $action): string => $action->isVisible() ? $action->toHtml() : '', $actions));
 
-        if ($actions === []) {
+        if ($html === '') {
             return null;
         }
 
-        if (count($actions) <= self::MAX_INLINE_ACTIONS) {
-            $html = implode('', array_map(fn (Action $action): string => $action->link()->toHtml(), $actions));
-
-            return $this->compact('<div class="fi-ta-actions '.self::INLINE_ACTIONS_CLASS.'">'.$html.'</div>');
-        }
-
-        $menuLabel = __('filament-data-grid::data-grid.actions.row_menu.label');
-
-        $html = ActionGroup::make([...$extraActions, ...($deleteAction ? [$deleteAction->grouped()] : [])])
-            ->label(is_string($menuLabel) ? $menuLabel : null)
-            ->icon(FilamentIcon::resolve(DataGridIconAlias::ROW_ACTIONS) ?? Heroicon::EllipsisVertical)
-            ->iconButton()
-            ->color('gray')
-            ->dropdownPlacement('bottom-end')
-            ->dropdownTeleport()
-            ->toHtml();
-
-        return $this->compact($html);
+        return $this->compact('<div class="fi-ta-actions '.self::INLINE_ACTIONS_CLASS.'">'.$html.'</div>');
     }
 
     /**
@@ -84,6 +58,17 @@ final class RenderRowActions
         $templates[$id] = $template;
 
         return $id;
+    }
+
+    private function forRow(Action|ActionGroup $action, string $key): Action|ActionGroup
+    {
+        if ($action instanceof Action) {
+            return $action(['item' => $key]);
+        }
+
+        $group = $action->getClone();
+
+        return $group->actions(array_map(fn (Action|ActionGroup $child): Action|ActionGroup => $this->forRow($child, $key), $group->getActions()));
     }
 
     private function compact(?string $html): ?string
