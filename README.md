@@ -243,6 +243,15 @@ DataGrid::make('lines')
 
 When the grid is reorderable, the count includes the drag handle column.
 
+`DataGridEntry` has it too, standalone and in `toTableContent()`:
+
+```php
+DataGridEntry::make('deliveries')
+    ->frozenColumns(1)
+```
+
+Frozen columns are ignored while a grid has child rows. On `DataGridEntry` that means any row that can open: child rows, a `childTable()`, or `expandedAbove()` and `expandedBelow()` content, because an open row spans every column.
+
 ## Flexible column width
 
 The editable `DataGrid` has one flexible column: the one without a `width()`. It takes the room the fixed-width columns leave, and never gets narrower than 160px; if the grid is narrower than that, it scrolls sideways. Change the floor per grid, in pixels or rem:

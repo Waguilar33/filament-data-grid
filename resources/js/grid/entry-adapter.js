@@ -125,6 +125,9 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
 
     const hasChildren = () => payload.rows.some(canExpand)
 
+    // Expanded rows span every column, and a span cannot cross SlickGrid's frozen pane split.
+    const frozenColumnIndex = () => (hasChildren() || !(payload.frozenColumns > 0) ? -1 : payload.frozenColumns - 1)
+
     const perPage = () => (typeof recordsPerPage === 'number' ? recordsPerPage : null)
 
     const pageCountFor = (count) => (perPage() ? Math.max(1, Math.ceil(count / perPage())) : 1)
@@ -317,7 +320,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
 
         const columns = grid.getColumns()
         const start = columns.indexOf(column)
-        const end = labelSpanEnd(columns, start)
+        const end = frozenColumnIndex() >= start ? Math.min(labelSpanEnd(columns, start), frozenColumnIndex()) : labelSpanEnd(columns, start)
         const insetEnd = columns[end]?.cssClass.includes('fi-data-grid-inset-end') ? ' fi-data-grid-inset-end' : ''
 
         return { position: `l${start} r${end}`, classes: `${totalCellClasses(column)}${insetEnd}` }
@@ -431,6 +434,11 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         }
 
         insetEdgeColumns(columns)
+
+        if (frozenColumnIndex() >= 0) {
+            columns[frozenColumnIndex()].cssClass += ' fi-data-grid-frozen-edge'
+            columns[frozenColumnIndex()].headerCssClass += ' fi-data-grid-frozen-edge'
+        }
 
         return columns
     }
@@ -739,6 +747,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
                         'fi-data-grid-parent-row',
                         canExpand(item.row) ? 'fi-data-grid-parent-row-expandable' : '',
                         expanded.has(item.row.key) ? 'fi-data-grid-parent-row-expanded' : '',
+                        item.row.link ? 'fi-data-grid-parent-row-linked' : '',
                         isLast ? 'fi-data-grid-row-last' : '',
                     ].join(' '),
                 }
@@ -778,6 +787,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         editable: false,
         enableCellNavigation: false,
         enableColumnReorder: false,
+        frozenColumn: frozenColumnIndex(),
         autoHeight: true,
         rowHeight: ROW_HEIGHT,
         enableVariableRowHeight: true,
@@ -841,6 +851,30 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
     grid.onRendered.subscribe(positionChildTables)
     grid.onFooterRowCellRendered.subscribe((event, { node, column }) => renderTotal(node, column))
     renderTotals()
+
+    let hoveredRows = []
+
+    const hoverRows = (nodes) => {
+        hoveredRows.forEach((node) => node.classList.remove('fi-data-grid-parent-row-hovered'))
+        hoveredRows = nodes
+        hoveredRows.forEach((node) => node.classList.add('fi-data-grid-parent-row-hovered'))
+    }
+
+    const hoverFrozenRow = (event) => {
+        if (frozenColumnIndex() < 0) {
+            return
+        }
+
+        const cell = grid.getCellFromEvent(event)
+        const halves = cell ? [grid.getCellNode(cell.row, 0), grid.getCellNode(cell.row, grid.getColumns().length - 1)] : []
+
+        hoverRows(halves.map((node) => node?.parentElement).filter(Boolean))
+    }
+
+    const clearHoveredRows = () => hoverRows([])
+
+    element.addEventListener('mouseover', hoverFrozenRow)
+    element.addEventListener('mouseleave', clearHoveredRows)
 
     const toggle = (key) => {
         if (expanded.has(key)) {
@@ -968,6 +1002,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
                 hadToggles !== nextPayload.rows.some((row) => Boolean(nextPayload.childTable) || nextPayload.childColumns.length > 0 || Boolean(row.above) || Boolean(row.below))
 
             const hadTotals = hasTotals()
+            const hadFrozenColumnIndex = frozenColumnIndex()
 
             payload = nextPayload
 
@@ -981,7 +1016,9 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
             indexRows()
             applyChildTablePadding()
 
-            if (columnsChanged) {
+            if (columnsChanged || hadFrozenColumnIndex !== frozenColumnIndex()) {
+                clearHoveredRows()
+                grid.setOptions({ frozenColumn: frozenColumnIndex() })
                 grid.setColumns(columnDefinitions())
             }
 
@@ -996,6 +1033,8 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         destroy() {
             cancelAnimationFrame(resizeFrame)
             resizeObserver.disconnect()
+            element.removeEventListener('mouseover', hoverFrozenRow)
+            element.removeEventListener('mouseleave', clearHoveredRows)
             document.fonts?.removeEventListener?.('loadingdone', remeasure)
             grid.destroy()
             grid = null

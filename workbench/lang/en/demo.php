@@ -34,12 +34,15 @@ return [
     ],
     'route' => [
         'table_navigation' => 'Delivery table',
+        'frozen_navigation' => 'Customer deliveries',
         'descriptions' => [
+            'frozen' => 'The customer stays in place while the rest scrolls sideways.',
             'browser' => 'Deliveries on this route, filtered in the browser.',
             'server' => 'The same deliveries, loaded page by page from the server.',
             'planned' => 'Deliveries planned for tomorrow, none yet.',
         ],
         'sections' => [
+            'frozen' => 'Deliveries by customer',
             'browser' => 'Rows sent to the browser',
             'server' => 'Rows loaded from the server',
             'planned' => 'Planned deliveries',
