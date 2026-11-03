@@ -16,4 +16,13 @@ final class DuplicateRecordActionName extends LogicException
             $action,
         ));
     }
+
+    public static function emptyState(string $entry, string $action): self
+    {
+        return new self(sprintf(
+            'DataGridEntry [%s] has an emptyStateActions() action named like a row action: [%s]. Filament finds an action by its name, so give each a unique name.',
+            $entry,
+            $action,
+        ));
+    }
 }

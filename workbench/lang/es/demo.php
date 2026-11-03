@@ -37,10 +37,16 @@ return [
         'descriptions' => [
             'browser' => 'Entregas de esta ruta, filtradas en el navegador.',
             'server' => 'Las mismas entregas, cargadas página por página desde el servidor.',
+            'planned' => 'Entregas planificadas para mañana, ninguna todavía.',
         ],
         'sections' => [
             'browser' => 'Filas enviadas al navegador',
             'server' => 'Filas cargadas desde el servidor',
+            'planned' => 'Entregas planificadas',
+        ],
+        'empty' => [
+            'heading' => 'Sin entregas todavía',
+            'description' => 'Las entregas aparecen aquí cuando se planifican.',
         ],
         'navigation' => 'Ruta de entrega',
         'columns' => [
@@ -69,6 +75,7 @@ return [
             'awaiting_payment' => 'Esperando pago',
         ],
         'actions' => [
+            'plan' => 'Planificar una entrega',
             'edit' => 'Editar',
             'edited' => 'Entrega :number editada',
             'deliver' => 'Entregar',

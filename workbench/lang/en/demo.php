@@ -37,10 +37,16 @@ return [
         'descriptions' => [
             'browser' => 'Deliveries on this route, filtered in the browser.',
             'server' => 'The same deliveries, loaded page by page from the server.',
+            'planned' => 'Deliveries planned for tomorrow, none yet.',
         ],
         'sections' => [
             'browser' => 'Rows sent to the browser',
             'server' => 'Rows loaded from the server',
+            'planned' => 'Planned deliveries',
+        ],
+        'empty' => [
+            'heading' => 'No deliveries yet',
+            'description' => 'Deliveries show up here once they are planned.',
         ],
         'navigation' => 'Delivery route',
         'columns' => [
@@ -69,6 +75,7 @@ return [
             'awaiting_payment' => 'Awaiting payment',
         ],
         'actions' => [
+            'plan' => 'Plan a delivery',
             'edit' => 'Edit',
             'edited' => 'Delivery :number edited',
             'deliver' => 'Deliver',

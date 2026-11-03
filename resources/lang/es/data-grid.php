@@ -14,6 +14,7 @@ return [
     ],
     'entry' => [
         'empty' => 'Sin resultados.',
+        'empty_state_heading' => 'Sin registros',
         'expand' => 'Expandir fila',
         'collapse' => 'Contraer fila',
         'open_record' => 'Abrir',

@@ -11,6 +11,8 @@ export default function dataGridEntry({ schemaComponent, translations, icons }) 
         appliedPayload: null,
         observers: [],
         isServerSide: false,
+        isEmpty: false,
+        hasEmptyState: false,
         isMounted: false,
         isLoading: false,
         latestRequest: 0,
@@ -32,6 +34,8 @@ export default function dataGridEntry({ schemaComponent, translations, icons }) 
             const payload = JSON.parse(this.appliedPayload)
 
             this.isServerSide = payload.serverSide
+            this.isEmpty = payload.isEmpty
+            this.hasEmptyState = payload.hasEmptyState
             this.filterDefinitions = payload.filters ?? []
             this.draftFilters = this.emptyFilters()
             this.activeFilters = this.emptyFilters()
@@ -57,6 +61,10 @@ export default function dataGridEntry({ schemaComponent, translations, icons }) 
             this.observers.forEach((observer) => observer.disconnect())
             this.childTables?.destroy()
             this.grid?.destroy()
+        },
+
+        get showsEmptyState() {
+            return this.hasEmptyState && this.isEmpty && this.total === 0
         },
 
         get overview() {
@@ -180,6 +188,10 @@ export default function dataGridEntry({ schemaComponent, translations, icons }) 
             this.appliedPayload = payload
 
             const nextPayload = JSON.parse(payload)
+
+            this.isEmpty = nextPayload.isEmpty
+            this.hasEmptyState = nextPayload.hasEmptyState
+
             const query = this.grid.getQuery()
 
             this.grid.setPayload(nextPayload)

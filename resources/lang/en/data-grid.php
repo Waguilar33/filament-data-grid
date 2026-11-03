@@ -14,6 +14,7 @@ return [
     ],
     'entry' => [
         'empty' => 'No results.',
+        'empty_state_heading' => 'No records',
         'expand' => 'Expand row',
         'collapse' => 'Collapse row',
         'open_record' => 'Open',

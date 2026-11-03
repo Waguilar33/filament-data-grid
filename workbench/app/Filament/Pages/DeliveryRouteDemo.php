@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Workbench\App\Filament\Pages;
 
+use Filament\Actions\Action;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\RepeatableEntry\TableColumn;
@@ -24,6 +25,11 @@ use Workbench\App\Catalog\FakeDeliveries;
 final class DeliveryRouteDemo extends Page
 {
     protected static ?int $navigationSort = 2;
+
+    /**
+     * @var list<array<string, mixed>>
+     */
+    public array $plannedDeliveries = [];
 
     public static function getNavigationLabel(): string
     {
@@ -49,6 +55,20 @@ final class DeliveryRouteDemo extends Page
                 ->icon(Heroicon::OutlinedServerStack)
                 ->serverSide()
                 ->records(fn (?string $search, int $page, ?int $recordsPerPage, array $filters): LengthAwarePaginator => $this->searchDeliveries($search, $page, $recordsPerPage, $filters)),
+            self::rows('planned_deliveries')
+                ->heading(__('demo::demo.route.sections.planned'))
+                ->description(__('demo::demo.route.descriptions.planned'))
+                ->icon(Heroicon::OutlinedCalendarDays)
+                ->serverSide()
+                ->records(fn (): array => $this->plannedDeliveries)
+                ->emptyStateIcon(Heroicon::OutlinedCalendarDays)
+                ->emptyStateHeading(__('demo::demo.route.empty.heading'))
+                ->emptyStateDescription(__('demo::demo.route.empty.description'))
+                ->emptyStateActions([
+                    Action::make('planDelivery')
+                        ->label(__('demo::demo.route.actions.plan'))
+                        ->action(fn () => $this->plannedDeliveries[] = FakeDeliveries::all()[0]),
+                ]),
         ]);
     }
 
@@ -68,6 +88,8 @@ final class DeliveryRouteDemo extends Page
                     ->multiple()
                     ->options(array_combine(FakeDeliveries::customers(), FakeDeliveries::customers())),
             ])
+            ->emptyStateIcon(Heroicon::OutlinedTruck)
+            ->emptyStateHeading(__('demo::demo.route.empty.heading'))
             ->paginated([5, 10, 25, DataGridEntry::ALL_RECORDS])
             ->defaultPaginationPageOption(10);
     }
