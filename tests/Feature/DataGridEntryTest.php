@@ -393,6 +393,18 @@ it('pads the child table by 15 pixels unless told otherwise', function (): void 
         ->and(deliveriesPayload(mountDeliveries(fn (DataGridEntry $entry): DataGridEntry => $entry->childTablePadding(-4)))['childTablePadding'])->toBe(0);
 });
 
+it('freezes the leading columns, capped at the number of columns', function (int $requested, int $frozen): void {
+    expect(deliveriesPayload(mountDeliveries(fn (DataGridEntry $entry): DataGridEntry => $entry->frozenColumns($requested)))['frozenColumns'])->toBe($frozen);
+})->with([
+    'none' => [0, 0],
+    'one' => [1, 1],
+    'more than there are' => [5, 3],
+]);
+
+it('freezes no columns unless asked', function (): void {
+    expect(deliveriesPayload(mountDeliveries())['frozenColumns'])->toBe(0);
+});
+
 it('sends no row height by default, so the browser sizes each row to its content', function (): void {
     $payload = serverEntry(fn (DataGridEntry $entry): DataGridEntry => $entry->state(manyDeliveries(2)))->getGridPayload();
 

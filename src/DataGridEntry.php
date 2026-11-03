@@ -74,6 +74,8 @@ class DataGridEntry extends RepeatableEntry
 
     protected int|Closure|null $rowHeight = null;
 
+    protected int|Closure $frozenColumns = 0;
+
     protected string|Closure|null $childTable = null;
 
     /**
@@ -409,6 +411,20 @@ class DataGridEntry extends RepeatableEntry
         $this->rowHeight = $height;
 
         return $this;
+    }
+
+    public function frozenColumns(int|Closure $count = 1): static
+    {
+        $this->frozenColumns = $count;
+
+        return $this;
+    }
+
+    public function getFrozenColumns(): int
+    {
+        $count = $this->evaluate($this->frozenColumns);
+
+        return is_int($count) ? max(0, $count) : 0;
     }
 
     public function renderExpandedAbove(Schema $item): ?string

@@ -649,7 +649,7 @@
     cursor: pointer;
 }
 
-.fi-data-grid-entry-grid .fi-data-grid-parent-row:hover .slick-cell {
+.fi-data-grid-entry-grid .fi-data-grid-parent-row:is(:hover, .fi-data-grid-parent-row-hovered) .slick-cell {
     background-color: var(--fi-data-grid-row-hover-bg);
 }
 
@@ -1028,7 +1028,7 @@
     color: var(--fi-data-grid-text);
 }
 
-.fi-data-grid-entry-grid .fi-data-grid-parent-row:has(.fi-data-grid-record-link) .slick-cell {
+.fi-data-grid-entry-grid .fi-data-grid-parent-row-linked .slick-cell {
     cursor: pointer;
 }
 

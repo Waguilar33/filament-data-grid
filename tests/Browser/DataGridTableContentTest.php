@@ -130,3 +130,38 @@ it('sizes the columns again for the next page of the table', function (): void {
 
     expect($page->script(clippedContentIn(TABLE_GRID)))->toBe([]);
 });
+
+it('keeps the frozen first column in place while the rest scrolls sideways', function (): void {
+    $page = visit('/demo/customer-deliveries-demo')->waitForEvent('networkidle')->resize(480, 900)->wait(0.5);
+    $grid = '.fi-data-grid-in-table';
+
+    $page->assertSeeIn($grid.' .slick-pane-left .slick-header', 'Customer')
+        ->assertDontSeeIn($grid.' .slick-pane-left .slick-header', 'Delivery')
+        ->assertSeeIn($grid.' .slick-pane-right .slick-header', 'Delivery')
+        ->assertAttributeContains($grid.' .slick-pane-left .slick-header-column', 'class', 'fi-data-grid-frozen-edge');
+
+    $scroll = $page->script(<<<'JS'
+        () => {
+            const grid = document.querySelector('.fi-data-grid-in-table')
+            const viewport = grid.querySelector('.slick-viewport-right')
+            const customer = grid.querySelector('.slick-viewport-left .slick-cell')
+            const before = customer.getBoundingClientRect().left
+
+            viewport.scrollLeft = viewport.scrollWidth
+
+            return {
+                overflows: viewport.scrollWidth > viewport.clientWidth,
+                scrolled: viewport.scrollLeft > 0,
+                customerStays: customer.getBoundingClientRect().left === before,
+                bothHalvesLinked: [...grid.querySelectorAll('.fi-data-grid-parent-row')].every((row) => row.classList.contains('fi-data-grid-parent-row-linked')),
+            }
+        }
+        JS);
+
+    expect($scroll)->toBe(['overflows' => true, 'scrolled' => true, 'customerStays' => true, 'bothHalvesLinked' => true]);
+
+    $page->click($grid.' .slick-viewport-left .slick-row:first-child .slick-cell')
+        ->wait(1.5)
+        ->assertUrlIs('*delivery-route-demo*')
+        ->assertNoJavaScriptErrors();
+});

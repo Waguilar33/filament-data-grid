@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.29 - 2026-11-02
+
+- `DataGridEntry` can keep its first columns in place while the rest scroll sideways, with `frozenColumns()`, like the editable `DataGrid`. It works standalone and in `toTableContent()`. Hovering a row highlights both halves of it, and clicking the frozen half opens the record. Frozen columns are ignored while any row can open (child rows, a `childTable()`, or `expandedAbove()` and `expandedBelow()` content), because an open row spans every column.
+
 ## v1.0.0-beta.28 - 2026-11-02
 
 - `DataGridEntry` can show an empty state like a Filament table's when it has no rows at all, with `emptyStateIcon()`, `emptyStateHeading()`, `emptyStateDescription()` and `emptyStateActions()`. It uses Filament's table empty state markup, below the grid's heading, without column headers or pagination. A search or filter that matches nothing still shows "No results.", in the browser and with `serverSide()`. Without any of these set, an empty grid looks as before.

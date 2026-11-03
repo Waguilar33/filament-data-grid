@@ -34,12 +34,15 @@ return [
     ],
     'route' => [
         'table_navigation' => 'Tabla de entregas',
+        'frozen_navigation' => 'Entregas por cliente',
         'descriptions' => [
+            'frozen' => 'El cliente se queda fijo mientras el resto se desplaza a los lados.',
             'browser' => 'Entregas de esta ruta, filtradas en el navegador.',
             'server' => 'Las mismas entregas, cargadas página por página desde el servidor.',
             'planned' => 'Entregas planificadas para mañana, ninguna todavía.',
         ],
         'sections' => [
+            'frozen' => 'Entregas por cliente',
             'browser' => 'Filas enviadas al navegador',
             'server' => 'Filas cargadas desde el servidor',
             'planned' => 'Entregas planificadas',

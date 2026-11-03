@@ -6,6 +6,7 @@ use Filament\Facades\Filament;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
 use Workbench\App\Filament\Pages\CashShiftDemo;
+use Workbench\App\Filament\Pages\CustomerDeliveriesDemo;
 use Workbench\App\Filament\Pages\DeliveryTableDemo;
 
 /**
@@ -78,4 +79,8 @@ it('marks a compact grid so the table header around it is compact', function ():
 
     expect(Livewire::test(CashShiftDemo::class)->html())->toContain('fi-data-grid-in-table fi-data-grid-compact')
         ->and(Livewire::test(DeliveryTableDemo::class)->html())->not->toContain('fi-data-grid-compact');
+});
+
+it('freezes the leading columns of a grid drawn as table content', function (): void {
+    expect(tableGridPayload(Livewire::test(CustomerDeliveriesDemo::class))['frozenColumns'])->toBe(1);
 });
