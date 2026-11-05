@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.31 - 2026-11-05
+
+- Fix: in a `DataGridEntry` with child rows, a row whose nested `RepeatableEntry` has no items no longer shows the open button, and clicking it no longer opens an empty child table. The button's cell stays, so the row's cells line up with the rows that can open. A row with `expandedAbove()` or `expandedBelow()` content but no child rows opens to show only that content: the empty child table with its "No lines." message is gone, and so is the `no_children` translation. Rows with a `childTable()` open as before.
+
 ## v1.0.0-beta.30 - 2026-11-05
 
 - Fix: in a grid without frozen columns, the rows area reached one header height past the bottom of the grid and covered whatever came next, such as the pagination of a `DataGridEntry`, so its per-page select and page buttons could not be clicked. It showed once rows were taller than one line, for example with wrapped badges or an open row. The rows area now ends where the grid ends, in `DataGridEntry`, `toTableContent()` and the editable `DataGrid`.

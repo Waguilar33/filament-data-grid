@@ -121,7 +121,10 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
 
     const hasChildTable = () => !hasNativeChildTable() && payload.childColumns.length > 0
 
-    const canExpand = (row) => hasNativeChildTable() || hasChildTable() || Boolean(row.above) || Boolean(row.below)
+    const canExpandIn = (data, row) =>
+        Boolean(data.childTable && childTables) || (data.childColumns.length > 0 && row.children?.length > 0) || Boolean(row.above) || Boolean(row.below)
+
+    const canExpand = (row) => canExpandIn(payload, row)
 
     const hasChildren = () => payload.rows.some(canExpand)
 
@@ -195,16 +198,12 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
 
             if (hasNativeChildTable()) {
                 group.push({ kind: 'child-table', row, tableStart: true, tableEnd: true })
-            } else if (hasChildTable()) {
-                if (row.children.length === 0) {
-                    group.push({ kind: 'child-empty', row, tableStart: true, tableEnd: true })
-                } else {
-                    group.push({ kind: 'child-header', row, tableStart: true })
+            } else if (hasChildTable() && row.children.length > 0) {
+                group.push({ kind: 'child-header', row, tableStart: true })
 
-                    row.children.forEach((cells, childIndex) =>
-                        group.push({ kind: 'child', row, cells, childIndex, tableEnd: childIndex === row.children.length - 1 }),
-                    )
-                }
+                row.children.forEach((cells, childIndex) =>
+                    group.push({ kind: 'child', row, cells, childIndex, tableEnd: childIndex === row.children.length - 1 }),
+                )
             }
 
             if (row.below) {
@@ -263,10 +262,6 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
 
         if (item.kind === 'child-table') {
             return `<div class="fi-data-grid-child-table-placeholder ${edges}"></div>`
-        }
-
-        if (item.kind === 'child-empty') {
-            return `<div class="fi-data-grid-child-row fi-data-grid-child-empty ${edges}">${escapeHtml(translations.no_children)}</div>`
         }
 
         const isHeader = item.kind === 'child-header'
@@ -999,7 +994,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
             const columnsChanged =
                 JSON.stringify(nextPayload.columns) !== JSON.stringify(payload.columns) ||
                 JSON.stringify(nextPayload.childColumns) !== JSON.stringify(payload.childColumns) ||
-                hadToggles !== nextPayload.rows.some((row) => Boolean(nextPayload.childTable) || nextPayload.childColumns.length > 0 || Boolean(row.above) || Boolean(row.below))
+                hadToggles !== nextPayload.rows.some((row) => canExpandIn(nextPayload, row))
 
             const hadTotals = hasTotals()
             const hadFrozenColumnIndex = frozenColumnIndex()

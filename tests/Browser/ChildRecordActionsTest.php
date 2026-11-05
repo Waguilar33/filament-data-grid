@@ -27,7 +27,7 @@ it('deletes child rows without a modal and drops an emptied group', function ():
         ->click(paymentRow('VISA 4242').' button:has-text("Delete")')
         ->wait(0.8)
         ->assertDontSee('VISA 4242')
-        ->assertCount(PAYMENTS_GRID.' .fi-data-grid-parent-row', 2)
+        ->assertCount(PAYMENTS_GRID.' .fi-data-grid-parent-row', 3)
         ->assertSee('Total paid')
         ->assertNoJavaScriptErrors();
 });
@@ -81,3 +81,32 @@ it('shows each group only the child columns its own rows use', function (string 
     'card' => ['Card', ['Amount', 'Reference', 'Authorization'], 'A-90311'],
     'transfer' => ['Transfer', ['Amount', 'Reference', 'Bank'], 'Banco Norte'],
 ]);
+
+it('renders no toggle and no child table for a group without payments, and child tables for the others', function (): void {
+    $childMarkup = sprintf(
+        'document.querySelectorAll(%s).length',
+        json_encode(implode(', ', array_map(
+            fn (string $class): string => PAYMENTS_GRID.' '.$class,
+            ['.fi-data-grid-child-row', '.fi-data-grid-child-slot', '.fi-data-grid-child-table-host', '.fi-data-grid-child-table-placeholder'],
+        ))),
+    );
+
+    $page = visit('/demo/payments-demo')->waitForEvent('networkidle')
+        ->assertScript($childMarkup, 0)
+        ->assertCount(paymentGroup('Voucher').' .fi-data-grid-row-toggle', 0)
+        ->click(paymentGroup('Cash').' .fi-data-grid-row-toggle')
+        ->click(paymentGroup('Card').' .fi-data-grid-row-toggle')
+        ->click(paymentGroup('Transfer').' .fi-data-grid-row-toggle')
+        ->click(paymentGroup('Voucher'))
+        ->wait(0.3)
+        ->assertScript($childMarkup, 7)
+        ->assertCount(PAYMENTS_GRID.' .fi-data-grid-child-header', 3);
+
+    $methodCellsLeft = $page->script(sprintf(<<<'JS'
+        () => [...document.querySelectorAll(%s)].map((row) => row.querySelector('.slick-cell:has(.fi-in-text-item)').getBoundingClientRect().left)
+        JS, json_encode(PAYMENTS_GRID.' .fi-data-grid-parent-row')));
+
+    expect(array_unique($methodCellsLeft))->toHaveCount(1);
+
+    $page->assertNoJavaScriptErrors();
+});

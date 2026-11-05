@@ -917,12 +917,6 @@
     color: var(--fi-data-grid-child-header-text);
 }
 
-.fi-data-grid-child-empty {
-    display: flex;
-    padding-inline: calc(var(--spacing) * 3);
-    color: var(--fi-data-grid-muted);
-}
-
 .fi-data-grid-empty {
     padding-block: calc(var(--spacing) * 6);
     border-top: 1px solid var(--fi-data-grid-border);
