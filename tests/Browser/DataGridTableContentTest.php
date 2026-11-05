@@ -160,6 +160,14 @@ it('keeps the frozen first column in place while the rest scrolls sideways', fun
 
     expect($scroll)->toBe(['overflows' => true, 'scrolled' => true, 'customerStays' => true, 'bothHalvesLinked' => true]);
 
+    expect($page->script(<<<'JS'
+        () => {
+            const canvas = document.querySelector('.fi-data-grid-in-table .fi-data-grid-canvas').getBoundingClientRect()
+
+            return [...document.querySelectorAll('.fi-data-grid-in-table .slick-pane-top')].map((pane) => Math.abs(pane.getBoundingClientRect().bottom - canvas.bottom) <= 1)
+        }
+        JS))->toBe([true, true]);
+
     $page->click($grid.' .slick-viewport-left .slick-row:first-child .slick-cell')
         ->wait(1.5)
         ->assertUrlIs('*delivery-route-demo*')

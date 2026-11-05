@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.30 - 2026-11-05
+
+- Fix: in a grid without frozen columns, the rows area reached one header height past the bottom of the grid and covered whatever came next, such as the pagination of a `DataGridEntry`, so its per-page select and page buttons could not be clicked. It showed once rows were taller than one line, for example with wrapped badges or an open row. The rows area now ends where the grid ends, in `DataGridEntry`, `toTableContent()` and the editable `DataGrid`.
+
 ## v1.0.0-beta.29 - 2026-11-02
 
 - `DataGridEntry` can keep its first columns in place while the rest scroll sideways, with `frozenColumns()`, like the editable `DataGrid`. It works standalone and in `toTableContent()`. Hovering a row highlights both halves of it, and clicking the frozen half opens the record. Frozen columns are ignored while any row can open (child rows, a `childTable()`, or `expandedAbove()` and `expandedBelow()` content), because an open row spans every column.

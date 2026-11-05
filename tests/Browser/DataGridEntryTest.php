@@ -357,3 +357,41 @@ it('underlines entry links on hover and keyboard focus, like table links, but no
     expect($page->script(linkUnderline('.l5 .fi-in-text-item')))->toBe('none')
         ->and($page->script(linkUnderline('.l5 .fi-badge')))->toBe('none');
 });
+
+function rowsPaneEndsWithItsGrid(string $grid): string
+{
+    return sprintf(<<<'JS'
+        (() => {
+            const canvas = document.querySelector(%s)
+            const pane = canvas.querySelector('.slick-pane-top.slick-pane-left')
+
+            return Math.abs(pane.getBoundingClientRect().bottom - canvas.getBoundingClientRect().bottom) <= 1
+        })()
+        JS, json_encode($grid.' .fi-data-grid-canvas'));
+}
+
+function perPageSelectReceivesClicks(string $grid): string
+{
+    return sprintf(<<<'JS'
+        (() => {
+            const select = [...document.querySelectorAll(%s)].find((select) => select.offsetParent)
+            select.scrollIntoView({ block: 'center' })
+            const box = select.getBoundingClientRect()
+
+            return document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2) === select
+        })()
+        JS, json_encode($grid.' .fi-pagination select'));
+}
+
+it('keeps the rows above the pagination, so rows taller than one line never cover the per-page select', function (): void {
+    visitRoute()
+        ->click(routeRow(0).' .fi-data-grid-row-toggle')
+        ->wait(0.5)
+        ->assertScript(rowsPaneEndsWithItsGrid(ROUTE), true)
+        ->assertScript(perPageSelectReceivesClicks(ROUTE), true)
+        ->select(ROUTE.' .fi-pagination-records-per-page-select:not(.fi-compact) select', '5')
+        ->assertSee('Showing 1 to 5 of 23 results')
+        ->assertScript(visibleRowCount('.fi-data-grid-parent-row'), 5)
+        ->assertScript(rowsPaneEndsWithItsGrid(ROUTE), true)
+        ->assertNoJavaScriptErrors();
+});

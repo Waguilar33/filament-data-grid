@@ -72,6 +72,16 @@
     display: block;
 }
 
+.fi-data-grid-canvas .slick-pane-header.slick-pane-left:not(.frozen) {
+    position: relative;
+}
+
+/* SlickGrid's autoHeight sizes this pane with the header included and also offsets it by the header, so it overhangs the grid */
+.fi-data-grid-canvas .slick-pane-top.slick-pane-left:not(.frozen) {
+    top: 0 !important;
+    height: auto !important;
+}
+
 .fi-data-grid-canvas .slick-header,
 .fi-data-grid-canvas .slick-headerrow,
 .fi-data-grid-canvas .slick-footerrow,
