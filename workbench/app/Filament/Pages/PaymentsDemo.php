@@ -158,6 +158,8 @@ final class PaymentsDemo extends Page
             $groups[$payment['method']]['payments'][$key] = $payment;
         }
 
+        $groups['Voucher'] ??= ['method' => 'Voucher', 'total' => 0, 'payments' => []];
+
         return $groups;
     }
 }

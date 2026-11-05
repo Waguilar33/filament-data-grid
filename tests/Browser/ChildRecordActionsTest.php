@@ -27,7 +27,7 @@ it('deletes child rows without a modal and drops an emptied group', function ():
         ->click(paymentRow('VISA 4242').' button:has-text("Delete")')
         ->wait(0.8)
         ->assertDontSee('VISA 4242')
-        ->assertCount(PAYMENTS_GRID.' .fi-data-grid-parent-row', 2)
+        ->assertCount(PAYMENTS_GRID.' .fi-data-grid-parent-row', 3)
         ->assertSee('Total paid')
         ->assertNoJavaScriptErrors();
 });
@@ -81,3 +81,20 @@ it('shows each group only the child columns its own rows use', function (string 
     'card' => ['Card', ['Amount', 'Reference', 'Authorization'], 'A-90311'],
     'transfer' => ['Transfer', ['Amount', 'Reference', 'Bank'], 'Banco Norte'],
 ]);
+
+it('shows no toggle on a group without payments and keeps its cells in line with the others', function (): void {
+    $page = visit('/demo/payments-demo')->waitForEvent('networkidle')
+        ->assertCount(paymentGroup('Voucher').' .fi-data-grid-row-toggle', 0)
+        ->assertCount(paymentGroup('Cash').' .fi-data-grid-row-toggle', 1)
+        ->click(paymentGroup('Voucher'))
+        ->wait(0.3)
+        ->assertCount(PAYMENTS_GRID.' .fi-data-grid-child-row', 0);
+
+    $methodCellsLeft = $page->script(sprintf(<<<'JS'
+        () => [...document.querySelectorAll(%s)].map((row) => row.querySelector('.slick-cell:has(.fi-in-text-item)').getBoundingClientRect().left)
+        JS, json_encode(PAYMENTS_GRID.' .fi-data-grid-parent-row')));
+
+    expect(array_unique($methodCellsLeft))->toHaveCount(1);
+
+    $page->assertNoJavaScriptErrors();
+});
