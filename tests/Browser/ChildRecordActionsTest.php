@@ -82,13 +82,25 @@ it('shows each group only the child columns its own rows use', function (string 
     'transfer' => ['Transfer', ['Amount', 'Reference', 'Bank'], 'Banco Norte'],
 ]);
 
-it('shows no toggle on a group without payments and keeps its cells in line with the others', function (): void {
+it('renders no toggle and no child table for a group without payments, and child tables for the others', function (): void {
+    $childMarkup = sprintf(
+        'document.querySelectorAll(%s).length',
+        json_encode(implode(', ', array_map(
+            fn (string $class): string => PAYMENTS_GRID.' '.$class,
+            ['.fi-data-grid-child-row', '.fi-data-grid-child-slot', '.fi-data-grid-child-table-host', '.fi-data-grid-child-table-placeholder'],
+        ))),
+    );
+
     $page = visit('/demo/payments-demo')->waitForEvent('networkidle')
+        ->assertScript($childMarkup, 0)
         ->assertCount(paymentGroup('Voucher').' .fi-data-grid-row-toggle', 0)
-        ->assertCount(paymentGroup('Cash').' .fi-data-grid-row-toggle', 1)
+        ->click(paymentGroup('Cash').' .fi-data-grid-row-toggle')
+        ->click(paymentGroup('Card').' .fi-data-grid-row-toggle')
+        ->click(paymentGroup('Transfer').' .fi-data-grid-row-toggle')
         ->click(paymentGroup('Voucher'))
         ->wait(0.3)
-        ->assertCount(PAYMENTS_GRID.' .fi-data-grid-child-row', 0);
+        ->assertScript($childMarkup, 7)
+        ->assertCount(PAYMENTS_GRID.' .fi-data-grid-child-header', 3);
 
     $methodCellsLeft = $page->script(sprintf(<<<'JS'
         () => [...document.querySelectorAll(%s)].map((row) => row.querySelector('.slick-cell:has(.fi-in-text-item)').getBoundingClientRect().left)

@@ -138,6 +138,14 @@ it('has no child rows without a table repeatable entry', function (): void {
         ->and($payload['rows'][0]['children'])->toBe([]);
 });
 
+it('renders no child table markup on the server, for rows with or without child rows', function (): void {
+    mountDeliveries()
+        ->assertSeeHtml('filamentDataGridEntry(')
+        ->assertDontSeeHtml('fi-data-grid-child-table-layer')
+        ->assertDontSeeHtml('fi-data-grid-child-table-host')
+        ->assertDontSeeHtml('fi-in-repeatable');
+});
+
 it('renders the grid component with its search and pagination controls', function (): void {
     mountDeliveries(fn (DataGridEntry $entry): DataGridEntry => $entry->searchable()->paginated(10))
         ->assertSeeHtml('filamentDataGridEntry(')

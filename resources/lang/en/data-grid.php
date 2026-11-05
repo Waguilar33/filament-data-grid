@@ -18,7 +18,6 @@ return [
         'expand' => 'Expand row',
         'collapse' => 'Collapse row',
         'open_record' => 'Open',
-        'no_children' => 'No lines.',
     ],
     'errors' => [
         'row' => 'Row :row',

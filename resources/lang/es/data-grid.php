@@ -18,7 +18,6 @@ return [
         'expand' => 'Expandir fila',
         'collapse' => 'Contraer fila',
         'open_record' => 'Abrir',
-        'no_children' => 'Sin líneas.',
     ],
     'errors' => [
         'row' => 'Fila :row',

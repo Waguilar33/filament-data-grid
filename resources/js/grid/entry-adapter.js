@@ -198,16 +198,12 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
 
             if (hasNativeChildTable()) {
                 group.push({ kind: 'child-table', row, tableStart: true, tableEnd: true })
-            } else if (hasChildTable()) {
-                if (row.children.length === 0) {
-                    group.push({ kind: 'child-empty', row, tableStart: true, tableEnd: true })
-                } else {
-                    group.push({ kind: 'child-header', row, tableStart: true })
+            } else if (hasChildTable() && row.children.length > 0) {
+                group.push({ kind: 'child-header', row, tableStart: true })
 
-                    row.children.forEach((cells, childIndex) =>
-                        group.push({ kind: 'child', row, cells, childIndex, tableEnd: childIndex === row.children.length - 1 }),
-                    )
-                }
+                row.children.forEach((cells, childIndex) =>
+                    group.push({ kind: 'child', row, cells, childIndex, tableEnd: childIndex === row.children.length - 1 }),
+                )
             }
 
             if (row.below) {
@@ -266,10 +262,6 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
 
         if (item.kind === 'child-table') {
             return `<div class="fi-data-grid-child-table-placeholder ${edges}"></div>`
-        }
-
-        if (item.kind === 'child-empty') {
-            return `<div class="fi-data-grid-child-row fi-data-grid-child-empty ${edges}">${escapeHtml(translations.no_children)}</div>`
         }
 
         const isHeader = item.kind === 'child-header'

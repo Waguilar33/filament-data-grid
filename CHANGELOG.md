@@ -4,7 +4,7 @@ All notable changes to `filament-data-grid` will be documented in this file.
 
 ## v1.0.0-beta.31 - 2026-11-05
 
-- Fix: in a `DataGridEntry` with child rows, a row whose nested `RepeatableEntry` has no items no longer shows the open button, and clicking it no longer opens an empty child table. The button's cell stays, so the row's cells line up with the rows that can open. Rows with `expandedAbove()` or `expandedBelow()` content, or with a `childTable()`, open as before.
+- Fix: in a `DataGridEntry` with child rows, a row whose nested `RepeatableEntry` has no items no longer shows the open button, and clicking it no longer opens an empty child table. The button's cell stays, so the row's cells line up with the rows that can open. A row with `expandedAbove()` or `expandedBelow()` content but no child rows opens to show only that content: the empty child table with its "No lines." message is gone, and so is the `no_children` translation. Rows with a `childTable()` open as before.
 
 ## v1.0.0-beta.30 - 2026-11-05
 
