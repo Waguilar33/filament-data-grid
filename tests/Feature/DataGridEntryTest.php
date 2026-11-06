@@ -146,6 +146,17 @@ it('renders no child table markup on the server, for rows with or without child 
         ->assertDontSeeHtml('fi-in-repeatable');
 });
 
+it('marks a grid whose heading has an icon, so its first column stays on the title line', function (): void {
+    mountDeliveries(fn (DataGridEntry $entry): DataGridEntry => $entry->heading('Deliveries')->icon(Heroicon::OutlinedTruck))
+        ->assertSeeHtml('fi-data-grid-heading-has-icon');
+
+    mountDeliveries(fn (DataGridEntry $entry): DataGridEntry => $entry->heading('Deliveries'))
+        ->assertDontSeeHtml('fi-data-grid-heading-has-icon');
+
+    mountDeliveries(fn (DataGridEntry $entry): DataGridEntry => $entry->heading('Deliveries')->compact())
+        ->assertDontSeeHtml('fi-data-grid-heading-has-icon');
+});
+
 it('renders the grid component with its search and pagination controls', function (): void {
     mountDeliveries(fn (DataGridEntry $entry): DataGridEntry => $entry->searchable()->paginated(10))
         ->assertSeeHtml('filamentDataGridEntry(')

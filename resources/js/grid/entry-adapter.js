@@ -454,6 +454,11 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
 
         if (first.id === TOGGLE_COLUMN) {
             first.cssClass += ' fi-data-grid-toggle-cell-inset'
+
+            if (columns[1]) {
+                columns[1].cssClass += ' fi-data-grid-after-toggle'
+                columns[1].headerCssClass += ' fi-data-grid-after-toggle'
+            }
         } else {
             first.cssClass += ' fi-data-grid-inset-start'
             first.headerCssClass += ' fi-data-grid-inset-start'

@@ -718,6 +718,16 @@
     padding-inline-start: var(--fi-data-grid-edge-inset);
 }
 
+.fi-data-grid-canvas .fi-data-grid-after-toggle:not(.fi-data-grid-child-row-wrapper > *) {
+    padding-inline-start: 0;
+}
+
+:is(.fi-data-grid-heading-has-icon, .fi-ta-ctn:has(.fi-ta-header .fi-data-grid-heading-icon) .fi-data-grid-in-table)
+    .fi-data-grid-canvas
+    .fi-data-grid-after-toggle:not(.fi-data-grid-child-row-wrapper > *) {
+    padding-inline-start: calc(var(--spacing) * 3);
+}
+
 .fi-data-grid-canvas .fi-data-grid-record-link-cell-inset:not(.fi-data-grid-child-row-wrapper > *) {
     justify-content: flex-end;
     padding-inline-end: var(--fi-data-grid-edge-inset);

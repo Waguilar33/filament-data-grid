@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.32 - 2026-11-06
+
+- Fix: in a `DataGridEntry` with rows that open, the first column no longer leaves a gap after the chevron when the grid's header has no icon. It starts right after the chevron. With a header icon, it still starts on the heading's edge. This applies to `toTableContent()` too, with an `IconHeading` on the table.
+
 ## v1.0.0-beta.31 - 2026-11-05
 
 - Fix: in a `DataGridEntry` with child rows, a row whose nested `RepeatableEntry` has no items no longer shows the open button, and clicking it no longer opens an empty child table. The button's cell stays, so the row's cells line up with the rows that can open. A row with `expandedAbove()` or `expandedBelow()` content but no child rows opens to show only that content: the empty child table with its "No lines." message is gone, and so is the `no_children` translation. Rows with a `childTable()` open as before.
