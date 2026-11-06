@@ -110,3 +110,30 @@ it('renders no toggle and no child table for a group without payments, and child
 
     $page->assertNoJavaScriptErrors();
 });
+
+it('starts the first column right after the open button, without its own start padding', function (): void {
+    $page = visit('/demo/payments-demo')->waitForEvent('networkidle')
+        ->click(paymentGroup('Cash').' .fi-data-grid-row-toggle')
+        ->wait(0.3);
+
+    $starts = $page->script(sprintf(<<<'JS'
+        () => {
+            const grid = document.querySelector(%s)
+            const toggle = grid.querySelector('.fi-data-grid-parent-row .fi-data-grid-toggle-cell').getBoundingClientRect()
+            const text = (selector) => {
+                const range = document.createRange()
+                range.selectNodeContents(grid.querySelector(selector))
+
+                return Math.round(range.getBoundingClientRect().left - toggle.right)
+            }
+
+            return {
+                header: text('.slick-header-column:nth-child(2) .slick-column-name'),
+                cell: text('.fi-data-grid-parent-row .slick-cell.l1 .fi-in-text-item'),
+                childPadding: getComputedStyle(grid.querySelector('.fi-data-grid-child-row .fi-data-grid-child-cell')).paddingInlineStart,
+            }
+        }
+        JS, json_encode(PAYMENTS_GRID)));
+
+    expect($starts)->toBe(['header' => 0, 'cell' => 0, 'childPadding' => '12px']);
+});
