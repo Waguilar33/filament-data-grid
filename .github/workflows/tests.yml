@@ -82,11 +82,20 @@ jobs:
       - name: List installed versions
         run: composer show | grep -E '^(filament/filament|livewire/livewire|laravel/framework|pestphp/pest|orchestra/testbench) '
 
+      - name: Cache Playwright browsers
+        if: env.BROWSER_TESTS == 'true'
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      # The runner image already ships Chromium's system libraries; --with-deps hits apt mirrors that sometimes stall.
       - name: Install Playwright
         if: env.BROWSER_TESTS == 'true'
+        timeout-minutes: 3
         run: |
           npm ci
-          npx playwright install --with-deps chromium
+          npx playwright install chromium
 
       - name: Publish workbench assets
         run: vendor/bin/testbench workbench:build --ansi
