@@ -2,7 +2,7 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
-## Unreleased
+## v1.0.0-beta.36 - 2026-11-08
 
 - Opening the sidebar no longer freezes Filament pages for over half a second. The grid's stylesheet found open dropdowns by their inline `display` style inside `:has()`, so every inline style change on the page (Alpine transitions on each sidebar item) made the browser re-check those rules against the whole document. It now uses the `aria-expanded` that Filament puts on the open dropdown's trigger. Open row and record action menus still draw above the rows below them.
 
