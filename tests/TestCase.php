@@ -16,6 +16,7 @@ use Filament\Support\SupportServiceProvider;
 use Filament\Tables\TablesServiceProvider;
 use Filament\Widgets\WidgetsServiceProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\File;
 use Livewire\LivewireServiceProvider;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase as Orchestra;
@@ -31,6 +32,22 @@ abstract class TestCase extends Orchestra
     protected function defineDatabaseMigrations(): void
     {
         $this->loadMigrationsFrom(__DIR__.'/../workbench/database/migrations');
+    }
+
+    protected function defineEnvironment($app): void
+    {
+        $worker = getenv('TEST_TOKEN');
+
+        if ($worker === false) {
+            return;
+        }
+
+        // Laravel 11 and early 12 write compiled views in place, so parallel workers sharing a folder read each other's half-written files.
+        $compiled = sys_get_temp_dir().'/filament-data-grid-views-'.$worker;
+
+        File::ensureDirectoryExists($compiled);
+
+        $app['config']->set('view.compiled', $compiled);
     }
 
     protected function getPackageProviders($app): array
