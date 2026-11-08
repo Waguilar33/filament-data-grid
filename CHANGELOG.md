@@ -2,7 +2,7 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
-## Unreleased
+## v1.0.0-beta.34 - 2026-11-07
 
 - Breaking: `IconHeading` is replaced by `IconHeader`. Instead of `->heading(IconHeading::make('Deliveries', $icon))`, write `->heading('Deliveries')->header(IconHeader::make($icon))`. The icon used to sit inside the table's heading, pinned in place with fixed offsets. The header now uses the markup of a Filament section header, with the icon beside the heading and description, and the table's header actions stay. A `DataGridEntry`'s own header uses the same markup, so grid, table and section headers match.
 
