@@ -70,10 +70,11 @@
         @endif
 
         <div wire:ignore class="fi-data-grid-viewport">
+            {{-- A Filament table's header and row heights, held until the grid has measured its own. --}}
             <div
                 x-ref="grid"
                 class="fi-data-grid-canvas"
-                style="min-height: calc(2.75rem + 1px + {{ count($payload['rows']) * 44 }}px)"
+                style="min-height: calc(49px + {{ count($payload['rows']) * 57 }}px)"
             ></div>
         </div>
 
