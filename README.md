@@ -623,6 +623,20 @@ Format a total like its column. The options match Filament's own:
 
 Without a method, a total is formatted like `numeric()` in the app's locale. Every argument also takes a closure, so a format can come from tenant settings. The server reads the locale's symbols, grouping and decimals from PHP's `intl`, and the browser formats with them. So a total matches the server's formatting even where the browser's own `Intl` differs from PHP's, for example `1.234` in Spanish.
 
+### Record links
+
+`recordUrl()` makes each row open its record, as a table's `recordUrl()` does. The closure gets the row as `$record` (a model, or the row's array plus `__key`), and returning `null` leaves that row unlinked:
+
+```php
+DataGridEntry::make('jobs')
+    ->state(fn (ProductionOrder $record) => $record->jobs)
+    ->table([...])
+    ->schema([...])
+    ->recordUrl(fn (Job $record): ?string => JobResource::getUrl('view', ['record' => $record]))
+```
+
+A linked row shows a chevron at its end, like `toTableContent()`, and a click anywhere on the row opens the record. Ctrl-click, cmd-click or a middle click opens it in a new tab. Pass `shouldOpenInNewTab: true`, or call `openRecordUrlInNewTab()`, to always open a new tab. Clicks on record actions, the arrow that opens child rows, and links, buttons and inputs inside cells keep their own behaviour. It works with `serverSide()` too. Inside a table (`toTableContent()`), the table's `recordUrl()` is used instead.
+
 ### Record actions
 
 `recordActions()` puts Filament Actions at the end of each row, as a table's `recordActions()` does. Each action gets that row as its `$record`, so `visible()`, `authorize()`, `schema()`, `fillForm()` and `action()` work per row, and modals, slide-overs and `ActionGroup` menus work as usual:
@@ -671,7 +685,7 @@ How it differs from a table's record actions:
 - The grid sets each action's `record()` and `bootUsing()` itself and reserves the `row` argument, so don't set those on the actions you pass in.
 - A click on a row that has gone away closes quietly. Filament's test helpers resolve the action outside that guard, so `callAction()` or `assertActionVisible()` for a missing row throws `ActionNotResolvableException` instead.
 - `$livewire` is the page that holds the entry. There is no `$table`, and on a page that replaces a relation manager there is no `getOwnerRecord()`: use the page's `$record`.
-- There are no bulk actions, `recordUrl()`, clickable rows, or settings for the actions column's position, label or alignment.
+- There are no bulk actions or settings for the actions column's position, label or alignment. For clickable rows, see [Record links](#record-links).
 - Filament's prebuilt actions such as `EditAction` and `DeleteAction` expect a table or a resource record. Build your own `Action`s for the grid.
 
 #### Actions on child rows

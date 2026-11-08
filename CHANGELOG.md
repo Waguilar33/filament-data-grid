@@ -4,6 +4,7 @@ All notable changes to `filament-data-grid` will be documented in this file.
 
 ## Unreleased
 
+- `DataGridEntry` gets `recordUrl()`, like a table's: each row opens its record, with the row as `$record`, and `null` leaves a row unlinked. A linked row shows the same chevron as `toTableContent()`, and a click anywhere on the row opens the record. Ctrl-click, cmd-click or a middle click opens it in a new tab, and `openRecordUrlInNewTab()` always does. Record actions, the arrow that opens child rows, and links and inputs inside cells keep their own clicks. In `toTableContent()`, ctrl-click and middle click on a row now open a new tab too.
 - Breaking: a `DataGridEntry` keeps cell text on one line by default. When the columns don't fit, the grid scrolls sideways instead of shrinking columns and wrapping text, so rows keep their height. This applies to child tables too, and to `toTableContent()`. Call `wrapCells()` to get the previous behaviour back. A column with `TableColumn::width()` keeps its fixed width, and text inside it still wraps. The editable `DataGrid` doesn't change.
 
 ## v1.0.0-beta.32 - 2026-11-06

@@ -30,6 +30,7 @@ use Waguilar\FilamentDataGrid\Concerns\HasGridHeader;
 use Waguilar\FilamentDataGrid\Entry\BuildEntryPayload;
 use Waguilar\FilamentDataGrid\Entry\Concerns\HasEmptyState;
 use Waguilar\FilamentDataGrid\Entry\Concerns\HasRecordActions;
+use Waguilar\FilamentDataGrid\Entry\Concerns\HasRecordUrl;
 use Waguilar\FilamentDataGrid\Entry\DescribeTableRecord;
 use Waguilar\FilamentDataGrid\Entry\EntryFilters;
 use Waguilar\FilamentDataGrid\Entry\EntryPage;
@@ -45,6 +46,7 @@ class DataGridEntry extends RepeatableEntry
     use HasExpandIconSize;
     use HasGridHeader;
     use HasRecordActions;
+    use HasRecordUrl;
 
     public const ALL_RECORDS = 'all';
 
@@ -598,7 +600,7 @@ class DataGridEntry extends RepeatableEntry
      */
     public function describeRecord(string $key, Schema $item): array
     {
-        return $this->tableRecords[$key] ?? ['actions' => $this->renderRecordActions($key, $item), 'link' => null];
+        return $this->tableRecords[$key] ?? ['actions' => $this->renderRecordActions($key, $item), 'link' => $this->renderRecordLink($key, $item)];
     }
 
     /**

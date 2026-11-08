@@ -78,6 +78,7 @@ final class OrderLinesDemo extends Page
                         TextEntry::make('product')->icon(Heroicon::OutlinedCube),
                         TextEntry::make('quantity')->numeric(),
                     ])
+                    ->recordUrl(fn (DemoOrderLine $record): string => "#line-{$record->id}")
                     ->recordActions([
                         self::adjustAction(),
                         ActionGroup::make([
