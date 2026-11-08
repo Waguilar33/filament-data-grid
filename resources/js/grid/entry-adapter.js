@@ -137,6 +137,10 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
     }
     let measuredWidths = null
     let columnWidths = []
+    let containerWidth = null
+    let contentFits = false
+    let isLaidOut = false
+    let heightsFollowWidth = true
     const intrinsicWidths = new Map()
     const childTemplates = new Map()
     let totals = {}
@@ -242,7 +246,10 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
             })
         })
 
-        layoutColumns()
+        if (!isLaidOut) {
+            layoutColumns()
+        }
+
         measureRows()
 
         onChange?.({
@@ -464,14 +471,19 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         return columns
     }
 
-    const edgeInset = () => {
-        const probe = document.createElement('div')
-        probe.style.paddingInlineStart = 'var(--fi-data-grid-edge-inset, 0px)'
-        element.appendChild(probe)
-        const inset = parseFloat(getComputedStyle(probe).paddingInlineStart) || 0
-        probe.remove()
+    const widthOfContainer = () => containerWidth ?? element.getBoundingClientRect().width
 
-        return inset
+    let edgeProbe = null
+
+    const edgeInset = () => {
+        if (!edgeProbe?.isConnected) {
+            edgeProbe = document.createElement('div')
+            edgeProbe.hidden = true
+            edgeProbe.style.paddingInlineStart = 'var(--fi-data-grid-edge-inset, 0px)'
+            element.appendChild(edgeProbe)
+        }
+
+        return parseFloat(getComputedStyle(edgeProbe).paddingInlineStart) || 0
     }
 
     const insetEdgeColumns = (columns) => {
@@ -612,7 +624,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
     }
 
     const layoutColumns = () => {
-        if (element.clientWidth === 0) {
+        if (widthOfContainer() === 0) {
             return false
         }
 
@@ -646,7 +658,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
             })
 
         const fixedWidth = sumOf(columns.map((column) => column.fixedWidth ?? 0))
-        const available = Math.floor(element.getBoundingClientRect().width) - fixedWidth
+        const available = Math.floor(widthOfContainer()) - fixedWidth
         const childInset = (childTablePadding() + CHILD_TABLE_BORDER) * 2
         const rowExplicitWidths = (row, explicitWidths) => shownChildColumns(row).map((index) => explicitWidths[index])
         const fixedOf = (widths) => sumOf(widths.map((width) => width ?? 0))
@@ -656,7 +668,11 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
             0,
             ...childSpans.map((spans, index) => childInset + fixedOf(rowExplicitWidths(openRows[index], provisionalWidths)) + sumOf(spans.map((span) => span.min))),
         )
-        const flexibleWidths = distribute(parentRequestsByColumn.map(spanOf), Math.max(available, childNeed - fixedWidth))
+        const parentSpans = parentRequestsByColumn.map(spanOf)
+        const flexibleWidths = distribute(parentSpans, Math.max(available, childNeed - fixedWidth))
+        const fitsBefore = contentFits
+        contentFits = !payload.wrapCells && flexibleWidths.every((width, index) => width >= parentSpans[index].max)
+        heightsFollowWidth = !(fitsBefore && contentFits)
         let next = 0
         const widths = columns.map((column) => column.fixedWidth ?? flexibleWidths[next++])
         const changed = columns.some((column, index) => column.width !== widths[index])
@@ -680,7 +696,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         })
 
         if (changed && grid) {
-            grid.setColumns(columns)
+            grid.reRenderColumns(childTemplates.size > 0)
         }
 
         return changed
@@ -718,14 +734,25 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         return `<div class="slick-row fi-data-grid-child-row-wrapper"><div class="slick-cell ${columns[0].cssClass}" style="width: ${width}px">${formatChildRow(item)}</div></div>`
     }
 
+    // Without wrapping, a column at least as wide as its content keeps every parent row the same height at any width.
+    const forgetHeightsAfterWidthChange = () => {
+        if (heightsFollowWidth) {
+            measuredHeights.clear()
+
+            return
+        }
+
+        ;[...measuredHeights.keys()].filter((key) => !key.startsWith('parent:')).forEach((key) => measuredHeights.delete(key))
+    }
+
     const measureRows = () => {
         const signature = columnWidths.join(',')
 
         if (signature !== measuredWidths) {
-            measuredHeights.clear()
+            forgetHeightsAfterWidthChange()
         }
 
-        if (element.clientWidth === 0) {
+        if (widthOfContainer() === 0) {
             measuredWidths = null
 
             return
@@ -1000,7 +1027,13 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
 
     const fitColumns = () => {
         if (layoutColumns() || measuredWidths !== columnWidths.join(',') || element.classList.contains('fi-data-grid-measuring')) {
-            redraw()
+            isLaidOut = true
+
+            try {
+                redraw()
+            } finally {
+                isLaidOut = false
+            }
         }
     }
 
@@ -1010,7 +1043,8 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
 
     alignGlyphs()
 
-    const resizeObserver = new ResizeObserver(() => {
+    const resizeObserver = new ResizeObserver(([entry]) => {
+        containerWidth = entry.borderBoxSize?.[0]?.inlineSize ?? entry.contentRect.width
         alignGlyphs()
         cancelAnimationFrame(resizeFrame)
         resizeFrame = requestAnimationFrame(fitColumns)

@@ -2,6 +2,11 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## Unreleased
+
+- Resizing a `DataGridEntry` (for example when the sidebar opens or closes) costs about a third of what it did: on the workbench's delivery table, one width change went from about 82ms of script to about 29ms, and no frame takes over 50ms. The grid reads its width from the resize observer instead of forcing a layout, lays out its columns once per resize instead of twice, updates column widths without rebuilding its headers and rows, and keeps row heights when no cell wraps and every column still fits its content.
+- The height a `DataGridEntry` reserves before it loads now counts the totals row, and a grid inside a Filament table (`toTableContent()`) reserves a Filament table's row height (57 pixels) instead of the old 44.
+
 ## v1.0.0-beta.36 - 2026-11-08
 
 - Opening the sidebar no longer freezes Filament pages for over half a second. The grid's stylesheet found open dropdowns by their inline `display` style inside `:has()`, so every inline style change on the page (Alpine transitions on each sidebar item) made the browser re-check those rules against the whole document. It now uses the `aria-expanded` that Filament puts on the open dropdown's trigger. Open row and record action menus still draw above the rows below them.

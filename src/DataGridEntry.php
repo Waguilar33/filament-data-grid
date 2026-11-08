@@ -56,6 +56,13 @@ class DataGridEntry extends RepeatableEntry
 
     private const MAX_SEARCH_LENGTH = 255;
 
+    // A Filament table's header, row and totals row heights, reserved until the grid has measured its own.
+    private const TABLE_HEADER_HEIGHT = 49;
+
+    private const TABLE_ROW_HEIGHT = 57;
+
+    private const TABLE_TOTALS_HEIGHT = 58;
+
     /**
      * @var bool|int|list<int|string>|Closure
      */
@@ -185,6 +192,16 @@ class DataGridEntry extends RepeatableEntry
         $this->defaultPaginationPageOption = $option;
 
         return $this;
+    }
+
+    /**
+     * @param  array{rows: array<mixed>, recordsPerPage: int|string|null, totals: mixed}  $payload
+     */
+    public function getReservedHeight(array $payload): int
+    {
+        $rows = is_int($payload['recordsPerPage']) ? min(count($payload['rows']), $payload['recordsPerPage']) : count($payload['rows']);
+
+        return self::TABLE_HEADER_HEIGHT + ($rows * self::TABLE_ROW_HEIGHT) + (filled($payload['totals']) && $rows > 0 ? self::TABLE_TOTALS_HEIGHT : 0);
     }
 
     public function isPaginated(): bool
