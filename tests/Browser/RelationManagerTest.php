@@ -9,7 +9,7 @@ it('opens and submits a record action modal from a grid in a relation manager wi
     $line = $order->lines()->create(['product' => 'Rustic Tea 100 g', 'quantity' => 2]);
 
     $page = visit("/demo/demo-orders/{$order->getKey()}")->waitForEvent('networkidle')->wait(0.5)
-        ->click('.fi-tabs-item:has-text("Lines")')
+        ->click('.fi-tabs-item >> text="Lines"')
         ->wait(1)
         ->click('.fi-resource-relation-manager .fi-data-grid-parent-row button:has-text("Adjust")')
         ->wait(1)
@@ -67,10 +67,50 @@ it('never shows a half laid out grid while a relation manager tab opens', functi
         }
         JS);
 
-    $page->click('.fi-tabs-item:has-text("Lines")')->wait(2);
+    $page->click('.fi-tabs-item >> text="Lines"')->wait(2);
 
     $frames = $page->script('window.__frames');
 
     expect($frames)->not->toBeEmpty()
         ->and($page->script('window.__details ?? null'))->toBeNull();
+});
+
+it('shows the skeleton until the grid is drawn, then eases the grid in, while a relation manager tab opens', function (): void {
+    $order = DemoOrder::query()->create(['reference' => 'ORD-0044']);
+    $order->lines()->create(['product' => 'Rustic Tea 100 g', 'quantity' => 2]);
+    $order->lines()->create(['product' => 'Wild Bread 100 g with a long name', 'quantity' => 40]);
+
+    $page = visit("/demo/demo-orders/{$order->getKey()}")->waitForEvent('networkidle')->wait(0.5);
+
+    $page->script(<<<'JS'
+        () => {
+            window.__states = []
+
+            const sample = () => {
+                const root = document.querySelector('.fi-resource-relation-manager .fi-data-grid-entry-grid')
+
+                if (root?.offsetParent) {
+                    const skeleton = root.querySelector('.fi-data-grid-skeleton')
+                    const canvas = root.querySelector('.fi-data-grid-canvas')
+                    const drawn = Boolean(canvas.querySelector('.slick-header-column')) && !canvas.classList.contains('fi-data-grid-measuring')
+                    const state = skeleton && drawn ? 'both' : skeleton ? 'skeleton' : drawn ? (Number(getComputedStyle(canvas).opacity) < 1 ? 'fading' : 'grid') : 'empty'
+
+                    if (window.__states.at(-1) !== state) {
+                        window.__states.push(state)
+                    }
+                }
+
+                requestAnimationFrame(sample)
+            }
+
+            requestAnimationFrame(sample)
+        }
+        JS);
+
+    $page->click('.fi-tabs-item >> text="Lines with a skeleton"')->wait(2);
+
+    $states = $page->script('window.__states');
+
+    expect(array_values(array_diff($states, ['skeleton'])))->toBe(['fading', 'grid'])
+        ->and($states)->not->toContain('empty')->not->toContain('both');
 });

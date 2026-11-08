@@ -69,13 +69,13 @@ it('replaces the skeleton with the grid once it has measured its columns', funct
 it('shows Filament skeleton bars over the rows while a server page loads', function (): void {
     $page = visit('/demo/delivery-route-demo')->resize(1440, 900)->waitForEvent('networkidle')->wait(1);
 
-    $page->script(delayLivewireRequests(1500));
-    $page->type(SERVER_DELIVERIES.' .fi-ta-search-field input', 'karen')->wait(0.9);
+    $page->script(delayLivewireRequests(3000));
+    $page->type(SERVER_DELIVERIES.' .fi-ta-search-field input', 'karen')->wait(1.2);
 
     expect($page->script(skeletonBarsIn(SERVER_DELIVERIES)))->toBeGreaterThan(0)
         ->and($page->script(sprintf('document.querySelector(%s).classList.contains("fi-data-grid-loading")', json_encode(SERVER_DELIVERIES.' .fi-data-grid-entry-content'))))->toBeFalse();
 
-    $page->wait(2)->assertSeeIn(SERVER_DELIVERIES.' .fi-pagination-overview', 'Showing 1 to 10 of 21 results');
+    $page->wait(3)->assertSeeIn(SERVER_DELIVERIES.' .fi-pagination-overview', 'Showing 1 to 10 of 21 results');
 
     expect($page->script(skeletonBarsIn(SERVER_DELIVERIES)))->toBe(0);
 });
@@ -91,11 +91,11 @@ it('waits for Livewire\'s loading delay before showing skeleton bars', function 
             window.fetch = (...args) => {
                 setTimeout(() => { window.__barsSoon ??= content.classList.contains('fi-ta-content-loading') }, 100)
 
-                return new Promise((resolve) => setTimeout(() => resolve(fetch(...args)), 1500))
+                return new Promise((resolve) => setTimeout(() => resolve(fetch(...args)), 3000))
             }
         }
         JS);
-    $page->type(SERVER_DELIVERIES.' .fi-ta-search-field input', 'karen')->wait(0.9);
+    $page->type(SERVER_DELIVERIES.' .fi-ta-search-field input', 'karen')->wait(1.2);
 
     expect($page->script('window.__barsSoon'))->toBeFalse()
         ->and($page->script(skeletonBarsIn(SERVER_DELIVERIES)))->toBeGreaterThan(0);
@@ -106,8 +106,8 @@ it('dims a grid without a loading skeleton while a server page loads, as before'
 
     expect($page->content())->not->toContain('fi-data-grid-skeleton');
 
-    $page->script(delayLivewireRequests(1500));
-    $page->type(SERVER_DELIVERIES.' .fi-ta-search-field input', 'karen')->wait(0.9);
+    $page->script(delayLivewireRequests(3000));
+    $page->type(SERVER_DELIVERIES.' .fi-ta-search-field input', 'karen')->wait(1.2);
 
     expect($page->script(sprintf('document.querySelector(%s).className', json_encode(SERVER_DELIVERIES.' .fi-data-grid-entry-content'))))
         ->toContain('fi-data-grid-loading')
@@ -118,12 +118,12 @@ it('dims a grid without a loading skeleton while a server page loads, as before'
 it('shows skeleton bars in a grid inside a Filament table with a loading skeleton', function (): void {
     $page = visit('/demo/cash-shift-demo')->resize(1440, 900)->waitForEvent('networkidle')->wait(1);
 
-    $page->script(delayLivewireRequests(1500));
-    $page->type('.fi-ta-ctn .fi-ta-header-toolbar .fi-ta-search-field input >> nth=0', 'ca')->wait(0.9);
+    $page->script(delayLivewireRequests(3000));
+    $page->type('.fi-ta-ctn .fi-ta-header-toolbar .fi-ta-search-field input >> nth=0', 'ca')->wait(1.4);
 
     expect($page->script(skeletonBarsIn('[id="methods"]')))->toBeGreaterThan(0);
 
-    $page->wait(2.5);
+    $page->wait(3.5);
 
     expect($page->script(skeletonBarsIn('[id="methods"]')))->toBe(0);
 });
