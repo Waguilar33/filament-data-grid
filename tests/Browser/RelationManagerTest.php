@@ -71,5 +71,6 @@ it('never shows a half laid out grid while a relation manager tab opens', functi
 
     $frames = $page->script('window.__frames');
 
-    expect($frames)->not->toBeEmpty()->not->toContain(true, json_encode($page->script('window.__details ?? null')));
+    expect($frames)->not->toBeEmpty()
+        ->and($page->script('window.__details ?? null'))->toBeNull();
 });
