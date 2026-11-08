@@ -121,7 +121,6 @@ it('searches parents and keeps their open children with them', function (): void
         ->click(parentRow('DLV-2026-0000010').' .fi-data-grid-row-toggle')
         ->type(ROUTE.' .fi-ta-search-field input', 'karen')
         ->wait(0.5)
-        ->assertSee('Showing 1 to 2 of 2 results')
         ->assertSeeIn(routeRow(0), 'DLV-2026-0000010')
         ->assertSeeIn(ROUTE.' .fi-data-grid-child-header', 'Product')
         ->assertScript(visibleRowCount('.fi-data-grid-parent-row'), 2)
@@ -214,14 +213,15 @@ it('filters rows with Filament filters in the browser and on the server', functi
         ->click(ROUTE.' .fi-data-grid-filters-trigger')
         ->select(ROUTE.' .fi-ta-filters select', 'partial')
         ->click(ROUTE.' .fi-data-grid-filters-apply')
-        ->assertSeeIn(ROUTE.' .fi-pagination-overview', 'Showing 1 to 5 of 5 results')
+        ->wait(0.5)
+        ->assertScript(visibleRowCount('.fi-data-grid-parent-row'), 5)
         ->assertSeeIn(ROUTE.' .fi-data-grid-filters-trigger', '1')
         ->click($server.' .fi-data-grid-filters-trigger')
         ->select($server.' .fi-ta-filters select', 'partial')
         ->click($server.' .fi-data-grid-filter-option:has-text("Karen Ortiz") input')
         ->click($server.' .fi-data-grid-filters-apply')
         ->wait(1)
-        ->assertSeeIn($server.' .fi-pagination-overview', 'Showing 1 to 5 of 5 results')
+        ->assertScript(sprintf('document.querySelectorAll(%s).length', json_encode($server.' .fi-data-grid-parent-row')), 5)
         ->click($server.' .fi-data-grid-filters-trigger')
         ->click($server.' .fi-data-grid-filters-reset')
         ->wait(1)
@@ -317,7 +317,7 @@ it('sizes the columns again for a search and for a page loaded from the server',
 
     $page->type(ROUTE.' .fi-ta-search-field input', 'karen')
         ->wait(0.5)
-        ->assertSee('Se muestran de 1 a 2 de 2 resultados');
+        ->assertScript(visibleRowCount('.fi-data-grid-parent-row'), 2);
 
     expect($page->script(headerWidth(ROUTE, 'Cliente')))->not->toBe($customerWidth)
         ->and($page->script(clippedContentIn(ROUTE)))->toBe([]);
@@ -421,3 +421,64 @@ it('keeps the rows above the pagination, so rows taller than one line never cove
         ->assertScript(rowsPaneEndsWithItsGrid(ROUTE), true)
         ->assertNoJavaScriptErrors();
 });
+
+it('hides the pagination bar while every row fits on the smallest page', function (): void {
+    $page = visitRoute()->type(ROUTE.' .fi-ta-search-field input', 'karen')->wait(0.5);
+
+    expect($page->script(paginationBarIsShown(ROUTE)))->toBeFalse()
+        ->and($page->script(visibleRowCount('.fi-data-grid-parent-row')))->toBe(2);
+
+    $page->clear(ROUTE.' .fi-ta-search-field input')->wait(0.5);
+
+    expect($page->script(paginationBarIsShown(ROUTE)))->toBeTrue();
+});
+
+it('offers only the page sizes that make sense for the matching rows', function (): void {
+    $page = visitRoute();
+
+    expect($page->script(pageSizeOptions(ROUTE)))->toBe(['5', '10', '25', 'all']);
+
+    $page->select(ROUTE.' .fi-pagination-records-per-page-select:not(.fi-compact) select', '25')
+        ->wait(0.3)
+        ->type(ROUTE.' .fi-ta-search-field input', 'DLV-2026-000000')
+        ->wait(0.5);
+
+    expect($page->script(pageSizeOptions(ROUTE)))->toBe(['5', '10', 'all'])
+        ->and($page->script(selectedPageSize(ROUTE)))->toBe('10')
+        ->and($page->script(visibleRowCount('.fi-data-grid-parent-row')))->toBe(9);
+
+    $page->clear(ROUTE.' .fi-ta-search-field input')->wait(0.5);
+
+    expect($page->script(pageSizeOptions(ROUTE)))->toBe(['5', '10', '25', 'all'])
+        ->and($page->script(selectedPageSize(ROUTE)))->toBe('25');
+});
+
+it('hides the pagination bar of a server-side grid while its rows fit on the smallest page', function (): void {
+    $server = '[id="content.server_deliveries"]';
+    $page = visitRoute()->type($server.' .fi-ta-search-field input', 'karen')->wait(1);
+
+    expect($page->script(paginationBarIsShown($server)))->toBeTrue();
+
+    $page->clear($server.' .fi-ta-search-field input')->type($server.' .fi-ta-search-field input', 'DLV-2026-0000240')->wait(1);
+
+    expect($page->script(paginationBarIsShown($server)))->toBeFalse()
+        ->and($page->script(sprintf('document.querySelectorAll(%s).length', json_encode($server.' .fi-data-grid-parent-row'))))->toBe(1);
+});
+
+function paginationBarIsShown(string $grid): string
+{
+    return sprintf('getComputedStyle(document.querySelector(%s)).display !== "none"', json_encode("{$grid} .fi-pagination"));
+}
+
+function pageSizeOptions(string $grid): string
+{
+    return sprintf(
+        '[...document.querySelectorAll(%s)].map((option) => option.value)',
+        json_encode("{$grid} .fi-pagination-records-per-page-select:not(.fi-compact) option"),
+    );
+}
+
+function selectedPageSize(string $grid): string
+{
+    return sprintf('document.querySelector(%s).value', json_encode("{$grid} .fi-pagination-records-per-page-select:not(.fi-compact) select"));
+}

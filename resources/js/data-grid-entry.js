@@ -21,6 +21,8 @@ export default function dataGridEntry({ schemaComponent, translations, icons }) 
         page: 1,
         pageCount: 1,
         recordsPerPage: null,
+        pageOptions: [],
+        preferredRecordsPerPage: null,
         total: 0,
         first: 0,
         last: 0,
@@ -37,6 +39,7 @@ export default function dataGridEntry({ schemaComponent, translations, icons }) 
             this.isEmpty = payload.isEmpty
             this.hasEmptyState = payload.hasEmptyState
             this.filterDefinitions = payload.filters ?? []
+            this.pageOptions = payload.recordsPerPageOptions ?? []
             this.draftFilters = this.emptyFilters()
             this.activeFilters = this.emptyFilters()
             this.childTables = this.$refs.childTables ? createChildTables(this.$refs.childTables, { onResize: () => this.grid?.redraw() }) : null
@@ -52,6 +55,8 @@ export default function dataGridEntry({ schemaComponent, translations, icons }) 
             this.$refs.grid.style.removeProperty('min-height')
             this.isMounted = true
             this.$watch('search', (value) => this.searchFor(value))
+            this.$watch('total', () => this.keepRecordsPerPageShown())
+            this.keepRecordsPerPageShown()
             this.observe(this.$refs.payload, ['data-payload'], () => this.applyPayload())
             this.observe(document.documentElement, ['class'], () => this.grid.setDarkMode(isDarkMode()))
         },
@@ -65,6 +70,39 @@ export default function dataGridEntry({ schemaComponent, translations, icons }) 
 
         get showsEmptyState() {
             return this.hasEmptyState && this.isEmpty && this.total === 0
+        },
+
+        get sizedPageOptions() {
+            return this.pageOptions.filter((option) => typeof option === 'number').sort((a, b) => a - b)
+        },
+
+        get fitsOnSmallestPage() {
+            return this.total <= Math.min(...this.sizedPageOptions)
+        },
+
+        get shownPageOptions() {
+            const sizes = this.sizedPageOptions
+            const coveringIndex = sizes.findIndex((size) => size >= this.total)
+            const shownSizes = coveringIndex === -1 ? sizes : sizes.slice(0, coveringIndex + 1)
+
+            return [...shownSizes, ...this.pageOptions.filter((option) => typeof option !== 'number')]
+        },
+
+        keepRecordsPerPageShown() {
+            this.preferredRecordsPerPage ??= this.recordsPerPage
+
+            const preferred = this.preferredRecordsPerPage
+
+            if (typeof preferred !== 'number') {
+                return
+            }
+
+            const shownSizes = this.shownPageOptions.filter((option) => typeof option === 'number')
+            const size = shownSizes.includes(preferred) ? preferred : shownSizes.at(-1)
+
+            if (size !== undefined && size !== this.recordsPerPage) {
+                this.query({ recordsPerPage: size })
+            }
         },
 
         get overview() {
@@ -145,7 +183,8 @@ export default function dataGridEntry({ schemaComponent, translations, icons }) 
         },
 
         changeRecordsPerPage(value) {
-            this.query({ recordsPerPage: /^\d+$/.test(String(value)) ? Number(value) : value })
+            this.preferredRecordsPerPage = /^\d+$/.test(String(value)) ? Number(value) : value
+            this.query({ recordsPerPage: this.preferredRecordsPerPage })
         },
 
         query(changes) {

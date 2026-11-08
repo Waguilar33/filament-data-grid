@@ -198,14 +198,12 @@
             @if ($entry->isPaginated())
                 @php
                     $pageOptions = $entry->getPaginationPageOptions();
-                    $optionLabel = fn (int | string $option): string => $option === \Waguilar\FilamentDataGrid\DataGridEntry::ALL_RECORDS
-                        ? __('filament::components/pagination.fields.records_per_page.options.all')
-                        : (string) $option;
+                    $allRecordsLabel = __('filament::components/pagination.fields.records_per_page.options.all');
                 @endphp
 
                 <nav
                     x-cloak
-                    x-show="isMounted && total > 0"
+                    x-show="isMounted && total > 0 && ! fitsOnSmallestPage"
                     aria-label="{{ __('filament::components/pagination.label') }}"
                     class="fi-pagination"
                 >
@@ -222,21 +220,20 @@
                     <span class="fi-pagination-overview" x-text="overview"></span>
 
                     @if (count($pageOptions) > 1)
-                        <div class="fi-pagination-records-per-page-select-ctn">
+                        <div x-show="shownPageOptions.length > 1" class="fi-pagination-records-per-page-select-ctn">
                             @foreach ([true, false] as $isCompact)
                                 <label @class(['fi-pagination-records-per-page-select', 'fi-compact' => $isCompact])>
                                     <x-filament::input.wrapper
                                         :prefix="$isCompact ? null : __('filament::components/pagination.fields.records_per_page.label')"
                                     >
                                         <x-filament::input.select x-on:change="changeRecordsPerPage($event.target.value)">
-                                            @foreach ($pageOptions as $option)
+                                            <template x-for="option in shownPageOptions" x-bind:key="option">
                                                 <option
-                                                    value="{{ $option }}"
-                                                    x-bind:selected="String(recordsPerPage) === @js((string) $option)"
-                                                >
-                                                    {{ $optionLabel($option) }}
-                                                </option>
-                                            @endforeach
+                                                    x-bind:value="option"
+                                                    x-bind:selected="String(recordsPerPage) === String(option)"
+                                                    x-text="option === @js(\Waguilar\FilamentDataGrid\DataGridEntry::ALL_RECORDS) ? @js($allRecordsLabel) : option"
+                                                ></option>
+                                            </template>
                                         </x-filament::input.select>
                                     </x-filament::input.wrapper>
 
