@@ -962,6 +962,8 @@ The browser tests use [Pest's browser plugin](https://pestphp.com/docs/browser-t
 
 Run `vendor/bin/pest --parallel` to spread the tests over your CPU cores: about a minute instead of four and a half. Each worker loads only its own test files, so a helper used by more than one file goes in `tests/Pest.php`.
 
+CI splits the tests into three shards by the timings in `tests/.pest/shards.json`. After adding or renaming a test file, refresh it with `vendor/bin/pest --parallel --update-shards`.
+
 The grid's payload keeps accented and other non-ASCII characters as they are, so Livewire's `assertSee('Árbol natural')` matches the text of a cell.
 
 To try the grid in a demo panel:

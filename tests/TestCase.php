@@ -42,12 +42,14 @@ abstract class TestCase extends Orchestra
             return;
         }
 
-        // Laravel 11 and early 12 write compiled views in place, so parallel workers sharing a folder read each other's half-written files.
-        $compiled = sys_get_temp_dir().'/filament-data-grid-views-'.$worker;
+        // Laravel 11 and early 12 write compiled views and real-time facades in place, so parallel workers sharing a folder read each other's half-written files.
+        $storage = sys_get_temp_dir().'/filament-data-grid-storage-'.$worker;
 
-        File::ensureDirectoryExists($compiled);
+        File::ensureDirectoryExists($storage.'/framework/views');
+        File::ensureDirectoryExists($storage.'/framework/cache');
 
-        $app['config']->set('view.compiled', $compiled);
+        $app->useStoragePath($storage);
+        $app['config']->set('view.compiled', $storage.'/framework/views');
     }
 
     protected function getPackageProviders($app): array
