@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 function parityMeasure(int $width): mixed
 {
-    return visit('/demo/parity-demo')->resize($width, 900)->waitForEvent('networkidle')->wait(0.8)->script(<<<'JS'
+    return visit('/demo/parity-demo')->resize($width, 900)->waitForEvent('networkidle')->assertScript(GRID_SETTLED)->script(<<<'JS'
         () => {
             const textBox = (element) => {
                 const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT)

@@ -20,9 +20,9 @@ it('shows the empty state under the heading, without column headers, when there 
 it('runs an empty state action and shows the rows it adds with their full height', function (): void {
     $page = visitRoute()
         ->click(PLANNED.' .fi-ta-empty-state button')
-        ->wait(1.5)
         ->assertSeeIn(PLANNED.' .slick-row', 'DLV-2026-0000001')
-        ->assertMissing(PLANNED.' .fi-ta-empty-state');
+        ->assertMissing(PLANNED.' .fi-ta-empty-state')
+        ->assertScript(GRID_SETTLED);
 
     $sizes = fn (): array => $page->script(sprintf(<<<'JS'
         () => {
@@ -66,6 +66,5 @@ it('hides the search toolbar while the grid has no rows, and shows it once it ha
         ->assertMissing(PLANNED.' .fi-ta-search-field');
 
     $page->click(PLANNED.' .fi-ta-empty-state button')
-        ->wait(1.5)
         ->assertVisible(PLANNED.' .fi-ta-search-field input');
 });

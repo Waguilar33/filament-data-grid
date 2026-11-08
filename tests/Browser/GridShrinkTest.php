@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 it('shrinks a grid back inside its card when the page gets narrower', function (string $url): void {
-    $page = visit($url)->waitForEvent('networkidle')->wait(0.5);
-    $page->resize(1600, 900)->wait(0.6);
-    $page->resize(900, 900)->wait(0.6);
+    $page = visit($url)->waitForEvent('networkidle')->assertScript(GRID_SETTLED);
+    $page->resize(1600, 900)->assertScript(GRID_SETTLED);
+    $page->resize(900, 900)->assertScript(GRID_SETTLED);
 
     $overflow = $page->script(<<<'JS'
         () => [...document.querySelectorAll('.fi-data-grid-canvas')].map((canvas) => {

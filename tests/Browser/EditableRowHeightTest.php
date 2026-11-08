@@ -78,12 +78,16 @@ it('keeps editable rows fitted after a live change and after opening and closing
 
     $quantity = ALLOCATION.' .fi-data-grid-child-layer > .fi-data-grid-child-host:nth-of-type(1) .grid-canvas > .slick-row:first-child .slick-cell.l2';
 
-    $page->click($toggle)->wait(0.6)->click($toggle)->wait(0.6)
+    $page->click($toggle)
+        ->assertAttribute($toggle, 'aria-expanded', 'true')
+        ->click($toggle)
+        ->assertAttribute($toggle, 'aria-expanded', 'false')
         ->click($quantity)
         ->keys($quantity.' input', ['3', 'Enter'])
-        ->wait(1.5);
+        ->assertSeeIn(ALLOCATION.' .slick-row:has-text("Extra virgin olive oil") .slick-cell.l3', '3')
+        ->assertScript('() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve(document.getAnimations().length === 0))))');
 
-    $fit = rowFit($page->wait(1));
+    $fit = rowFit($page);
 
     expect(collect($fit['parents'])->pluck('clipped')->unique()->all())->toBe([false])
         ->and(collect($fit['children'])->pluck('clipped')->unique()->all())->toBe([false])

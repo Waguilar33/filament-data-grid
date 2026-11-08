@@ -4,22 +4,23 @@ declare(strict_types=1);
 
 use Workbench\App\Models\DemoOrder;
 
+const LIVEWIRE_STARTED = 'window.Livewire?.all().length > 0 && document.getAnimations().length === 0';
+
 it('opens and submits a record action modal from a grid in a relation manager without a table', function (): void {
     $order = DemoOrder::query()->create(['reference' => 'ORD-0042']);
     $line = $order->lines()->create(['product' => 'Rustic Tea 100 g', 'quantity' => 2]);
 
-    $page = visit("/demo/demo-orders/{$order->getKey()}")->waitForEvent('networkidle')->wait(0.5)
+    $page = visit("/demo/demo-orders/{$order->getKey()}")->waitForEvent('networkidle')->assertScript(LIVEWIRE_STARTED)
         ->click('.fi-tabs-item >> text="Lines"')
-        ->wait(1)
+        ->assertScript('document.querySelector(".fi-resource-relation-manager .fi-data-grid-parent-row") !== null && document.getAnimations().length === 0')
         ->click('.fi-resource-relation-manager .fi-data-grid-parent-row button:has-text("Adjust")')
-        ->wait(1)
         ->assertVisible('.fi-modal-window input')
         ->assertValue('.fi-modal-window input', '2');
 
     $page->clear('.fi-modal-window input')
         ->type('.fi-modal-window input', '7')
         ->click('.fi-modal-window button[type="submit"]')
-        ->wait(1)
+        ->assertScript('document.querySelector(".fi-modal-open") === null')
         ->assertNoJavaScriptErrors();
 
     expect((float) $line->refresh()->quantity)->toBe(7.0)
@@ -31,7 +32,7 @@ it('never shows a half laid out grid while a relation manager tab opens', functi
     $order->lines()->create(['product' => 'Rustic Tea 100 g', 'quantity' => 2]);
     $order->lines()->create(['product' => 'Wild Bread 100 g with a long name', 'quantity' => 40]);
 
-    $page = visit("/demo/demo-orders/{$order->getKey()}")->waitForEvent('networkidle')->wait(0.5);
+    $page = visit("/demo/demo-orders/{$order->getKey()}")->waitForEvent('networkidle')->assertScript(LIVEWIRE_STARTED);
 
     $page->script(<<<'JS'
         () => {
@@ -67,7 +68,7 @@ it('never shows a half laid out grid while a relation manager tab opens', functi
         }
         JS);
 
-    $page->click('.fi-tabs-item >> text="Lines"')->wait(2);
+    $page->click('.fi-tabs-item >> text="Lines"')->assertScript('window.__frames.length >= 60');
 
     $frames = $page->script('window.__frames');
 
@@ -80,7 +81,7 @@ it('shows the skeleton until the grid is drawn, then eases the grid in, while a 
     $order->lines()->create(['product' => 'Rustic Tea 100 g', 'quantity' => 2]);
     $order->lines()->create(['product' => 'Wild Bread 100 g with a long name', 'quantity' => 40]);
 
-    $page = visit("/demo/demo-orders/{$order->getKey()}")->waitForEvent('networkidle')->wait(0.5);
+    $page = visit("/demo/demo-orders/{$order->getKey()}")->waitForEvent('networkidle')->assertScript(LIVEWIRE_STARTED);
 
     $page->script(<<<'JS'
         () => {

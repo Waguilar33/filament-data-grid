@@ -31,7 +31,8 @@ it('opens rows inside a Filament table and keeps them open while Filament search
         ->click(tableRow(0).' .fi-data-grid-row-toggle')
         ->assertSeeIn(TABLE_GRID.' .fi-data-grid-child-header', 'Product')
         ->type('.fi-ta-search-field input', '0000001')
-        ->wait(1.5)
+        ->assertDontSee('of 240 results')
+        ->assertScript(GRID_SETTLED)
         ->assertSeeIn(tableRow(0), 'DLV-2026-0000001')
         ->assertAttribute(tableRow(0).' .fi-data-grid-row-toggle', 'aria-expanded', 'true')
         ->assertSeeIn(TABLE_GRID.' .fi-data-grid-child-header', 'Product')
@@ -42,19 +43,17 @@ it('uses Filament filters in a slide-over and Filament pagination', function ():
     visitTable()
         ->assertSee('Showing 1 to 10 of 240 results')
         ->click('.fi-ta-header-toolbar button[title="Filter"]')
-        ->wait(1)
         ->assertVisible('.fi-modal-slide-over .fi-modal-window')
         ->click('.fi-modal-slide-over .fi-select-input-btn')
-        ->wait(0.5)
+        ->assertVisible('.fi-modal-slide-over .fi-dropdown-panel li:has-text("Ana Torres")')
         ->click('.fi-modal-slide-over .fi-dropdown-panel li:has-text("Ana Torres")')
         ->click('Apply filters')
-        ->wait(1.5)
         ->assertSee('Active filters')
         ->assertSee('Showing 1 to 10 of 21 results')
         ->assertSeeIn(tableRow(0), 'Ana Torres')
         ->click('.fi-pagination-items [rel="next"]')
-        ->wait(1.5)
         ->assertSee('Showing 11 to 20 of 21 results')
+        ->assertScript(GRID_SETTLED)
         ->assertSeeIn(tableRow(0), 'Ana Torres')
         ->assertNoJavaScriptErrors();
 });
@@ -62,17 +61,13 @@ it('uses Filament filters in a slide-over and Filament pagination', function ():
 it('runs the table record actions and opens the record from its row', function (): void {
     visitTable()
         ->click(tableRow(0).' button:has-text("Reschedule")')
-        ->wait(1)
         ->assertSee('New date')
         ->click('.fi-modal-slide-over.fi-modal-open .fi-modal-close-btn, .fi-modal-slide-over:has-text("New date") .fi-modal-close-btn')
-        ->wait(0.5)
+        ->assertScript('document.querySelector(".fi-modal-open") === null && document.getAnimations().length === 0')
         ->click(tableRow(1).' button:has-text("Deliver")')
-        ->wait(1)
         ->click('.fi-modal-window button:has-text("Confirm")')
-        ->wait(1)
         ->assertSee('Delivery DLV-2026-0000002 marked as delivered')
         ->click(tableRow(2).' .fi-data-grid-record-link')
-        ->wait(1.5)
         ->assertUrlIs('*delivery-route-demo*')
         ->assertNoJavaScriptErrors();
 });
@@ -80,16 +75,17 @@ it('runs the table record actions and opens the record from its row', function (
 it('shows a tooltip on an icon-only cell', function (): void {
     visitTable()
         ->hover(tableRow(0).' .slick-cell.l4 svg')
-        ->wait(0.5)
         ->assertSee('Shipment');
 });
 
 it('opens a row action dropdown above the open row below it', function (): void {
     $page = visitTable()
         ->click(tableRow(1).' .fi-data-grid-row-toggle')
-        ->wait(0.5)
+        ->assertAttribute(tableRow(1).' .fi-data-grid-row-toggle', 'aria-expanded', 'true')
+        ->assertScript(GRID_SETTLED)
         ->click(tableRow(0).' .fi-dropdown-trigger button')
-        ->wait(0.5);
+        ->assertVisible('.fi-dropdown-panel .fi-dropdown-list-item:visible >> nth=0')
+        ->assertScript(GRID_SETTLED);
 
     $page->assertScript(<<<'JS'
         () => {
@@ -103,13 +99,12 @@ it('opens a row action dropdown above the open row below it', function (): void 
     $page->assertScript(openDropdownLift('.fi-data-grid-record-actions'), '30/30');
 
     $page->click('.fi-dropdown-list-item:has-text("Edit"):visible')
-        ->wait(1)
         ->assertSee('Delivery DLV-2026-0000001 edited')
         ->assertNoJavaScriptErrors();
 });
 
 it('fits the record actions and badges without a sideways scrollbar', function (): void {
-    $page = visitTable()->resize(1600, 900)->wait(0.5);
+    $page = visitTable()->resize(1600, 900)->assertScript(GRID_SETTLED);
 
     expect($page->script(clippedContentIn(TABLE_GRID)))->toBe([])
         ->and($page->script(scrollsSideways(TABLE_GRID)))->toBeFalse()
@@ -117,7 +112,7 @@ it('fits the record actions and badges without a sideways scrollbar', function (
 });
 
 it('keeps the record actions whole when the columns no longer fit', function (): void {
-    $page = visitTable('?locale=es')->resize(480, 900)->wait(0.5);
+    $page = visitTable('?locale=es')->resize(480, 900)->assertScript(GRID_SETTLED);
 
     expect($page->script(sprintf('document.querySelectorAll(%s).length', json_encode(TABLE_GRID.' .fi-data-grid-record-actions-cell .fi-data-grid-record-actions > *'))))->toBeGreaterThan(0)
         ->and($page->script(clippedContentIn(TABLE_GRID)))->toBe([])
@@ -127,14 +122,14 @@ it('keeps the record actions whole when the columns no longer fit', function ():
 it('sizes the columns again for the next page of the table', function (): void {
     $page = visitTable('?locale=es')
         ->click('.fi-pagination-items [rel="next"]')
-        ->wait(1.5)
-        ->assertSee('Se muestran de 11 a 20');
+        ->assertSee('Se muestran de 11 a 20')
+        ->assertScript(GRID_SETTLED);
 
     expect($page->script(clippedContentIn(TABLE_GRID)))->toBe([]);
 });
 
 it('keeps the frozen first column in place while the rest scrolls sideways', function (): void {
-    $page = visit('/demo/customer-deliveries-demo')->waitForEvent('networkidle')->resize(480, 900)->wait(0.5);
+    $page = visit('/demo/customer-deliveries-demo')->waitForEvent('networkidle')->resize(480, 900)->assertScript(GRID_SETTLED);
     $grid = '.fi-data-grid-in-table';
 
     $page->assertSeeIn($grid.' .slick-pane-left .slick-header', 'Customer')
@@ -171,7 +166,6 @@ it('keeps the frozen first column in place while the rest scrolls sideways', fun
         JS))->toBe([true, true]);
 
     $page->click($grid.' .slick-viewport-left .slick-row:first-child .slick-cell')
-        ->wait(1.5)
         ->assertUrlIs('*delivery-route-demo*')
         ->assertNoJavaScriptErrors();
 });

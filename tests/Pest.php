@@ -17,6 +17,24 @@ pest()->extend(TestCase::class)->in('Feature', 'Browser');
 
 const TABLE_ROW_HEIGHT = 57;
 
+const GRID_SETTLED = <<<'JS'
+    new Promise((resolve) => {
+        const layout = () => JSON.stringify([...document.querySelectorAll('.fi-data-grid-canvas, .slick-header-column, .slick-row, .slick-footerrow-column, .fi-data-grid-child-host, .fi-data-grid-child-slot, .fi-data-grid-child-row, .fi-data-grid-child-table-host')].map((element) => {
+            const box = element.getBoundingClientRect()
+
+            return [box.left, box.top, box.width, box.height]
+        }))
+        const before = layout()
+
+        requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(() => resolve(
+            layout() === before
+                && document.getAnimations().length === 0
+                && !document.querySelector('.fi-data-grid-skeleton')
+                && [...document.querySelectorAll('.fi-data-grid-canvas')].every((canvas) => canvas.querySelector('.slick-header')),
+        ))))
+    })
+    JS;
+
 pest()->beforeEach(function (): void {
     View::addNamespace('filament-data-grid-tests', __DIR__.'/Fixtures/views');
     LinesForm::$initialLines = [];

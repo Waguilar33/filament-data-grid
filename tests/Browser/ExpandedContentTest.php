@@ -45,11 +45,10 @@ it('shows content above a nested grid in the same panel', function (): void {
 it('keeps the content and the rows below in place when a row closes and opens again', function (): void {
     $page = visitDispatch()
         ->click('[id="form.products"] .grid-canvas .slick-row:has-text("Standing desk") .fi-data-grid-row-toggle')
-        ->wait(0.3)
         ->assertCount(dispatchHost('PO-2026-0003'), 0)
         ->click('[id="form.products"] .grid-canvas .slick-row:has-text("Standing desk") .fi-data-grid-row-toggle')
-        ->wait(0.3)
-        ->assertSeeIn(dispatchHost('PO-2026-0003'), 'PO-2026-0003');
+        ->assertSeeIn(dispatchHost('PO-2026-0003'), 'PO-2026-0003')
+        ->assertScript(GRID_SETTLED);
 
     $gap = $page->script(<<<'JS'
         () => {

@@ -12,7 +12,7 @@ const MONEY_TOTALS = ['money_in' => 3, 'money_out' => 4, 'balance' => 5];
 
 function visitTotals(string $query = ''): AwaitableWebpage
 {
-    return visit('/demo/cash-shift-demo'.$query)->waitForEvent('networkidle')->wait(0.5);
+    return visit('/demo/cash-shift-demo'.$query)->waitForEvent('networkidle')->assertScript(GRID_SETTLED);
 }
 
 function totalTexts(string $grid): string
@@ -21,6 +21,14 @@ function totalTexts(string $grid): string
         '[...document.querySelectorAll(%s)].map((cell) => cell.textContent.replace(/\s+/gu, " ").trim())',
         json_encode($grid.' .slick-footerrow-column'),
     );
+}
+
+/**
+ * @param  list<string>  $totals
+ */
+function totalsShow(string $grid, array $totals): string
+{
+    return sprintf('JSON.stringify(%s) === %s', totalTexts($grid), json_encode(json_encode($totals)));
 }
 
 /**
@@ -73,24 +81,24 @@ it('sums every column with a total and formats it like the column, under both gr
 it('totals only the rows that match the search, and hides the totals when none match', function (): void {
     $page = visitTotals()
         ->type(STANDALONE_TOTALS.' .fi-ta-search-field input', 'card')
-        ->wait(0.5);
+        ->assertScript(totalsShow(STANDALONE_TOTALS, expectedTotals('en', ['card'], STANDALONE_TOTALS)));
 
     expect($page->script(totalTexts(STANDALONE_TOTALS)))->toBe(expectedTotals('en', ['card'], STANDALONE_TOTALS));
 
     $page->type(STANDALONE_TOTALS.' .fi-ta-search-field input', 'nothing matches')
-        ->wait(0.5)
-        ->assertSee('No results.');
+        ->assertSee('No results.')
+        ->assertScript(sprintf('getComputedStyle(document.querySelector(%s)).display === "none"', json_encode(STANDALONE_TOTALS.' .slick-footerrow')));
 
     expect($page->script(sprintf('getComputedStyle(document.querySelector(%s)).display', json_encode(STANDALONE_TOTALS.' .slick-footerrow'))))->toBe('none');
 
     $page->type(STANDALONE_TOTALS.' .fi-ta-search-field input', '')
-        ->wait(0.5);
+        ->assertScript(totalsShow(STANDALONE_TOTALS, expectedTotals('en', ['cash', 'card', 'transfer', 'voucher'], STANDALONE_TOTALS)));
 
     expect($page->script(totalTexts(STANDALONE_TOTALS)))->toBe(expectedTotals('en', ['cash', 'card', 'transfer', 'voucher'], STANDALONE_TOTALS));
 });
 
 it('lines each total up with the values of its column', function (string $grid, int $width, string $locale): void {
-    $page = visitTotals("?locale={$locale}")->resize($width, 900)->wait(0.5);
+    $page = visitTotals("?locale={$locale}")->resize($width, 900)->assertScript(GRID_SETTLED);
     $cell = fn (int $column): string => sprintf('%s .slick-row .l%d .fi-in-text-item', $grid, $column);
     $total = fn (int $column): string => sprintf('%s .slick-footerrow-column.l%d .fi-data-grid-total', $grid, $column);
 
@@ -134,7 +142,8 @@ it('spans the label over every column before the first total, ending next to it 
 it('keeps the totals under the rows while a child table is open', function (): void {
     $page = visitTotals()
         ->click(STANDALONE_TOTALS.' .slick-row:has-text("Card") .fi-data-grid-row-toggle')
-        ->wait(1);
+        ->assertVisible(STANDALONE_TOTALS.' .fi-data-grid-child-table-host:not([style*="display: none"])')
+        ->assertScript(GRID_SETTLED);
 
     $bottoms = $page->script(sprintf(<<<'JS'
         [%s, %s].map((selector) => Math.round(document.querySelector(selector).getBoundingClientRect().bottom))
