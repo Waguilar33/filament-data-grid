@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Workbench\App\Filament\Pages;
 
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Hidden;
@@ -208,6 +209,13 @@ final class DataGridDemo extends Page
             ->hiddenLabel()
             ->defaultItems(0)
             ->addActionLabel(__('demo::demo.actions.add_adjustment'))
+            ->extraItemActions([
+                ActionGroup::make([
+                    Action::make('flag')
+                        ->label(__('demo::demo.actions.flag'))
+                        ->action(fn (): Notification => Notification::make()->title(__('demo::demo.actions.flagged'))->success()->send()),
+                ]),
+            ])
             ->table([
                 TableColumn::make(__('demo::demo.columns.reason'))->markAsRequired(),
                 TableColumn::make(__('demo::demo.columns.kind'))->width('9rem'),

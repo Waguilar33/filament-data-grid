@@ -286,3 +286,25 @@ it('fits a narrow container with the flexible column below the old 240px floor',
     expect($measure['overflow'])->toBeLessThanOrEqual(0)
         ->and($measure['flexible'])->toBeGreaterThanOrEqual(160)->toBeLessThan(240);
 });
+
+it('opens a grouped row action menu above the rows below it', function (): void {
+    $page = visitDemo();
+
+    $page->script(sprintf('document.querySelector(%s).scrollIntoView({ block: "center" })', json_encode(ADJUSTMENTS)));
+
+    $page->click(ADJUSTMENTS.' .slick-row >> nth=0 >> .fi-data-grid-row-actions .fi-dropdown-trigger button')
+        ->wait(0.5)
+        ->assertScript(openDropdownLift(ADJUSTMENTS.' .fi-data-grid-row-actions'), '30/30')
+        ->assertScript(<<<'JS'
+            () => {
+                const item = [...document.querySelectorAll('.fi-dropdown-panel .fi-dropdown-list-item')].find((element) => element.offsetParent !== null)
+                const box = item.getBoundingClientRect()
+
+                return item.contains(document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2))
+            }
+            JS, true)
+        ->click('.fi-dropdown-list-item:has-text("Flag for review"):visible')
+        ->wait(1)
+        ->assertSee('Adjustment flagged for review')
+        ->assertNoJavaScriptErrors();
+});

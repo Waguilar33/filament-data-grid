@@ -100,6 +100,8 @@ it('opens a row action dropdown above the open row below it', function (): void 
         }
         JS, true);
 
+    $page->assertScript(openDropdownLift('.fi-data-grid-record-actions'), '30/30');
+
     $page->click('.fi-dropdown-list-item:has-text("Edit"):visible')
         ->wait(1)
         ->assertSee('Delivery DLV-2026-0000001 edited')

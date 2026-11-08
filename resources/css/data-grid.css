@@ -640,14 +640,15 @@
     color-scheme: dark;
 }
 
-.fi-data-grid:has(.fi-data-grid-row-actions .fi-dropdown-panel:not([style*='display: none'])),
-.fi-data-grid:has(.fi-data-grid-record-actions .fi-dropdown-panel:not([style*='display: none'])) {
+/* Never match [style] inside :has(): every inline style change (Alpine transitions) re-checks it against the whole page. */
+.fi-data-grid:has(.fi-data-grid-row-actions :is(.fi-dropdown-trigger[aria-expanded='true'], .fi-dropdown-trigger [aria-expanded='true'])),
+.fi-data-grid:has(.fi-data-grid-record-actions :is(.fi-dropdown-trigger[aria-expanded='true'], .fi-dropdown-trigger [aria-expanded='true'])) {
     position: relative;
     z-index: 30;
 }
 
-.fi-data-grid-canvas .slick-row:has(.fi-data-grid-row-actions .fi-dropdown-panel:not([style*='display: none'])),
-.fi-data-grid-canvas .slick-row:has(.fi-data-grid-record-actions .fi-dropdown-panel:not([style*='display: none'])),
+.fi-data-grid-canvas .slick-row:has(.fi-data-grid-row-actions :is(.fi-dropdown-trigger[aria-expanded='true'], .fi-dropdown-trigger [aria-expanded='true'])),
+.fi-data-grid-canvas .slick-row:has(.fi-data-grid-record-actions :is(.fi-dropdown-trigger[aria-expanded='true'], .fi-dropdown-trigger [aria-expanded='true'])),
 .fi-data-grid-canvas .slick-row:has(.fi-select-input-btn[aria-expanded='true']) {
     z-index: 30;
 }
@@ -1228,7 +1229,7 @@
     z-index: 0;
 }
 
-.fi-data-grid-entry-body > .fi-data-grid-entry-content:has(.fi-dropdown-panel:not([style*='display: none'])) {
+.fi-data-grid-entry-body > .fi-data-grid-entry-content:has(:is(.fi-dropdown-trigger[aria-expanded='true'], .fi-dropdown-trigger [aria-expanded='true'])) {
     z-index: 3;
 }
 
