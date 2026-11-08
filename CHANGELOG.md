@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## Unreleased
+
+- Breaking: a `DataGridEntry` keeps cell text on one line by default. When the columns don't fit, the grid scrolls sideways instead of shrinking columns and wrapping text, so rows keep their height. This applies to child tables too, and to `toTableContent()`. Call `wrapCells()` to get the previous behaviour back. A column with `TableColumn::width()` keeps its fixed width, and text inside it still wraps. The editable `DataGrid` doesn't change.
+
 ## v1.0.0-beta.32 - 2026-11-06
 
 - Fix: in a `DataGridEntry` with rows that open, the first column no longer leaves a gap after the chevron when the grid's header has no icon. It starts right after the chevron. With a header icon, it still starts on the heading's edge. This applies to `toTableContent()` too, with an `IconHeading` on the table.

@@ -74,6 +74,8 @@ class DataGridEntry extends RepeatableEntry
 
     protected int|Closure|null $rowHeight = null;
 
+    protected bool|Closure $canWrapCells = false;
+
     protected int|Closure $frozenColumns = 0;
 
     protected string|Closure|null $childTable = null;
@@ -411,6 +413,18 @@ class DataGridEntry extends RepeatableEntry
         $this->rowHeight = $height;
 
         return $this;
+    }
+
+    public function wrapCells(bool|Closure $condition = true): static
+    {
+        $this->canWrapCells = $condition;
+
+        return $this;
+    }
+
+    public function canWrapCells(): bool
+    {
+        return (bool) $this->evaluate($this->canWrapCells);
     }
 
     public function frozenColumns(int|Closure $count = 1): static
