@@ -2,7 +2,7 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
-## Unreleased
+## v1.0.0-beta.35 - 2026-11-08
 
 - A `DataGridEntry` stays invisible, at its reserved height, until it has measured its columns in a visible container, so a grid that opens in a tab or relation manager never shows placeholder column widths first. The reserved height before the grid loads now matches a Filament table's rows.
 - `DataGridEntry` rows, headers, totals and child rows use Filament's table classes (`fi-ta-cell`, `fi-ta-col`, `fi-ta-text`, `fi-ta-header-cell`) instead of the grid's own copies of their styles. Padding, fonts and colours now come from Filament and your theme, and follow them when they change. Visible change: rows are as tall as a Filament table's (57 pixels instead of 44), headers too, and child rows look like a small Filament table. The grid reads the row height from Filament's classes instead of fixing it. The chevron and `compact()` keep their own spacing.
