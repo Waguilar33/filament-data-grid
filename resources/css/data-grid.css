@@ -1307,3 +1307,8 @@
 .fi-data-grid-canvas .slick-footerrow-column.fi-align-center {
     justify-content: center;
 }
+
+/* Until the grid has measured its columns in a visible container, SlickGrid's first render has placeholder widths. */
+.fi-data-grid-canvas.fi-data-grid-measuring > * {
+    visibility: hidden;
+}

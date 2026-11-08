@@ -52,7 +52,6 @@ export default function dataGridEntry({ schemaComponent, translations, icons }) 
                 onChange: (state) => Object.assign(this, state),
             })
 
-            this.$refs.grid.style.removeProperty('min-height')
             this.isMounted = true
             this.$watch('search', (value) => this.searchFor(value))
             this.$watch('total', () => this.keepRecordsPerPageShown())

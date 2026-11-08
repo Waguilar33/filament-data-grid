@@ -172,11 +172,12 @@
                 x-bind:class="{ 'fi-data-grid-loading': isLoading }"
                 x-bind:aria-busy="isLoading"
             >
+                {{-- A Filament table's header and row heights, held until the grid has measured its own. --}}
                 <div
                     x-ref="grid"
                     x-show="! showsEmptyState"
                     class="fi-data-grid-canvas"
-                    style="min-height: calc(2.75rem + 1px + {{ is_int($payload['recordsPerPage']) ? min(count($payload['rows']), $payload['recordsPerPage']) * 44 : count($payload['rows']) * 44 }}px){{ $showsEmptyState ? '; display: none' : '' }}"
+                    style="min-height: calc(49px + {{ is_int($payload['recordsPerPage']) ? min(count($payload['rows']), $payload['recordsPerPage']) * 57 : count($payload['rows']) * 57 }}px){{ $showsEmptyState ? '; display: none' : '' }}"
                 ></div>
 
                 <p x-cloak x-show="isMounted && total === 0 && ! showsEmptyState" class="fi-data-grid-empty">

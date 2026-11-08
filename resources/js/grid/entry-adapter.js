@@ -830,6 +830,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
     indexRows()
     computeVisible()
 
+    element.classList.add('fi-data-grid-measuring')
     measureTableRowHeight()
 
     grid = new SlickGrid(element, dataProvider, initialColumns, {
@@ -895,6 +896,11 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         grid.updateRowCount()
         grid.resizeCanvas()
         positionChildTables()
+
+        if (measuredWidths !== null && element.classList.contains('fi-data-grid-measuring')) {
+            element.classList.remove('fi-data-grid-measuring')
+            element.style.removeProperty('min-height')
+        }
     }
 
     grid.onRendered.subscribe(positionChildTables)
@@ -993,7 +999,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
     })
 
     const fitColumns = () => {
-        if (layoutColumns() || measuredWidths !== columnWidths.join(',')) {
+        if (layoutColumns() || measuredWidths !== columnWidths.join(',') || element.classList.contains('fi-data-grid-measuring')) {
             redraw()
         }
     }
