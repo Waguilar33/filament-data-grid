@@ -380,10 +380,10 @@ it('renders a heading, description and icon above the grid', function (): void {
         ->heading('Deliveries')
         ->description('Where each order stands')
         ->icon(Heroicon::OutlinedTruck))
-        ->assertSeeHtml('fi-ta-header-heading')
+        ->assertSeeHtml('fi-ta-header fi-data-grid-icon-header')
+        ->assertSeeHtml('fi-section-header-heading')
         ->assertSee('Deliveries')
-        ->assertSee('Where each order stands')
-        ->assertSeeHtml('fi-data-grid-entry-header-icon');
+        ->assertSee('Where each order stands');
 });
 
 it('renders a compact header with the markup of a compact Filament section', function (): void {
@@ -397,8 +397,7 @@ it('renders a compact header with the markup of a compact Filament section', fun
     expect($html)->toContain('fi-section fi-compact fi-section-has-header fi-data-grid-section')
         ->toContain('fi-section-header-heading')
         ->toContain('fi-section-header-description')
-        ->not->toContain('fi-ta-header-heading')
-        ->not->toContain('fi-data-grid-entry-header-icon');
+        ->not->toContain('fi-data-grid-icon-header');
 });
 
 it('keeps the table header look unless compact, and skips the section without a heading', function (): void {

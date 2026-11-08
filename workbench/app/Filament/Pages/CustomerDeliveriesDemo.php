@@ -16,7 +16,7 @@ use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Support\Arr;
 use Waguilar\FilamentDataGrid\DataGridEntry;
-use Waguilar\FilamentDataGrid\Support\IconHeading;
+use Waguilar\FilamentDataGrid\Support\IconHeader;
 use Workbench\App\Catalog\FakeDeliveries;
 
 final class CustomerDeliveriesDemo extends Page implements HasTable
@@ -43,7 +43,8 @@ final class CustomerDeliveriesDemo extends Page implements HasTable
     public function table(Table $table): Table
     {
         return $table
-            ->heading(IconHeading::make(__('demo::demo.route.sections.frozen'), Heroicon::OutlinedUsers))
+            ->heading(__('demo::demo.route.sections.frozen'))
+            ->header(IconHeader::make(Heroicon::OutlinedUsers))
             ->description(__('demo::demo.route.descriptions.frozen'))
             ->records(fn (): array => Arr::keyBy(FakeDeliveries::all(count: 8), 'delivery_number'))
             ->columns([TextColumn::make('delivery_number')])

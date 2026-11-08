@@ -33,20 +33,8 @@
     <div @class(['fi-ta-ctn', 'fi-ta-ctn-with-header' => ($hasHeader && ! $isSection) || $hasToolbar])>
         <div class="fi-ta-main">
             @if ($hasHeader && ! $isSection)
-                <div class="fi-ta-header">
-                    <div class="fi-data-grid-entry-header">
-                        {{ \Filament\Support\generate_icon_html($icon, attributes: (new ComponentAttributeBag)->class(['fi-data-grid-entry-header-icon']), size: \Filament\Support\Enums\IconSize::Large) }}
-
-                        <div>
-                            @if (filled($heading))
-                                <h3 class="fi-ta-header-heading">{{ $heading }}</h3>
-                            @endif
-
-                            @if (filled($description))
-                                <p class="fi-ta-header-description">{{ $description }}</p>
-                            @endif
-                        </div>
-                    </div>
+                <div class="fi-ta-header fi-data-grid-icon-header">
+                    @include('filament-data-grid::section-header', ['heading' => $heading, 'description' => $description, 'icon' => $icon])
                 </div>
             @endif
 

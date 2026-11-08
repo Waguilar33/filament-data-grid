@@ -25,6 +25,38 @@ it('draws a compact grid header exactly like a compact section header', function
         ->toBe($measure('.fi-section.fi-compact:not(.fi-data-grid-section) > .fi-section-header'));
 });
 
+it('draws grid and table icon headers exactly like a Filament section header', function (): void {
+    $measure = fn (string $url, string $header): mixed => visit($url)->resize(1280, 900)->waitForEvent('networkidle')->wait(0.3)->script(sprintf(<<<'JS'
+        () => {
+            const header = document.querySelector(%s)
+            const box = header.getBoundingClientRect()
+            const offset = (selector) => {
+                const rect = header.querySelector(selector).getBoundingClientRect()
+
+                return [Math.round(rect.left - box.left), Math.round(rect.top - box.top), Math.round(rect.width), Math.round(rect.height)]
+            }
+
+            return {
+                padding: getComputedStyle(header).padding,
+                icon: offset('svg'),
+                heading: offset('.fi-section-header-heading'),
+                description: offset('.fi-section-header-description').slice(0, 2),
+                headingFont: getComputedStyle(header.querySelector('.fi-section-header-heading')).font,
+                descriptionFont: getComputedStyle(header.querySelector('.fi-section-header-description')).font,
+            }
+        }
+        JS, json_encode($header)));
+
+    $section = $measure('/demo/delivery-table-demo', '.fi-section:not(.fi-compact) > .fi-section-header');
+    $table = $measure('/demo/delivery-table-demo', '.fi-data-grid-icon-header');
+    $entry = $measure('/demo/delivery-route-demo', '[id="content.deliveries"] .fi-data-grid-icon-header');
+
+    $withoutTextWidths = fn (array $header): array => [...$header, 'heading' => array_slice($header['heading'], 0, 2)];
+
+    expect($withoutTextWidths($table))->toBe($withoutTextWidths($section))
+        ->and($withoutTextWidths($entry))->toBe($withoutTextWidths($section));
+});
+
 it('lines a compact grid table header up with a compact section', function (): void {
     $header = visit('/demo/cash-shift-demo')->waitForEvent('networkidle')->script(<<<'JS'
         () => {
@@ -34,7 +66,7 @@ it('lines a compact grid table header up with a compact section', function (): v
             return [
                 getComputedStyle(header).paddingTop,
                 header.querySelector('svg').getBoundingClientRect().left - card.left,
-                header.querySelector('.fi-ta-header-heading').getBoundingClientRect().left - card.left,
+                header.querySelector('.fi-section-header-heading').getBoundingClientRect().left - card.left,
                 getComputedStyle(header.closest('.fi-ta-ctn')).borderRadius,
             ]
         }

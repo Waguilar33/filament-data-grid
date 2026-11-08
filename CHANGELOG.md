@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## Unreleased
+
+- Breaking: `IconHeading` is replaced by `IconHeader`. Instead of `->heading(IconHeading::make('Deliveries', $icon))`, write `->heading('Deliveries')->header(IconHeader::make($icon))`. The icon used to sit inside the table's heading, pinned in place with fixed offsets. The header now uses the markup of a Filament section header, with the icon beside the heading and description, and the table's header actions stay. A `DataGridEntry`'s own header uses the same markup, so grid, table and section headers match.
+
 ## v1.0.0-beta.33 - 2026-11-07
 
 - Fix: record actions of a `DataGridEntry` in a relation manager's `content()`, with no table there, opened no modal: Filament draws action modals only from pages and tables. The grid now draws them itself when it isn't on a page, once per Livewire component.
