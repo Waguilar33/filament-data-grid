@@ -112,7 +112,7 @@ const childCellHtml = (cell, column, isHeader) => {
     return `<div class="${classes}" role="cell">${childCellContent(cell, column)}</div>`
 }
 
-export function createEntryGrid(element, { payload, translations, icons, isDarkMode, onChange, childTables = null }) {
+export function createEntryGrid(element, { payload, translations, icons, isDarkMode, onChange, onReady, childTables = null }) {
     let rows = []
     let visible = []
     let search = ''
@@ -927,6 +927,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         if (measuredWidths !== null && element.classList.contains('fi-data-grid-measuring')) {
             element.classList.remove('fi-data-grid-measuring')
             element.style.removeProperty('min-height')
+            onReady?.()
         }
     }
 

@@ -29,6 +29,7 @@ use Waguilar\FilamentDataGrid\Concerns\HasExpandIconSize;
 use Waguilar\FilamentDataGrid\Concerns\HasGridHeader;
 use Waguilar\FilamentDataGrid\Entry\BuildEntryPayload;
 use Waguilar\FilamentDataGrid\Entry\Concerns\HasEmptyState;
+use Waguilar\FilamentDataGrid\Entry\Concerns\HasLoadingSkeleton;
 use Waguilar\FilamentDataGrid\Entry\Concerns\HasRecordActions;
 use Waguilar\FilamentDataGrid\Entry\Concerns\HasRecordUrl;
 use Waguilar\FilamentDataGrid\Entry\DescribeTableRecord;
@@ -45,6 +46,7 @@ class DataGridEntry extends RepeatableEntry
     use HasExpandedContent;
     use HasExpandIconSize;
     use HasGridHeader;
+    use HasLoadingSkeleton;
     use HasRecordActions;
     use HasRecordUrl;
 
@@ -583,6 +585,7 @@ class DataGridEntry extends RepeatableEntry
         $state = [];
         $this->tableRecords = [];
         $table = $livewire->getTable();
+        $this->hasTableLoadingSkeleton = $table->hasLoadingSkeleton();
         $describeRecord = app(DescribeTableRecord::class);
 
         foreach ($records instanceof Paginator ? $records->items() : $records as $key => $record) {
@@ -749,6 +752,7 @@ class DataGridEntry extends RepeatableEntry
                 'icons' => [
                     'expand' => $this->getExpandIconHtml(),
                 ],
+                'loadingSkeletonDelay' => $this->hasLoadingSkeleton() ? $this->getLoadingSkeletonDelay() : null,
             ]),
         ])->render();
 

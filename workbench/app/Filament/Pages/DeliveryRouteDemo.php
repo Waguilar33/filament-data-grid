@@ -19,6 +19,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use Livewire\Attributes\Url;
 use Waguilar\FilamentDataGrid\DataGridEntry;
 use Workbench\App\Catalog\FakeDeliveries;
 
@@ -30,6 +31,9 @@ final class DeliveryRouteDemo extends Page
      * @var list<array<string, mixed>>
      */
     public array $plannedDeliveries = [];
+
+    #[Url]
+    public bool $skeleton = true;
 
     public static function getNavigationLabel(): string
     {
@@ -55,6 +59,7 @@ final class DeliveryRouteDemo extends Page
                 ->icon(Heroicon::OutlinedServerStack)
                 ->serverSide()
                 ->wrapCells()
+                ->loadingSkeleton(fn (): bool => $this->skeleton)
                 ->records(fn (?string $search, int $page, ?int $recordsPerPage, array $filters): LengthAwarePaginator => $this->searchDeliveries($search, $page, $recordsPerPage, $filters)),
             self::rows('planned_deliveries')
                 ->heading(__('demo::demo.route.sections.planned'))

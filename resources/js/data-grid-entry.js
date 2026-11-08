@@ -3,8 +3,9 @@ import { createEntryGrid } from './grid/entry-adapter.js'
 import { callInParallel, isDarkMode } from './grid/page.js'
 
 const SERVER_SEARCH_DEBOUNCE_MS = 300
+const REVEAL_DURATION_MS = 150
 
-export default function dataGridEntry({ schemaComponent, translations, icons }) {
+export default function dataGridEntry({ schemaComponent, translations, icons, loadingSkeletonDelay = null }) {
     return {
         grid: null,
         childTables: null,
@@ -15,6 +16,8 @@ export default function dataGridEntry({ schemaComponent, translations, icons }) 
         hasEmptyState: false,
         isMounted: false,
         isLoading: false,
+        hasLoadingSkeleton: loadingSkeletonDelay !== null,
+        skeletonTimeout: null,
         latestRequest: 0,
         searchTimeout: null,
         search: '',
@@ -50,6 +53,7 @@ export default function dataGridEntry({ schemaComponent, translations, icons }) 
                 icons,
                 isDarkMode: isDarkMode(),
                 onChange: (state) => Object.assign(this, state),
+                onReady: () => this.reveal(),
             })
 
             this.isMounted = true
@@ -58,10 +62,49 @@ export default function dataGridEntry({ schemaComponent, translations, icons }) 
             this.keepRecordsPerPageShown()
             this.observe(this.$refs.payload, ['data-payload'], () => this.applyPayload())
             this.observe(document.documentElement, ['class'], () => this.grid.setDarkMode(isDarkMode()))
+
+            const table = this.$el.closest('.fi-ta-content-ctn')
+
+            if (table && this.hasLoadingSkeleton) {
+                this.observe(table, ['class'], () => this.showSkeleton(table.classList.contains('fi-ta-content-loading')))
+            }
+        },
+
+        showSkeleton(shows) {
+            this.$refs.content.classList.toggle('fi-ta-content-loading', shows)
+            this.$refs.grid.classList.toggle('fi-ta-content', shows)
+        },
+
+        reveal() {
+            const skeleton = this.$refs.content.querySelector(':scope > .fi-data-grid-skeleton')
+
+            if (!skeleton?.isConnected) {
+                return
+            }
+
+            const content = this.$refs.content
+            const from = content.offsetHeight
+
+            skeleton.remove()
+
+            const to = content.offsetHeight
+
+            if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                return
+            }
+
+            const timing = { duration: REVEAL_DURATION_MS, easing: 'ease-out' }
+
+            this.$refs.grid.animate([{ opacity: 0 }, { opacity: 1 }], timing)
+
+            if (from !== to) {
+                content.animate([{ height: `${from}px`, overflow: 'clip' }, { height: `${to}px`, overflow: 'clip' }], timing)
+            }
         },
 
         destroy() {
             clearTimeout(this.searchTimeout)
+            clearTimeout(this.skeletonTimeout)
             this.observers.forEach((observer) => observer.disconnect())
             this.childTables?.destroy()
             this.grid?.destroy()
@@ -199,6 +242,11 @@ export default function dataGridEntry({ schemaComponent, translations, icons }) 
 
             this.isLoading = true
 
+            if (this.hasLoadingSkeleton) {
+                clearTimeout(this.skeletonTimeout)
+                this.skeletonTimeout = setTimeout(() => this.showSkeleton(true), loadingSkeletonDelay)
+            }
+
             try {
                 const result = await callInParallel(this.$wire, 'callSchemaComponentMethod', [
                     schemaComponent,
@@ -212,6 +260,11 @@ export default function dataGridEntry({ schemaComponent, translations, icons }) 
             } finally {
                 if (request === this.latestRequest) {
                     this.isLoading = false
+
+                    if (this.hasLoadingSkeleton) {
+                        clearTimeout(this.skeletonTimeout)
+                        this.showSkeleton(false)
+                    }
                 }
             }
         },

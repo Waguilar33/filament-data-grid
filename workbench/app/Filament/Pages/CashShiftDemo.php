@@ -53,6 +53,7 @@ final class CashShiftDemo extends Page implements HasTable
                     Total::make('balance')->money('USD'),
                 ])
                 ->totalsLabelAlignment(Alignment::End)
+                ->loadingSkeleton()
                 ->state(FakeCashShift::methods()),
             Livewire::make(ShiftMovementsTable::class, ['method' => 'card', 'withHeading' => true])->key('plain-movements'),
         ]);
@@ -71,6 +72,7 @@ final class CashShiftDemo extends Page implements HasTable
             ))
             ->columns([TextColumn::make('key')->searchable()])
             ->paginated(false)
+            ->loadingSkeleton()
             ->content(self::methods('methods')->compact()->toTableContent());
     }
 

@@ -9,7 +9,11 @@
     <div x-ref="payload" hidden data-payload="{{ json_encode($payload, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE) }}"></div>
 
     <div class="fi-data-grid-entry-body">
-        <div wire:ignore class="fi-data-grid-entry-content">
+        <div wire:ignore x-ref="content" class="fi-data-grid-entry-content">
+            @if ($entry->hasLoadingSkeleton() && filled($payload['rows']))
+                @include('filament-data-grid::loading-skeleton')
+            @endif
+
             <div
                 x-ref="grid"
                 class="fi-data-grid-canvas"

@@ -27,6 +27,7 @@ final class LinesRelationManager extends RelationManager
                 ->state(fn (): Collection => $this->ownerRecord instanceof DemoOrder ? $this->ownerRecord->lines()->get() : new Collection)
                 ->searchable(['product'])
                 ->paginated([10, 25])
+                ->loadingSkeleton()
                 ->recordUrl(fn (DemoOrderLine $record): string => "#line-{$record->id}")
                 ->table([
                     TableColumn::make('Number'),
