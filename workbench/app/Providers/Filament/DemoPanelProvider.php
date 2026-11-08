@@ -25,6 +25,7 @@ final class DemoPanelProvider extends PanelProvider
             ->id('demo')
             ->path('demo')
             ->discoverPages(in: __DIR__.'/../../Filament/Pages', for: 'Workbench\\App\\Filament\\Pages')
+            ->discoverResources(in: __DIR__.'/../../Filament/Resources', for: 'Workbench\\App\\Filament\\Resources')
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

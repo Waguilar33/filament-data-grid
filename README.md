@@ -663,6 +663,7 @@ An action without `->view()` shows as a small link and a group as a menu, like i
 
 - With Eloquent rows, each action finds its row again by its model key when it is clicked, so rows added or removed in the meantime don't make it act on the wrong one. If the row is gone, nothing runs. It never falls back to the page's record.
 - With array rows, the row is found by its array key, so give the rows stable keys (`['tea' => [...], 'salt' => [...]]`, not a list that can shift). `$record` is the row's array plus Filament's `__key`, as in a table with array records.
+- It works in a relation manager whose `content()` holds the grid and no table. Filament draws action modals only from pages and tables, so there the grid draws them itself, once per relation manager.
 - It works in browser mode only. `serverSide()` throws `UnsupportedRecordActions`, because the action finds its row among the entry's state. Inside a table (`toTableContent()`), put the actions on the table's `recordActions()` instead; combining both throws too.
 
 To test an action, call it as a schema component action with the row's key (the model key, or the array key) as the `row` argument:
