@@ -889,6 +889,38 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         redraw()
     }
 
+    const recordLinkAt = (row) => grid.getCellNode(row, grid.getColumnIndex(LINK_COLUMN))?.querySelector('a')
+
+    const openRecordLink = (row, event) => {
+        const link = recordLinkAt(row)
+
+        if (!link) {
+            return
+        }
+
+        if (event.metaKey || event.ctrlKey || event.button === 1) {
+            window.open(link.href, '_blank', 'noopener')
+
+            return
+        }
+
+        link.click()
+    }
+
+    const openRecordLinkInNewTab = (event) => {
+        const cell = event.button === 1 ? grid.getCellFromEvent(event) : null
+        const item = cell ? visible[cell.row] : null
+
+        if (item?.kind !== 'parent' || !item.row.link || event.target.closest('a, button, input, select, textarea, .fi-data-grid-record-actions, .fi-data-grid-row-toggle')) {
+            return
+        }
+
+        event.preventDefault()
+        openRecordLink(cell.row, event)
+    }
+
+    element.addEventListener('auxclick', openRecordLinkInNewTab)
+
     grid.onClick.subscribe((event, { row }) => {
         const item = visible[row]
 
@@ -904,7 +936,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         }
 
         if (!isToggle && item.row.link) {
-            grid.getCellNode(row, grid.getColumnIndex(LINK_COLUMN))?.querySelector('a')?.click()
+            openRecordLink(row, event.getNativeEvent?.() ?? event)
 
             return
         }
@@ -1038,6 +1070,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
             resizeObserver.disconnect()
             element.removeEventListener('mouseover', hoverFrozenRow)
             element.removeEventListener('mouseleave', clearHoveredRows)
+            element.removeEventListener('auxclick', openRecordLinkInNewTab)
             document.fonts?.removeEventListener?.('loadingdone', remeasure)
             grid.destroy()
             grid = null

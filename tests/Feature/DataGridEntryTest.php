@@ -525,3 +525,22 @@ it('keeps cells on one line unless wrapCells() is set', function (): void {
         ->and(deliveriesPayload(mountDeliveries(fn (DataGridEntry $entry): DataGridEntry => $entry->wrapCells()))['wrapCells'])->toBeTrue()
         ->and(deliveriesPayload(mountDeliveries(fn (DataGridEntry $entry): DataGridEntry => $entry->wrapCells(fn (): bool => false)))['wrapCells'])->toBeFalse();
 });
+
+it('links each row to the url recordUrl() returns for its record', function (): void {
+    $payload = deliveriesPayload(mountDeliveries(fn (DataGridEntry $entry): DataGridEntry => $entry
+        ->recordUrl(fn (array $record): ?string => $record['status'] === 'complete' ? "/deliveries/{$record['number']}" : null)));
+
+    expect($payload['rows'][0]['link'])->toContain('href="/deliveries/DLV-1"')->toContain('fi-data-grid-record-link')->not->toContain('target="_blank"')
+        ->and($payload['rows'][1]['link'])->toBeNull();
+});
+
+it('opens the record url in a new tab when asked', function (): void {
+    $payload = deliveriesPayload(mountDeliveries(fn (DataGridEntry $entry): DataGridEntry => $entry
+        ->recordUrl(fn (array $record): string => "/deliveries/{$record['number']}", shouldOpenInNewTab: true)));
+
+    expect($payload['rows'][0]['link'])->toContain('target="_blank"');
+});
+
+it('links no row without recordUrl()', function (): void {
+    expect(deliveriesPayload(mountDeliveries())['rows'])->each(fn ($row) => $row->link->toBeNull());
+});

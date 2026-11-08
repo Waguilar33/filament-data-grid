@@ -35,3 +35,37 @@ it('shows grouped record actions in a menu that is not clipped by the grid', fun
 
     expect($clipped)->toBeFalse();
 });
+
+it('opens the record when a row with a recordUrl() is clicked', function (): void {
+    $page = visit('/demo/order-lines-demo')->waitForEvent('networkidle')->wait(0.5);
+
+    expect($page->script(sprintf('document.querySelectorAll(%s).length', json_encode(ORDER_LINES.' .fi-data-grid-record-link'))))->toBeGreaterThan(0);
+
+    $page->click(orderLineRow('Wild Bread').' .fi-data-grid-entry >> nth=0')->wait(0.3);
+
+    expect($page->script('location.hash'))->toMatch('/^#line-\d+$/');
+});
+
+it('keeps record actions from opening the record of a row with a recordUrl()', function (): void {
+    $page = visit('/demo/order-lines-demo')->waitForEvent('networkidle')->wait(0.5)
+        ->click(orderLineRow('Rustic Tea').' button:has-text("Adjust")')
+        ->wait(0.5)
+        ->assertSee('Receipt');
+
+    expect($page->script('location.hash'))->toBe('');
+});
+
+it('opens the record of a row in a new tab on a ctrl-click', function (): void {
+    $page = visit('/demo/order-lines-demo')->waitForEvent('networkidle')->wait(0.5);
+
+    $page->script('() => { window.__opened = []; window.open = (url, target) => { window.__opened.push([url, target]) } }');
+    $page->script(sprintf(
+        '() => document.querySelector(%s).dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, ctrlKey: true }))',
+        json_encode(ORDER_LINES.' .fi-data-grid-parent-row .slick-cell.fi-data-grid-entry'),
+    ));
+
+    expect($page->script('window.__opened'))->toHaveCount(1)
+        ->and($page->script('window.__opened[0][0]'))->toMatch('/#line-\d+$/')
+        ->and($page->script('window.__opened[0][1]'))->toBe('_blank')
+        ->and($page->script('location.hash'))->toBe('');
+});
