@@ -61,6 +61,7 @@ final class DeliveryRouteDemo extends Page
                 ->description(__('demo::demo.route.descriptions.planned'))
                 ->icon(Heroicon::OutlinedCalendarDays)
                 ->serverSide()
+                ->searchable()
                 ->records(fn (): array => $this->plannedDeliveries)
                 ->emptyStateIcon(Heroicon::OutlinedCalendarDays)
                 ->emptyStateHeading(__('demo::demo.route.empty.heading'))

@@ -544,3 +544,12 @@ it('opens the record url in a new tab when asked', function (): void {
 it('links no row without recordUrl()', function (): void {
     expect(deliveriesPayload(mountDeliveries())['rows'])->each(fn ($row) => $row->link->toBeNull());
 });
+
+it('renders the search toolbar only when the grid has rows', function (): void {
+    mountDeliveries(fn (DataGridEntry $entry): DataGridEntry => $entry->searchable())
+        ->assertSeeHtml('fi-ta-header-toolbar');
+
+    mountDeliveries(fn (DataGridEntry $entry): DataGridEntry => $entry->searchable()->state([]))
+        ->assertDontSeeHtml('fi-ta-header-toolbar')
+        ->assertDontSeeHtml('fi-ta-search-field');
+});

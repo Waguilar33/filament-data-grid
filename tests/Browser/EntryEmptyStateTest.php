@@ -55,5 +55,17 @@ it('keeps saying no results when a search matches nothing in the browser and on 
         ->assertMissing(ROUTE.' .fi-ta-empty-state')
         ->assertMissing($server.' .fi-ta-empty-state')
         ->assertVisible($server.' .slick-header-left')
+        ->assertVisible(ROUTE.' .fi-ta-search-field input')
+        ->assertVisible($server.' .fi-ta-search-field input')
         ->assertNoJavaScriptErrors();
+});
+
+it('hides the search toolbar while the grid has no rows, and shows it once it has some', function (): void {
+    $page = visitRoute()
+        ->assertMissing(PLANNED.' .fi-ta-header-toolbar')
+        ->assertMissing(PLANNED.' .fi-ta-search-field');
+
+    $page->click(PLANNED.' .fi-ta-empty-state button')
+        ->wait(1.5)
+        ->assertVisible(PLANNED.' .fi-ta-search-field input');
 });
