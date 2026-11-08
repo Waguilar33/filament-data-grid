@@ -572,7 +572,7 @@ DataGridEntry::make('history')
     ])
 ```
 
-The grid's heading, description and icon stay above the empty state, and the column headers and pagination are hidden, as on a Filament table. With only some of these set, the icon falls back to Filament's `tables::empty-state` icon and the heading to "No records". Without any of them, an empty grid shows "No results." as before. Empty state actions can be `Action`s or `ActionGroup`s, and their names must differ from the record actions' names.
+The grid's heading, description and icon stay above the empty state, and the column headers and pagination are hidden, as on a Filament table. While the grid has no rows at all, the search field and filters are hidden too, with or without an empty state. A search or filter that matches nothing keeps them, so it can be cleared. With only some of these set, the icon falls back to Filament's `tables::empty-state` icon and the heading to "No records". Without any of them, an empty grid shows "No results." as before. Empty state actions can be `Action`s or `ActionGroup`s, and their names must differ from the record actions' names.
 
 The empty state is only for a grid whose rows are empty. When a search or filter matches nothing but rows exist, the grid keeps its column headers and says "No results.". This works with `serverSide()` too: the grid learns whether the source is empty when Livewire renders it, from the unfiltered first page. A grid used as a Filament table's `content()` shows the table's own empty state, so these methods do nothing there.
 

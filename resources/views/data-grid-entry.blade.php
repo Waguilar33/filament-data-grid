@@ -8,7 +8,7 @@
     $description = $entry->getDescription();
     $icon = $entry->getIcon();
     $hasHeader = filled($heading) || filled($description);
-    $hasToolbar = $entry->isSearchable() || filled($payload['filters']);
+    $hasToolbar = ($entry->isSearchable() || filled($payload['filters'])) && ! $payload['isEmpty'];
     $isSection = $hasHeader && $entry->isCompact();
     $showsEmptyState = $payload['hasEmptyState'] && $payload['isEmpty'];
 @endphp
