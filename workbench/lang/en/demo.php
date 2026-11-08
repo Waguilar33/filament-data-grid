@@ -236,4 +236,17 @@ return [
     'placeholders' => [
         'scan' => 'Scan or type',
     ],
+    'parity' => [
+        'navigation' => 'Filament parity',
+        'native' => 'Filament table',
+        'native_description' => 'A native Filament table with the same rows.',
+        'grid' => 'Data grid',
+        'grid_description' => 'The same rows in a DataGridEntry.',
+        'nested' => 'Data grid with child rows',
+        'nested_description' => 'The same rows, each opening its lines.',
+        'product' => 'Product',
+        'quantity' => 'Quantity',
+        'status' => 'Status',
+        'view' => 'View',
+    ],
 ];

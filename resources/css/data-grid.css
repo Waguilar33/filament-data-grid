@@ -104,6 +104,7 @@
 
 .fi-data-grid-canvas .slick-header-columns {
     position: relative;
+    display: flex;
     overflow: hidden;
     white-space: nowrap;
     cursor: default;
@@ -114,15 +115,19 @@
     float: left;
     display: inline-flex;
     align-items: center;
+    flex-shrink: 0;
     box-sizing: border-box;
-    height: 2.75rem;
     margin: 0;
-    padding-inline: calc(var(--spacing) * 3);
     overflow: hidden;
-    font-weight: var(--font-weight-semibold);
-    color: var(--fi-data-grid-header-text);
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.fi-data-grid-canvas .slick-header-column:where(:not(.fi-ta-header-cell)) {
+    height: 2.75rem;
+    padding-inline: calc(var(--spacing) * 3);
+    font-weight: var(--font-weight-semibold);
+    color: var(--fi-data-grid-header-text);
 }
 
 .fi-data-grid-canvas .slick-column-name {
@@ -177,12 +182,62 @@
     align-items: center;
     box-sizing: border-box;
     margin: 0;
-    padding-inline: calc(var(--spacing) * 3);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     border-bottom: 1px solid var(--fi-data-grid-border);
     cursor: default;
+}
+
+.fi-data-grid-canvas .slick-cell:where(:not(.fi-ta-cell)) {
+    padding-inline: calc(var(--spacing) * 3);
+}
+
+/* An infolist entry fills its container; shrinking it lets the column's alignment place it, like a table column's content. */
+.fi-data-grid-canvas .fi-ta-text > * {
+    width: fit-content;
+    max-width: 100%;
+}
+
+.fi-data-grid-canvas .fi-ta-text:is(.fi-align-end, .fi-align-right) > * {
+    margin-inline-start: auto;
+}
+
+.fi-data-grid-canvas .fi-ta-text.fi-align-center > * {
+    margin-inline: auto;
+}
+
+/* Filament table text is leading-6; an infolist entry's text-sm would make rows shorter than a table's. */
+.fi-data-grid-canvas .fi-ta-text .fi-in-text-item {
+    line-height: calc(var(--spacing) * 6);
+}
+
+/* SlickGrid splits frozen rows into two panes, so each pane's inner edge isn't a table edge. */
+.fi-data-grid-canvas .slick-pane-right .fi-ta-cell:first-child,
+.fi-data-grid-canvas .slick-pane-right .fi-ta-header-cell:first-of-type {
+    padding-inline-start: 0;
+}
+
+.fi-data-grid-canvas .slick-pane-left.frozen .fi-ta-cell:last-child,
+.fi-data-grid-canvas .slick-pane-left.frozen .fi-ta-header-cell:last-of-type {
+    padding-inline-end: 0;
+}
+
+/* compact() matches a compact Section: 16px edges at every width. */
+.fi-data-grid-compact .fi-data-grid-canvas .fi-ta-cell:first-child {
+    padding-inline-start: var(--spacing);
+}
+
+.fi-data-grid-compact .fi-data-grid-canvas .fi-ta-cell:last-child {
+    padding-inline-end: var(--spacing);
+}
+
+.fi-data-grid-compact .fi-data-grid-canvas .fi-ta-header-cell:first-of-type {
+    padding-inline-start: calc(var(--spacing) * 4);
+}
+
+.fi-data-grid-compact .fi-data-grid-canvas .fi-ta-header-cell:last-of-type {
+    padding-inline-end: calc(var(--spacing) * 4);
 }
 
 .fi-data-grid-canvas .slick-cell.fi-align-end,
@@ -699,17 +754,19 @@
     padding-inline-start: calc(var(--fi-data-grid-edge-inset) - var(--spacing));
 }
 
-.fi-data-grid-canvas .fi-data-grid-inset-start:not(.fi-data-grid-child-row-wrapper > *) {
+.fi-data-grid-canvas .fi-data-grid-inset-start:not(.fi-data-grid-child-row-wrapper > *, .fi-ta-cell, .fi-ta-header-cell) {
     padding-inline-start: var(--fi-data-grid-edge-inset);
 }
 
-.fi-data-grid-canvas .fi-data-grid-after-toggle:not(.fi-data-grid-child-row-wrapper > *) {
+/* Deliberately not Filament's checkbox-column pattern: without a header icon, the first column starts right after the chevron. */
+.fi-data-grid-canvas .fi-ta-header-cell.fi-data-grid-after-toggle,
+.fi-data-grid-canvas .fi-data-grid-after-toggle:not(.fi-data-grid-child-row-wrapper > *) > .fi-ta-col > .fi-ta-text {
     padding-inline-start: 0;
 }
 
 :is(.fi-data-grid-heading-has-icon, .fi-ta-ctn:has(.fi-data-grid-icon-header > .fi-section-header > .fi-icon) .fi-data-grid-in-table)
     .fi-data-grid-canvas
-    .fi-data-grid-after-toggle:not(.fi-data-grid-child-row-wrapper > *) {
+    :is(.fi-ta-header-cell.fi-data-grid-after-toggle, .fi-data-grid-after-toggle:not(.fi-data-grid-child-row-wrapper > *) > .fi-ta-col > .fi-ta-text) {
     padding-inline-start: calc(var(--spacing) * 3);
 }
 
@@ -718,7 +775,7 @@
     padding-inline-end: var(--fi-data-grid-edge-inset);
 }
 
-.fi-data-grid-canvas .fi-data-grid-inset-end:not(.fi-data-grid-child-row-wrapper > *) {
+.fi-data-grid-canvas .fi-data-grid-inset-end:not(.fi-data-grid-child-row-wrapper > *, .fi-ta-cell, .fi-ta-header-cell) {
     padding-inline-end: var(--fi-data-grid-edge-inset);
 }
 
@@ -886,9 +943,12 @@
     display: flex;
     align-items: center;
     min-width: 0;
-    padding-inline: calc(var(--spacing) * 3);
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.fi-data-grid-child-cell:where(:not(.fi-ta-cell, .fi-ta-header-cell)) {
+    padding-inline: calc(var(--spacing) * 3);
 }
 
 .fi-data-grid-child-cell.fi-align-end,
@@ -907,9 +967,6 @@
 
 .fi-data-grid-child-header {
     background-color: var(--fi-data-grid-header-bg);
-    font-size: var(--text-xs);
-    font-weight: var(--font-weight-medium);
-    color: var(--fi-data-grid-child-header-text);
 }
 
 .fi-data-grid-empty {
@@ -1136,8 +1193,8 @@
     flex: none;
 }
 
-.fi-data-grid-canvas .fi-data-grid-row-probe .fi-data-grid-parent-row .slick-cell,
-.fi-data-grid-canvas .fi-data-grid-row-probe .fi-data-grid-child-cell {
+.fi-data-grid-canvas .fi-data-grid-row-probe .fi-data-grid-parent-row .slick-cell:not(.fi-ta-cell),
+.fi-data-grid-canvas .fi-data-grid-row-probe .fi-data-grid-child-cell:not(.fi-ta-cell, .fi-ta-header-cell) {
     padding-block: calc(var(--spacing) * 2);
 }
 
@@ -1215,9 +1272,12 @@
     display: flex;
     align-items: center;
     box-sizing: border-box;
-    padding-inline: calc(var(--spacing) * 3);
     overflow: hidden;
     white-space: nowrap;
+}
+
+.fi-data-grid-canvas .slick-footerrow-column:where(:not(.fi-ta-cell)) {
+    padding-inline: calc(var(--spacing) * 3);
 }
 
 .fi-data-grid-canvas .fi-data-grid-total {

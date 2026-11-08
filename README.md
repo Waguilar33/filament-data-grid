@@ -492,6 +492,10 @@ Livewire must be able to find the component on later requests. On Livewire 3 tha
 - Filament remembers a table's per-page choice in the session by component class, so every child table of the same class opens with the per-page the user last picked in any of them.
 - `childTable()` replaces a nested `RepeatableEntry` child table. `expandedAbove()` and `expandedBelow()` still show above and below it.
 
+### Looks like a Filament table
+
+`DataGridEntry` draws its rows, headers, totals and child rows with Filament's own table classes (`fi-ta-cell`, `fi-ta-col`, `fi-ta-text`, `fi-ta-header-cell`), so the padding, row height, fonts and colours come from Filament and from your theme, and change when they do. A grid next to a Filament table lines up with it at every screen width. The grid keeps its own styles only where Filament has nothing to offer: the chevron that opens a row, where the first column starts right after the chevron unless the header has an icon, and `compact()`, which keeps 16-pixel edges at every width like a compact section.
+
 ### Column widths
 
 Columns fit their content, and cell text stays on one line. The browser measures the header and the cells of the rows on the current page, each on one line, with each badge, icon and action kept whole:
@@ -512,7 +516,7 @@ The browser measures again when the window or the grid resizes, the page, search
 
 ### Row height
 
-Each parent and child row grows to fit its tallest cell, so wrapped text and an entry's `belowContent()`, such as a code badge under a product name, show in full. A row is never shorter than 44 pixels, and the cells stay centred vertically:
+Each parent and child row grows to fit its tallest cell, so wrapped text and an entry's `belowContent()`, such as a code badge under a product name, show in full. A row is never shorter than a Filament table row, and the cells stay centred vertically:
 
 ```php
 use Filament\Schemas\Components\Text;

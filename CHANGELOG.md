@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## Unreleased
+
+- `DataGridEntry` rows, headers, totals and child rows use Filament's table classes (`fi-ta-cell`, `fi-ta-col`, `fi-ta-text`, `fi-ta-header-cell`) instead of the grid's own copies of their styles. Padding, fonts and colours now come from Filament and your theme, and follow them when they change. Visible change: rows are as tall as a Filament table's (57 pixels instead of 44), headers too, and child rows look like a small Filament table. The grid reads the row height from Filament's classes instead of fixing it. The chevron and `compact()` keep their own spacing. The editable `DataGrid` doesn't change yet.
+
 ## v1.0.0-beta.34 - 2026-11-07
 
 - Breaking: `IconHeading` is replaced by `IconHeader`. Instead of `->heading(IconHeading::make('Deliveries', $icon))`, write `->heading('Deliveries')->header(IconHeader::make($icon))`. The icon used to sit inside the table's heading, pinned in place with fixed offsets. The header now uses the markup of a Filament section header, with the icon beside the heading and description, and the table's header actions stay. A `DataGridEntry`'s own header uses the same markup, so grid, table and section headers match.

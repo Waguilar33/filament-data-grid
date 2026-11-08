@@ -130,10 +130,14 @@ it('starts the first column right after the open button, without its own start p
             return {
                 header: text('.slick-header-column:nth-child(2) .slick-column-name'),
                 cell: text('.fi-data-grid-parent-row .slick-cell.l1 .fi-in-text-item'),
-                childPadding: getComputedStyle(grid.querySelector('.fi-data-grid-child-row .fi-data-grid-child-cell')).paddingInlineStart,
+                childInset: (() => {
+                    const cell = grid.querySelector('.fi-data-grid-child-row:not(.fi-data-grid-child-header) > .fi-ta-cell')
+
+                    return parseFloat(getComputedStyle(cell).paddingInlineStart) + parseFloat(getComputedStyle(cell.querySelector('.fi-ta-text')).paddingInlineStart)
+                })(),
             }
         }
         JS, json_encode(PAYMENTS_GRID)));
 
-    expect($starts)->toBe(['header' => 0, 'cell' => 0, 'childPadding' => '12px']);
+    expect($starts)->toBe(['header' => 0, 'cell' => 0, 'childInset' => 24]);
 });

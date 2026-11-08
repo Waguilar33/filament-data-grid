@@ -8,7 +8,7 @@ const ROUTE = '[id="content.deliveries"]';
 
 function routeRow(int $row): string
 {
-    return sprintf('%s .slick-row[style*="top: %dpx"]', ROUTE, $row * 44);
+    return sprintf('%s .slick-row[style*="top: %dpx"]', ROUTE, $row * TABLE_ROW_HEIGHT);
 }
 
 function routeRowAt(int $top): string
@@ -142,8 +142,8 @@ it('grows a child row to fit the unit code under its product', function (): void
     visitRoute()
         ->click(parentRow('DLV-2026-0000002').' .fi-data-grid-row-toggle')
         ->assertSeeIn(childRow('Tropical Tea 100 g').' .fi-badge', 'U-0021')
-        ->assertScript(rowHeight('Fresh Tea 100 g'), 44)
-        ->assertScript(rowHeight('Tropical Tea 100 g').' > 44', true)
+        ->assertScript(rowHeight('Fresh Tea 100 g'), TABLE_ROW_HEIGHT)
+        ->assertScript(rowHeight('Tropical Tea 100 g').' > '.TABLE_ROW_HEIGHT, true)
         ->assertScript(badgesFitTheirCells('Tropical Tea 100 g'), true)
         ->assertScript(rowsAreStacked(), true)
         ->assertNoJavaScriptErrors();
@@ -151,8 +151,8 @@ it('grows a child row to fit the unit code under its product', function (): void
 
 it('grows a parent row whose badges wrap onto a second line', function (): void {
     visitRoute()
-        ->assertScript(rowHeight('DLV-2026-0000001'), 44)
-        ->assertScript(rowHeight('DLV-2026-0000004').' > 44', true)
+        ->assertScript(rowHeight('DLV-2026-0000001'), TABLE_ROW_HEIGHT)
+        ->assertScript(rowHeight('DLV-2026-0000004').' > '.TABLE_ROW_HEIGHT, true)
         ->assertScript(badgesFitTheirCells('DLV-2026-0000004'), true)
         ->assertScript(rowsAreStacked(), true)
         ->assertNoJavaScriptErrors();
@@ -285,7 +285,7 @@ it('keeps cells on one line and scrolls sideways when the columns do not fit', f
     expect($page->script(clippedContentIn(ROUTE)))->toBe([])
         ->and($page->script(scrollsSideways(ROUTE)))->toBeTrue()
         ->and($page->script(parentRowHeights(ROUTE)))->toBe($heights)
-        ->and(array_count_values($heights)[44] ?? 0)->toBeGreaterThan(0);
+        ->and(array_count_values($heights)[TABLE_ROW_HEIGHT] ?? 0)->toBeGreaterThan(0);
 });
 
 it('wraps cells and shrinks columns towards their content with wrapCells()', function (): void {
@@ -294,7 +294,7 @@ it('wraps cells and shrinks columns towards their content with wrapCells()', fun
 
     expect($page->script(clippedContentIn($server)))->toBe([])
         ->and($page->script(scrollsSideways($server)))->toBeFalse()
-        ->and(max($page->script(parentRowHeights($server))))->toBeGreaterThan(44);
+        ->and(max($page->script(parentRowHeights($server))))->toBeGreaterThan(TABLE_ROW_HEIGHT);
 
     $page->resize(480, 900)->wait(0.5);
 

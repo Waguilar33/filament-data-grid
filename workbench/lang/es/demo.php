@@ -236,4 +236,17 @@ return [
     'placeholders' => [
         'scan' => 'Escanea o escribe',
     ],
+    'parity' => [
+        'navigation' => 'Paridad con Filament',
+        'native' => 'Tabla de Filament',
+        'native_description' => 'Una tabla nativa de Filament con las mismas filas.',
+        'grid' => 'Data grid',
+        'grid_description' => 'Las mismas filas en un DataGridEntry.',
+        'nested' => 'Data grid con filas hijas',
+        'nested_description' => 'Las mismas filas, cada una abre sus líneas.',
+        'product' => 'Producto',
+        'quantity' => 'Cantidad',
+        'status' => 'Estado',
+        'view' => 'Ver',
+    ],
 ];
