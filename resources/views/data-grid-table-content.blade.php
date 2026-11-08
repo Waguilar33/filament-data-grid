@@ -13,7 +13,7 @@
             <div
                 x-ref="grid"
                 class="fi-data-grid-canvas"
-                style="min-height: calc(2.75rem + 1px + {{ count($payload['rows']) * 44 }}px)"
+                style="min-height: {{ $entry->getReservedHeight($payload) }}px"
             ></div>
         </div>
 
