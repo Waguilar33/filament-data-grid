@@ -2,7 +2,7 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
-## Unreleased
+## v1.0.0-beta.37 - 2026-11-08
 
 - `DataGridEntry::loadingSkeleton()`, like Filament's table option. Before the grid has measured its columns it shows Filament table rows with skeleton bars sized to the real content, then fades in and eases to its own height. While a `serverSide()` grid loads, its rows show Filament's skeleton bars instead of dimming, after Livewire's loading delay. A grid inside a Filament table with `loadingSkeleton()` turns it on by itself. Off by default; `DataGridEntry::configureUsing()` turns it on for every grid.
 - Resizing a `DataGridEntry` (for example when the sidebar opens or closes) costs about a third of what it did: on the workbench's delivery table, one width change went from about 82ms of script to about 29ms, and no frame takes over 50ms. The grid reads its width from the resize observer instead of forcing a layout, lays out its columns once per resize instead of twice, updates column widths without rebuilding its headers and rows, and keeps row heights when no cell wraps and every column still fits its content.
