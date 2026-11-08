@@ -536,6 +536,27 @@ DataGridEntry::make('deliveries')
 
 Child rows are always measured. A fixed height doesn't make the content fit, so content taller than the row is cut off.
 
+### Loading skeleton
+
+Like Filament's [`loadingSkeleton()`](https://filamentphp.com/docs/5.x/tables/overview#displaying-a-loading-skeleton) on tables, an entry can show skeleton rows while it loads:
+
+```php
+DataGridEntry::make('deliveries')
+    ->loadingSkeleton()
+```
+
+- Before the grid has measured its columns, it shows Filament table rows with the real cells hidden behind grey bars, so the bars and rows have the size of the content. When the grid is ready, it fades in over the skeleton, and the space eases to the grid's height. Without a skeleton, the grid keeps the space empty and appears at once.
+- While a `serverSide()` grid loads a page, a search or filters, its rows show Filament's skeleton bars instead of dimming. Like Filament, it waits for the `filament.livewire_loading_delay` config (200ms by default) first, so fast requests show nothing.
+- Inside a Filament table with `loadingSkeleton()`, the grid turns it on by itself, and shows the bars whenever the table loads.
+
+The bars use Filament's own styles, so the `--loading-skeleton-*` variables that [customize a table's skeleton](https://filamentphp.com/docs/5.x/tables/overview#customizing-the-loading-skeleton-styles) style the grid's too. With reduced motion, the bars don't pulse and the grid doesn't fade. To turn it on for every grid, set it in a service provider. A grid can still opt out with `loadingSkeleton(false)`:
+
+```php
+DataGridEntry::configureUsing(fn (DataGridEntry $entry) => $entry->loadingSkeleton());
+```
+
+The skeleton's columns share the width the way a plain HTML table does, so they can sit a little apart from the grid's own columns, and a row whose content stacks differently at the grid's column width can change height when the grid appears.
+
 ### Heading, description and icon
 
 Like a section, the grid can have a heading, a description and an icon above it:

@@ -194,21 +194,21 @@
 }
 
 /* An infolist entry fills its container; shrinking it lets the column's alignment place it, like a table column's content. */
-.fi-data-grid-canvas .fi-ta-text > * {
+:is(.fi-data-grid-canvas, .fi-data-grid-skeleton) .fi-ta-text > * {
     width: fit-content;
     max-width: 100%;
 }
 
-.fi-data-grid-canvas .fi-ta-text:is(.fi-align-end, .fi-align-right) > * {
+:is(.fi-data-grid-canvas, .fi-data-grid-skeleton) .fi-ta-text:is(.fi-align-end, .fi-align-right) > * {
     margin-inline-start: auto;
 }
 
-.fi-data-grid-canvas .fi-ta-text.fi-align-center > * {
+:is(.fi-data-grid-canvas, .fi-data-grid-skeleton) .fi-ta-text.fi-align-center > * {
     margin-inline: auto;
 }
 
 /* Filament table text is leading-6; an infolist entry's text-sm would make rows shorter than a table's. */
-.fi-data-grid-canvas .fi-ta-text .fi-in-text-item {
+:is(.fi-data-grid-canvas, .fi-data-grid-skeleton) .fi-ta-text .fi-in-text-item {
     line-height: calc(var(--spacing) * 6);
 }
 
@@ -1213,7 +1213,7 @@
     margin-top: 0;
 }
 
-.fi-data-grid-canvas div.fi-in-text-item.fi-in-text-has-badges {
+:is(.fi-data-grid-canvas, .fi-data-grid-skeleton) div.fi-in-text-item.fi-in-text-has-badges {
     display: flex;
     align-items: center;
 }
@@ -1312,4 +1312,14 @@
 /* Until the grid has measured its columns in a visible container, SlickGrid's first render has placeholder widths. */
 .fi-data-grid-canvas.fi-data-grid-measuring > * {
     visibility: hidden;
+}
+
+.fi-data-grid-skeleton ~ .fi-data-grid-canvas {
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+}
+
+.fi-data-grid-skeleton .fi-data-grid-skeleton-toggle {
+    width: calc(var(--fi-data-grid-edge-inset) + var(--spacing) * 6);
 }

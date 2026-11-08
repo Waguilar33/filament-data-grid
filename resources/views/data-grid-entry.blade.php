@@ -168,10 +168,15 @@
             <div class="fi-data-grid-entry-body">
             <div
                 wire:ignore
+                x-ref="content"
                 class="fi-data-grid-entry-content"
-                x-bind:class="{ 'fi-data-grid-loading': isLoading }"
+                x-bind:class="{ 'fi-data-grid-loading': isLoading && ! hasLoadingSkeleton }"
                 x-bind:aria-busy="isLoading"
             >
+                @if ($entry->hasLoadingSkeleton() && ! $showsEmptyState && filled($payload['rows']))
+                    @include('filament-data-grid::loading-skeleton')
+                @endif
+
                 <div
                     x-ref="grid"
                     x-show="! showsEmptyState"

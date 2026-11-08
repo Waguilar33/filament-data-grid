@@ -13,6 +13,7 @@ use Workbench\App\Filament\Resources\DemoOrders\Pages\ListDemoOrders;
 use Workbench\App\Filament\Resources\DemoOrders\Pages\ViewDemoOrder;
 use Workbench\App\Filament\Resources\DemoOrders\RelationManagers\LinesRelationManager;
 use Workbench\App\Filament\Resources\DemoOrders\RelationManagers\LineTotalsRelationManager;
+use Workbench\App\Filament\Resources\DemoOrders\RelationManagers\SkeletonLinesRelationManager;
 use Workbench\App\Models\DemoOrder;
 
 final class DemoOrderResource extends Resource
@@ -33,7 +34,7 @@ final class DemoOrderResource extends Resource
 
     public static function getRelations(): array
     {
-        return [LineTotalsRelationManager::class, LinesRelationManager::class];
+        return [LineTotalsRelationManager::class, LinesRelationManager::class, SkeletonLinesRelationManager::class];
     }
 
     public static function getPages(): array

@@ -15,9 +15,11 @@ use Waguilar\FilamentDataGrid\DataGridEntry;
 use Workbench\App\Models\DemoOrder;
 use Workbench\App\Models\DemoOrderLine;
 
-final class LinesRelationManager extends RelationManager
+class LinesRelationManager extends RelationManager
 {
     protected static string $relationship = 'lines';
+
+    protected bool $hasLoadingSkeleton = false;
 
     public function content(Schema $schema): Schema
     {
@@ -27,6 +29,7 @@ final class LinesRelationManager extends RelationManager
                 ->state(fn (): Collection => $this->ownerRecord instanceof DemoOrder ? $this->ownerRecord->lines()->get() : new Collection)
                 ->searchable(['product'])
                 ->paginated([10, 25])
+                ->loadingSkeleton($this->hasLoadingSkeleton)
                 ->recordUrl(fn (DemoOrderLine $record): string => "#line-{$record->id}")
                 ->table([
                     TableColumn::make('Number'),
