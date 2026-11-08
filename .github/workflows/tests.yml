@@ -3,7 +3,9 @@ name: tests
 on:
   push:
     branches: [main]
+    paths-ignore: ['**.md']
   pull_request:
+    paths-ignore: ['**.md']
 
 permissions:
   contents: read
@@ -32,21 +34,15 @@ jobs:
             testbench: '^11.3'
           - php: '8.2'
             pest: '^3.0'
-            browser: false
           - php: '8.3'
             pest: '^4.4.5'
-            browser: '^4.3.1'
           - php: '8.4'
             pest: '^4.4.5'
-            browser: '^4.3.1'
         exclude:
           - php: '8.2'
             laravel: '13.*'
 
     name: P${{ matrix.php }} - L${{ matrix.laravel }} - F${{ matrix.filament }} - ${{ matrix.stability }}
-
-    env:
-      BROWSER_TESTS: ${{ matrix.browser != false && matrix.stability == 'prefer-stable' }}
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -64,7 +60,7 @@ jobs:
         uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version: ${{ matrix.php }}
-          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, intl, fileinfo, sockets
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, intl, fileinfo
           coverage: none
 
       - name: Install Composer dependencies
@@ -72,18 +68,67 @@ jobs:
           composer config audit.block-insecure false
           composer require "laravel/framework:${{ matrix.laravel }}" "filament/filament:${{ matrix.filament }}" --no-interaction --no-update
           composer require --dev "orchestra/testbench:${{ matrix.testbench }}" "pestphp/pest:${{ matrix.pest }}" --no-interaction --no-update
-          if [ "$BROWSER_TESTS" = "true" ]; then
-            composer require --dev "pestphp/pest-plugin-browser:${{ matrix.browser }}" --no-interaction --no-update
-          else
-            composer remove --dev pestphp/pest-plugin-browser --no-interaction --no-update
-          fi
+          composer remove --dev pestphp/pest-plugin-browser --no-interaction --no-update
           composer update --${{ matrix.stability }} --prefer-dist --no-interaction
 
       - name: List installed versions
         run: composer show | grep -E '^(filament/filament|livewire/livewire|laravel/framework|pestphp/pest|orchestra/testbench) '
 
+      - name: Publish workbench assets
+        run: vendor/bin/testbench workbench:build --ansi
+
+      - name: Run tests
+        run: vendor/bin/pest --ci --parallel tests/Feature
+
+  # Browser tests check what the page does, which depends on Filament far more than on PHP or Laravel, so they run on the newest stack once per Filament major.
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        filament: ['^4.15.2', '^5.10.2']
+        shard: [1, 2, 3]
+        include:
+          - filament: '^4.15.2'
+            pest: '^4.4.5'
+            browser: '^4.3.1'
+          - filament: '^5.10.2'
+            pest: '^5.3'
+            browser: '^5.1'
+
+    name: Browser - F${{ matrix.filament }} - Pest ${{ matrix.pest }} - ${{ matrix.shard }}/3
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.composer/cache/files
+          key: composer-browser-${{ matrix.filament }}-${{ hashFiles('composer.json') }}
+          restore-keys: composer-browser-
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: '8.4'
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, intl, fileinfo, sockets
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: |
+          composer config audit.block-insecure false
+          composer require "laravel/framework:13.*" "filament/filament:${{ matrix.filament }}" --no-interaction --no-update
+          composer require --dev "orchestra/testbench:^11.3" "pestphp/pest:${{ matrix.pest }}" "pestphp/pest-plugin-browser:${{ matrix.browser }}" --no-interaction --no-update
+          composer update --prefer-stable --prefer-dist --no-interaction
+
+      - name: List installed versions
+        run: composer show | grep -E '^(filament/filament|livewire/livewire|laravel/framework|pestphp/pest|pestphp/pest-plugin-browser|orchestra/testbench) '
+
       - name: Cache Playwright browsers
-        if: env.BROWSER_TESTS == 'true'
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/ms-playwright
@@ -91,7 +136,6 @@ jobs:
 
       # The runner image already ships Chromium's system libraries; --with-deps hits apt mirrors that sometimes stall.
       - name: Install Playwright
-        if: env.BROWSER_TESTS == 'true'
         timeout-minutes: 3
         run: |
           npm ci
@@ -101,10 +145,10 @@ jobs:
         run: vendor/bin/testbench workbench:build --ansi
 
       - name: Run tests
-        run: vendor/bin/pest --ci --parallel ${{ env.BROWSER_TESTS == 'true' && 'tests' || 'tests/Feature' }}
+        run: vendor/bin/pest --ci --parallel --shard=${{ matrix.shard }}/3 tests
 
       - name: Upload browser test screenshots
-        if: failure() && env.BROWSER_TESTS == 'true'
+        if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: screenshots-${{ strategy.job-index }}

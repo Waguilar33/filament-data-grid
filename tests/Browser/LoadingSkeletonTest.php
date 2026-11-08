@@ -59,7 +59,8 @@ it('serves skeleton rows only for grids with a loading skeleton', function (): v
 });
 
 it('replaces the skeleton with the grid once it has measured its columns', function (): void {
-    $page = visit('/demo/cash-shift-demo')->resize(1440, 900)->waitForEvent('networkidle')->wait(1);
+    $page = visit('/demo/cash-shift-demo')->resize(1440, 900)
+        ->assertScript('document.querySelectorAll(".fi-data-grid-skeleton").length === 0 && document.getAnimations().length === 0');
 
     expect($page->script('document.querySelectorAll(".fi-data-grid-skeleton").length'))->toBe(0)
         ->and($page->script('[...document.querySelectorAll(".fi-data-grid-entry-grid .fi-data-grid-canvas")].map((canvas) => getComputedStyle(canvas).position + " " + getComputedStyle(canvas).opacity)'))->toBe(['relative 1', 'relative 1'])
@@ -116,7 +117,8 @@ it('dims a grid without a loading skeleton while a server page loads, as before'
 });
 
 it('shows skeleton bars in a grid inside a Filament table with a loading skeleton', function (): void {
-    $page = visit('/demo/cash-shift-demo')->resize(1440, 900)->waitForEvent('networkidle')->wait(1);
+    $page = visit('/demo/cash-shift-demo')->resize(1440, 900)
+        ->assertScript('document.querySelectorAll(".fi-data-grid-skeleton").length === 0 && document.getAnimations().length === 0');
 
     $page->script(delayLivewireRequests(3000));
     $page->type('.fi-ta-ctn .fi-ta-header-toolbar .fi-ta-search-field input >> nth=0', 'ca')->wait(1.4);
