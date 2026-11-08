@@ -960,6 +960,8 @@ composer test
 
 The browser tests use [Pest's browser plugin](https://pestphp.com/docs/browser-testing). Install Chromium once with `npx playwright install chromium`.
 
+Run `vendor/bin/pest --parallel` to spread the tests over your CPU cores: about a minute instead of four and a half. Each worker loads only its own test files, so a helper used by more than one file goes in `tests/Pest.php`.
+
 The grid's payload keeps accented and other non-ASCII characters as they are, so Livewire's `assertSee('Árbol natural')` matches the text of a cell.
 
 To try the grid in a demo panel:

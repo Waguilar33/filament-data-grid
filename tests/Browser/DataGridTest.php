@@ -2,23 +2,9 @@
 
 declare(strict_types=1);
 
-use Pest\Browser\Api\AwaitableWebpage;
-
-const LINES = '[id="form.lines"]';
-
 const ADJUSTMENTS = '[id="form.adjustments"]';
 
 const SCANS = '[id="form.scans"]';
-
-function cell(int $row, int $column, string $grid = LINES): string
-{
-    return sprintf('%s .slick-row[style*="top: %dpx"] .slick-cell.l%d', $grid, $row * TABLE_ROW_HEIGHT, $column);
-}
-
-function savedState(string $grid = 'lines'): string
-{
-    return sprintf('JSON.parse(document.querySelector("[data-saved-state]").textContent).%s', $grid);
-}
 
 function dragRow(string $handle, string $target): string
 {
@@ -41,23 +27,6 @@ function dragRow(string $handle, string $target): string
             window.dispatchEvent(new MouseEvent('mouseup', at(endY)))
         }
         JS;
-}
-
-function visitDemo(string $query = ''): AwaitableWebpage
-{
-    $page = visit('/demo/data-grid-demo'.$query)->waitForEvent('networkidle');
-
-    $page->script(<<<'JS'
-        async () => {
-            const isDrawn = () => [...document.querySelectorAll('.fi-data-grid-canvas')].every((canvas) => canvas.querySelector('.slick-header'))
-
-            for (let tries = 0; !isDrawn() && tries < 100; tries++) {
-                await new Promise((resolve) => setTimeout(resolve, 50))
-            }
-        }
-        JS);
-
-    return $page;
 }
 
 function openDropdownSearch(): string

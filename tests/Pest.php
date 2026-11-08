@@ -2,10 +2,14 @@
 
 declare(strict_types=1);
 
+use Filament\Infolists\Components\TextEntry;
 use Illuminate\Support\Facades\View;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
+use Pest\Browser\Api\AwaitableWebpage;
 use Waguilar\FilamentDataGrid\DataGrid;
+use Waguilar\FilamentDataGrid\DataGridEntry;
+use Waguilar\FilamentDataGrid\Tests\Fixtures\EntryPage;
 use Waguilar\FilamentDataGrid\Tests\Fixtures\LinesForm;
 use Waguilar\FilamentDataGrid\Tests\TestCase;
 
@@ -108,4 +112,98 @@ function headerWidth(string $scope, string $label): string
         json_encode("{$scope} .slick-header-column"),
         json_encode($label),
     );
+}
+
+const LINES = '[id="form.lines"]';
+
+function cell(int $row, int $column, string $grid = LINES): string
+{
+    return sprintf('%s .slick-row[style*="top: %dpx"] .slick-cell.l%d', $grid, $row * TABLE_ROW_HEIGHT, $column);
+}
+
+function savedState(string $grid = 'lines'): string
+{
+    return sprintf('JSON.parse(document.querySelector("[data-saved-state]").textContent).%s', $grid);
+}
+
+function visitDemo(string $query = ''): AwaitableWebpage
+{
+    $page = visit('/demo/data-grid-demo'.$query)->waitForEvent('networkidle');
+
+    $page->script(<<<'JS'
+        async () => {
+            const isDrawn = () => [...document.querySelectorAll('.fi-data-grid-canvas')].every((canvas) => canvas.querySelector('.slick-header'))
+
+            for (let tries = 0; !isDrawn() && tries < 100; tries++) {
+                await new Promise((resolve) => setTimeout(resolve, 50))
+            }
+        }
+        JS);
+
+    return $page;
+}
+
+const ROUTE = '[id="content.deliveries"]';
+
+function visitRoute(string $query = ''): AwaitableWebpage
+{
+    $page = visit('/demo/delivery-route-demo'.$query)->waitForEvent('networkidle');
+
+    $page->script(<<<'JS'
+        async () => {
+            for (let tries = 0; !document.querySelector('.fi-data-grid-canvas .slick-header') && tries < 100; tries++) {
+                await new Promise((resolve) => setTimeout(resolve, 50))
+            }
+        }
+        JS);
+
+    return $page;
+}
+
+function visitDispatch(): AwaitableWebpage
+{
+    $page = visit('/demo/dispatch-demo')->waitForEvent('networkidle');
+
+    $page->script(<<<'JS'
+        async () => {
+            for (let tries = 0; document.querySelectorAll('.fi-data-grid-child-host .slick-header').length < 3 && tries < 100; tries++) {
+                await new Promise((resolve) => setTimeout(resolve, 50))
+            }
+        }
+        JS);
+
+    return $page;
+}
+
+const COUNTS = '[id="form.counts"]';
+
+const COUNTED = 2;
+
+function countedInput(int $row): string
+{
+    return cell($row, COUNTED, COUNTS).' input';
+}
+
+/**
+ * @return list<array{number: string, customer: string}>
+ */
+function manyDeliveries(int $count): array
+{
+    return array_map(
+        fn (int $index): array => ['number' => sprintf('DLV-%02d', $index), 'customer' => $index % 2 === 0 ? 'Ana' : 'Bruno'],
+        range(1, $count),
+    );
+}
+
+function serverEntry(Closure $configure): DataGridEntry
+{
+    EntryPage::$configureUsing = fn (): array => [
+        $configure(DataGridEntry::make('deliveries')->schema([TextEntry::make('number'), TextEntry::make('customer')])),
+    ];
+
+    $entry = Livewire::test(EntryPage::class)->instance()->getSchema('infolist')?->getComponent('deliveries');
+
+    expect($entry)->toBeInstanceOf(DataGridEntry::class);
+
+    return $entry;
 }

@@ -177,30 +177,6 @@ it('searches the text users see, as formatted by the entry', function (): void {
     expect($payload['rows'][0]['search'])->toBe('fully complete');
 });
 
-/**
- * @return list<array{number: string, customer: string}>
- */
-function manyDeliveries(int $count): array
-{
-    return array_map(
-        fn (int $index): array => ['number' => sprintf('DLV-%02d', $index), 'customer' => $index % 2 === 0 ? 'Ana' : 'Bruno'],
-        range(1, $count),
-    );
-}
-
-function serverEntry(Closure $configure): DataGridEntry
-{
-    EntryPage::$configureUsing = fn (): array => [
-        $configure(DataGridEntry::make('deliveries')->schema([TextEntry::make('number'), TextEntry::make('customer')])),
-    ];
-
-    $entry = Livewire::test(EntryPage::class)->instance()->getSchema('infolist')?->getComponent('deliveries');
-
-    expect($entry)->toBeInstanceOf(DataGridEntry::class);
-
-    return $entry;
-}
-
 it('pages in the browser unless told otherwise', function (): void {
     $payload = serverEntry(fn (DataGridEntry $entry): DataGridEntry => $entry->state(manyDeliveries(12))->paginated(5))->getGridPayload();
 

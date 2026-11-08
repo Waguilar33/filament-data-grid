@@ -2,15 +2,6 @@
 
 declare(strict_types=1);
 
-const COUNTS = '[id="form.counts"]';
-
-const COUNTED = 2;
-
-function countedInput(int $row): string
-{
-    return cell($row, COUNTED, COUNTS).' input';
-}
-
 it('shows stored numbers through the field mask', function (): void {
     visitDemo()
         ->assertSeeIn(cell(0, COUNTED, COUNTS), '1,500')

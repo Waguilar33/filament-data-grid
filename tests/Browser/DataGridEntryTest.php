@@ -2,10 +2,6 @@
 
 declare(strict_types=1);
 
-use Pest\Browser\Api\AwaitableWebpage;
-
-const ROUTE = '[id="content.deliveries"]';
-
 function routeRow(int $row): string
 {
     return sprintf('%s .slick-row[style*="top: %dpx"]', ROUTE, $row * TABLE_ROW_HEIGHT);
@@ -61,21 +57,6 @@ function rowsAreStacked(): string
             return rows.every((row, index) => index === 0 || row.offsetTop === rows[index - 1].offsetTop + rows[index - 1].offsetHeight)
         })()
         JS, json_encode(ROUTE.' .slick-row'));
-}
-
-function visitRoute(string $query = ''): AwaitableWebpage
-{
-    $page = visit('/demo/delivery-route-demo'.$query)->waitForEvent('networkidle');
-
-    $page->script(<<<'JS'
-        async () => {
-            for (let tries = 0; !document.querySelector('.fi-data-grid-canvas .slick-header') && tries < 100; tries++) {
-                await new Promise((resolve) => setTimeout(resolve, 50))
-            }
-        }
-        JS);
-
-    return $page;
 }
 
 function visibleRowCount(string $selector): string
