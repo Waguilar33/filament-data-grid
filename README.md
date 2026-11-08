@@ -763,22 +763,24 @@ public function table(Table $table): Table
 
 `toTableContent()` uses Filament's `content()` hook, so the table works the same as any other Filament table, with `query()` or `records()`. Each parent row also shows the table's `recordActions()` (Filament Actions, so their modals and slide-overs work as usual) and, when the table has a `recordUrl()`, a chevron that opens the record. Clicking the row opens the record too; the arrow at the start of the row opens its child rows. It works in a relation manager, whose table already has the relationship query. Define the grid's columns with `table()` and `schema()` as above. The table's `columns()` still decide what can be searched and sorted, but aren't shown. Leave `searchable()`, `filters()` and `paginated()` off the grid itself here, because the table does that work.
 
-To give the table's heading an icon, like a section's, pass the heading through `IconHeading`. It works on any Filament table, with or without the grid, including a plain table that lists its own rows:
+To give the table's header an icon, like a section's, add `header(IconHeader::make($icon))`. It keeps the table's `heading()`, `description()` and header actions, and draws them with the markup of a Filament section header (the icon beside the heading and description, not inside the heading), so they line up exactly like a section's. It works on any Filament table, with or without the grid, including a plain table that lists its own rows:
 
 ```php
-use Waguilar\FilamentDataGrid\Support\IconHeading;
+use Waguilar\FilamentDataGrid\Support\IconHeader;
 
 $table
-    ->heading(IconHeading::make('Deliveries', Heroicon::OutlinedTruck))
+    ->heading('Deliveries')
     ->description('Where each order on the route stands.')
+    ->header(IconHeader::make(Heroicon::OutlinedTruck))
 ```
 
 Inside a table, the heading, description and icon belong to the table, because Filament draws the table's header (with its search, filters and header actions) before it draws the content. The grid's own `heading()`, `description()` and `icon()` aren't shown there. `compact()` still works: on the grid, it makes the table's header compact too, so it lines up with compact sections:
 
 ```php
 $table
-    ->heading(IconHeading::make('Deliveries', Heroicon::OutlinedTruck))
+    ->heading('Deliveries')
     ->description('Where each order on the route stands.')
+    ->header(IconHeader::make(Heroicon::OutlinedTruck))
     ->content(DataGridEntry::make('deliveries')->compact()->...->toTableContent())
 ```
 

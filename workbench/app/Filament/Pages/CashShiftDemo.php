@@ -17,7 +17,7 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Waguilar\FilamentDataGrid\DataGridEntry;
-use Waguilar\FilamentDataGrid\Support\IconHeading;
+use Waguilar\FilamentDataGrid\Support\IconHeader;
 use Waguilar\FilamentDataGrid\Totals\Total;
 use Workbench\App\Catalog\FakeCashShift;
 use Workbench\App\Livewire\ShiftMovementsTable;
@@ -61,7 +61,8 @@ final class CashShiftDemo extends Page implements HasTable
     public function table(Table $table): Table
     {
         return $table
-            ->heading(IconHeading::make(__('demo::demo.shift.sections.table'), Heroicon::OutlinedBanknotes))
+            ->heading(__('demo::demo.shift.sections.table'))
+            ->header(IconHeader::make(Heroicon::OutlinedBanknotes))
             ->description(__('demo::demo.shift.descriptions.table'))
             ->records(fn (?string $search): array => array_filter(
                 FakeCashShift::methods(),

@@ -15,7 +15,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Waguilar\FilamentDataGrid\ChildTable;
-use Waguilar\FilamentDataGrid\Support\IconHeading;
+use Waguilar\FilamentDataGrid\Support\IconHeader;
 use Workbench\App\Catalog\FakeCashShift;
 
 final class ShiftMovementsTable extends ChildTable
@@ -27,7 +27,9 @@ final class ShiftMovementsTable extends ChildTable
     public function table(Table $table): Table
     {
         return $table
-            ->heading(fn (): ?IconHeading => $this->withHeading ? IconHeading::make(__('demo::demo.shift.sections.movements'), Heroicon::OutlinedBanknotes) : null)
+            ->when($this->withHeading, fn (Table $table): Table => $table
+                ->heading(__('demo::demo.shift.sections.movements'))
+                ->header(IconHeader::make(Heroicon::OutlinedBanknotes)))
             ->records(fn (?string $search, array $filters, int $page, int|string $recordsPerPage): LengthAwarePaginator => $this->movements($search, $filters, $page, $recordsPerPage))
             ->columns([
                 TextColumn::make('time')->label(__('demo::demo.shift.columns.time')),

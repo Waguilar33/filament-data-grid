@@ -7,9 +7,11 @@ namespace Workbench\App\Filament\Pages;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Forms\Components\DatePicker;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\EmbeddedTable;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
@@ -20,7 +22,7 @@ use Filament\Tables\Table;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
-use Waguilar\FilamentDataGrid\Support\IconHeading;
+use Waguilar\FilamentDataGrid\Support\IconHeader;
 use Workbench\App\Catalog\FakeDeliveries;
 
 final class DeliveryTableDemo extends Page implements HasTable
@@ -41,13 +43,20 @@ final class DeliveryTableDemo extends Page implements HasTable
 
     public function content(Schema $schema): Schema
     {
-        return $schema->components([EmbeddedTable::make()]);
+        return $schema->components([
+            Section::make(__('demo::demo.route.sections.browser'))
+                ->description(__('demo::demo.route.descriptions.browser'))
+                ->icon(Heroicon::OutlinedMap)
+                ->schema([TextEntry::make('route')->state('R-05')]),
+            EmbeddedTable::make(),
+        ]);
     }
 
     public function table(Table $table): Table
     {
         return $table
-            ->heading(IconHeading::make(__('demo::demo.route.sections.server'), Heroicon::OutlinedTruck))
+            ->heading(__('demo::demo.route.sections.server'))
+            ->header(IconHeader::make(Heroicon::OutlinedTruck))
             ->description(__('demo::demo.route.descriptions.server'))
             ->records(fn (?string $search, array $filters, int $page, int $recordsPerPage): LengthAwarePaginator => $this->deliveries($search, $filters, $page, $recordsPerPage))
             ->columns([TextColumn::make('delivery_number')->searchable()])
