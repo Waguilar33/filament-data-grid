@@ -101,7 +101,7 @@ jobs:
         run: vendor/bin/testbench workbench:build --ansi
 
       - name: Run tests
-        run: vendor/bin/pest --ci ${{ env.BROWSER_TESTS == 'true' && 'tests' || 'tests/Feature' }}
+        run: vendor/bin/pest --ci --parallel ${{ env.BROWSER_TESTS == 'true' && 'tests' || 'tests/Feature' }}
 
       - name: Upload browser test screenshots
         if: failure() && env.BROWSER_TESTS == 'true'

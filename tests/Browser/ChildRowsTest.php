@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use Pest\Browser\Api\AwaitableWebpage;
-
 const PRODUCTS = '[id="form.products"]';
 
 function productRow(int $top): string
@@ -19,21 +17,6 @@ function childGrid(int $position): string
 function childCell(int $position, int $row, int $column): string
 {
     return sprintf('%s .slick-row[style*="top: %dpx"] .slick-cell.l%d', childGrid($position), $row * TABLE_ROW_HEIGHT, $column);
-}
-
-function visitDispatch(): AwaitableWebpage
-{
-    $page = visit('/demo/dispatch-demo')->waitForEvent('networkidle');
-
-    $page->script(<<<'JS'
-        async () => {
-            for (let tries = 0; document.querySelectorAll('.fi-data-grid-child-host .slick-header').length < 3 && tries < 100; tries++) {
-                await new Promise((resolve) => setTimeout(resolve, 50))
-            }
-        }
-        JS);
-
-    return $page;
 }
 
 it('updates the parent total live while the next child cell is being edited', function (): void {
