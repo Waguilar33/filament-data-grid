@@ -7,7 +7,9 @@ namespace Waguilar\FilamentDataGrid\Entry\Concerns;
 use Closure;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
+use Filament\Actions\Contracts\HasActions;
 use Filament\Actions\Exceptions\ActionNotResolvableException;
+use Filament\Pages\BasePage;
 use Filament\Schemas\Schema;
 use Filament\Support\ArrayRecord;
 use Filament\Support\Enums\Size;
@@ -124,6 +126,15 @@ trait HasRecordActions
         }
 
         return $actions;
+    }
+
+    public function rendersActionModals(mixed $livewire): bool
+    {
+        if (! $livewire instanceof HasActions || $livewire instanceof BasePage) {
+            return false;
+        }
+
+        return $this->hasRecordActions() || $this->hasChildRecordActions() || $this->getEmptyStateActions() !== [];
     }
 
     public function renderRecordActions(string $key, Schema $item): ?string

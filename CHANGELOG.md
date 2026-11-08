@@ -4,6 +4,7 @@ All notable changes to `filament-data-grid` will be documented in this file.
 
 ## Unreleased
 
+- Fix: record actions of a `DataGridEntry` in a relation manager's `content()`, with no table there, opened no modal: Filament draws action modals only from pages and tables. The grid now draws them itself when it isn't on a page, once per Livewire component.
 - A `DataGridEntry` with no rows at all no longer shows its search and filters toolbar, so an empty state sits right under the heading. A search or filter that matches nothing keeps the toolbar.
 - A paginated `DataGridEntry` hides its pagination bar while every row that matches the search and filters fits on the smallest page, and its page-size select lists only the sizes that make sense for that count: those smaller than it, plus the first that holds every row, plus "All". When the chosen size drops out, the grid uses the largest one left, and returns to the chosen size when it is offered again. Browser and `serverSide()` grids alike.
 - `DataGridEntry` gets `recordUrl()`, like a table's: each row opens its record, with the row as `$record`, and `null` leaves a row unlinked. A linked row shows the same chevron as `toTableContent()`, and a click anywhere on the row opens the record. Ctrl-click, cmd-click or a middle click opens it in a new tab, and `openRecordUrlInNewTab()` always does. Record actions, the arrow that opens child rows, and links and inputs inside cells keep their own clicks. In `toTableContent()`, ctrl-click and middle click on a row now open a new tab too.

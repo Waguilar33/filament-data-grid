@@ -344,4 +344,9 @@
             </div>
         </section>
     @endif
+
+    @if ($entry->rendersActionModals($this))
+        {{-- Pages draw the modals in their layout; a relation manager's content() has nowhere else to draw them. --}}
+        <x-filament-actions::modals />
+    @endif
 </div>
