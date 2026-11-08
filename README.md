@@ -144,7 +144,7 @@ A field hidden in every row, with `visible(false)` or a closure that is false fo
 
 A component that is neither a form field nor an infolist entry throws `Waguilar\FilamentDataGrid\Exceptions\UnsupportedCellComponent`.
 
-Rows grow to fit their tallest cell, with 44px as the minimum, so an entry with `belowContent()` or a long name that wraps is never cut off. This applies to child rows too. The grid measures the rows again when the state changes, when a row opens or closes, and when the grid is resized.
+Rows grow to fit their tallest cell, never shorter than a Filament table row, so an entry with `belowContent()` or a long name that wraps is never cut off. This applies to child rows too. The grid measures the rows again when the state changes, when a row opens or closes, and when the grid is resized.
 
 ### Heading, description and icon
 
@@ -494,7 +494,7 @@ Livewire must be able to find the component on later requests. On Livewire 3 tha
 
 ### Looks like a Filament table
 
-`DataGridEntry` draws its rows, headers, totals and child rows with Filament's own table classes (`fi-ta-cell`, `fi-ta-col`, `fi-ta-text`, `fi-ta-header-cell`), so the padding, row height, fonts and colours come from Filament and from your theme, and change when they do. A grid next to a Filament table lines up with it at every screen width. The grid keeps its own styles only where Filament has nothing to offer: the chevron that opens a row, where the first column starts right after the chevron unless the header has an icon, and `compact()`, which keeps 16-pixel edges at every width like a compact section.
+`DataGridEntry` and the editable `DataGrid` draw their rows, headers, totals and child rows with Filament's own table classes (`fi-ta-cell`, `fi-ta-col`, `fi-ta-text`, `fi-ta-header-cell`), so the padding, row height, fonts and colours come from Filament and from your theme, and change when they do. A grid next to a Filament table lines up with it at every screen width. The grid keeps its own styles only where Filament has nothing to offer: the chevron that opens a row, where the first column starts right after the chevron unless the header has an icon, and `compact()`, which keeps 16-pixel edges at every width like a compact section.
 
 ### Column widths
 

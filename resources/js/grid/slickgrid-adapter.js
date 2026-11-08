@@ -1,5 +1,5 @@
 import { SlickEditorLock, SlickGrid, SlickRowMoveManager } from '@slickgrid-universal/common'
-import { cellLabel, escapeHtml, fitIconHtml, headerGlyphOffset, headerHtml, isBlank, renderActions, renderCell } from './cells.js'
+import { cellLabel, escapeHtml, fitIconHtml, headerGlyphOffset, headerHtml, isBlank, renderActions, renderCell, wrapTableCell } from './cells.js'
 import { DateEditor, NumberEditor, TextEditor } from './editors.js'
 import { mountSelectCell } from './select-cell.js'
 import { hasMask, maskedText } from './mask.js'
@@ -9,7 +9,7 @@ const ACTIONS_COLUMN = '__actions'
 const MOVE_COLUMN = '__move'
 const TOGGLE_COLUMN = '__toggle'
 const TOGGLE_WIDTH = 44
-const ROW_HEIGHT = 44
+const FALLBACK_ROW_HEIGHT = 44
 const FLEXIBLE_MIN_WIDTH = 160
 const ACTIONS_WIDTH = 56
 const INLINE_ACTIONS_PADDING = 24
@@ -55,6 +55,28 @@ export function createGrid(
     let items = []
     let definedEdgeInset = 0
     const measuredHeights = new Map()
+    let tableRowHeight = null
+
+    const rowHeight = () => tableRowHeight ?? FALLBACK_ROW_HEIGHT
+
+    const measureTableRowHeight = () => {
+        const probe = document.createElement('div')
+        const row = document.createElement('div')
+        const cell = document.createElement('div')
+
+        probe.className = 'fi-data-grid-row-probe'
+        row.className = 'slick-row fi-data-grid-parent-row'
+        cell.className = 'slick-cell fi-ta-cell fi-data-grid-cell'
+        cell.append(wrapTableCell('<span class="fi-data-grid-cell-text">&nbsp;</span>'))
+        row.append(cell)
+        probe.append(row)
+        element.appendChild(probe)
+
+        const height = Math.ceil(cell.getBoundingClientRect().height)
+
+        probe.remove()
+        tableRowHeight = height > 0 ? height : null
+    }
 
     const edgeInset = () => {
         const probe = document.createElement('div')
@@ -153,8 +175,8 @@ export function createGrid(
             resizable: true,
             sortable: false,
             focusable: column.editor.type !== 'entry',
-            cssClass: `fi-data-grid-cell fi-data-grid-cell-${column.editor.type} fi-align-${column.alignment ?? 'start'}${isColumnHighlighted(column) ? ' fi-data-grid-column-highlighted' : ''}`,
-            headerCssClass: `fi-data-grid-header fi-align-${column.alignment ?? 'start'}`,
+            cssClass: `fi-ta-cell fi-data-grid-cell fi-data-grid-cell-${column.editor.type} fi-align-${column.alignment ?? 'start'}${isColumnHighlighted(column) ? ' fi-data-grid-column-highlighted' : ''}`,
+            headerCssClass: `fi-ta-header-cell fi-data-grid-header fi-align-${column.alignment ?? 'start'}`,
             editorClass: EDITORS[column.editor.type] ?? null,
             editor: {
                 ...column.editor,
@@ -179,7 +201,7 @@ export function createGrid(
                 focusable: false,
                 selectable: false,
                 cssClass: 'fi-data-grid-cell fi-data-grid-move-cell',
-                headerCssClass: 'fi-data-grid-header',
+                headerCssClass: 'fi-ta-header-cell fi-data-grid-header',
                 formatter: (rowIndex, cellIndex, value, column, item) =>
                     rows.get(item.__key)?.isTrailingBlank
                         ? ''
@@ -202,7 +224,7 @@ export function createGrid(
                 focusable: false,
                 selectable: false,
                 cssClass: 'fi-data-grid-cell fi-data-grid-toggle-cell',
-                headerCssClass: 'fi-data-grid-header',
+                headerCssClass: 'fi-ta-header-cell fi-data-grid-header',
                 formatter: (rowIndex, cellIndex, value, column, item) => formatToggle(item),
             })
         }
@@ -219,7 +241,7 @@ export function createGrid(
                 focusable: false,
                 selectable: false,
                 cssClass: 'fi-data-grid-cell fi-data-grid-actions-cell',
-                headerCssClass: 'fi-data-grid-header',
+                headerCssClass: 'fi-ta-header-cell fi-data-grid-header',
                 formatter: (rowIndex, cellIndex, value, column, item) => {
                     const template = payload.actionTemplates?.[rows.get(item.__key)?.actions]
 
@@ -311,7 +333,7 @@ export function createGrid(
             .join(' ')
 
         if (type === 'select') {
-            return { html: selectCellElement(item, column, cell, value), addClasses: classes, toolTip: cell.error ?? '' }
+            return { html: wrapTableCell(selectCellElement(item, column, cell, value), column.source.alignment ?? 'start'), addClasses: classes, toolTip: cell.error ?? '' }
         }
 
         const label = ['date', 'modal'].includes(type)
@@ -329,7 +351,7 @@ export function createGrid(
         const cellIcon = cell.icon ? (payload.cellIcons?.[cell.icon] ?? null) : null
 
         return {
-            html: renderCell({ type, value: shown, cell, label, placeholder, translations, icons, isEditable, cellIcon }),
+            html: wrapTableCell(renderCell({ type, value: shown, cell, label, placeholder, translations, icons, isEditable, cellIcon }), column.source.alignment ?? 'start'),
             addClasses: classes,
             toolTip: cell.error ?? fullText,
         }
@@ -566,6 +588,8 @@ export function createGrid(
     items = buildItems()
     syncChildren()
 
+    measureTableRowHeight()
+
     const grid = new SlickGrid(element, dataProvider, columnDefinitions(), {
         editable: true,
         frozenColumn: frozenColumnIndex(),
@@ -576,7 +600,7 @@ export function createGrid(
         enableColumnReorder: false,
         enableAsyncPostRender: false,
         autoHeight: true,
-        rowHeight: ROW_HEIGHT,
+        rowHeight: rowHeight(),
         enableVariableRowHeight: true,
         showHeaderRow: false,
         showTopPanel: false,
@@ -652,6 +676,11 @@ export function createGrid(
             return false
         }
 
+        if (tableRowHeight === null) {
+            measureTableRowHeight()
+            grid.setOptions({ rowHeight: rowHeight() })
+        }
+
         const columns = grid.getColumns()
         const targets = items.filter((item) => !isPlaceholder(item))
         const probe = document.createElement('div')
@@ -661,11 +690,11 @@ export function createGrid(
             .join('')
         element.appendChild(probe)
 
-        const heights = [...probe.children].map((row) => Math.max(ROW_HEIGHT, Math.ceil(row.getBoundingClientRect().height)))
+        const heights = [...probe.children].map((row) => Math.max(rowHeight(), Math.ceil(row.getBoundingClientRect().height)))
 
         probe.remove()
 
-        const next = new Map(targets.map((item, index) => [item.__key, heights[index]]).filter(([, height]) => height > ROW_HEIGHT))
+        const next = new Map(targets.map((item, index) => [item.__key, heights[index]]).filter(([, height]) => height > rowHeight()))
         const changed = next.size !== measuredHeights.size || [...next].some(([key, height]) => measuredHeights.get(key) !== height)
 
         measuredHeights.clear()

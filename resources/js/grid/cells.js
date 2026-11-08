@@ -157,3 +157,20 @@ export const headerGlyphOffset = (element) => {
 
     return 0
 }
+
+export const wrapTableCell = (content, alignment = 'start') => {
+    const column = document.createElement('div')
+    const text = document.createElement('div')
+
+    column.className = 'fi-ta-col'
+    text.className = `fi-ta-text fi-align-${alignment}`
+    column.append(text)
+
+    if (content instanceof Element) {
+        text.append(content)
+    } else {
+        text.innerHTML = content ?? ''
+    }
+
+    return column
+}

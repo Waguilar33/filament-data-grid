@@ -15,7 +15,7 @@ it('steps an unmasked number cell with the arrow keys without leaving the row', 
         ->assertValue(quantityInput(1), '3.5')
         ->keys(quantityInput(1), 'ArrowDown')
         ->assertValue(quantityInput(1), '2.5')
-        ->assertScript('document.activeElement.closest(".slick-row").style.top', '44px')
+        ->assertScript('document.activeElement.closest(".slick-row").style.top', TABLE_ROW_HEIGHT.'px')
         ->keys(quantityInput(1), 'Enter')
         ->click('Save')
         ->wait(1.5)

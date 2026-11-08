@@ -28,7 +28,7 @@ function parityMeasure(int $width): mixed
                 const header = headers.find((cell) => textBox(cell) !== null)
                 const headerText = textBox(header)
                 const headerStyle = getComputedStyle(header)
-                const lastAction = rows[0].querySelector('.fi-ta-actions').getBoundingClientRect()
+                const lastAction = rows[0].querySelector('.fi-ta-actions')?.getBoundingClientRect()
 
                 return {
                     cellX: Math.round(firstCell.rect.left - box.left),
@@ -38,7 +38,7 @@ function parityMeasure(int $width): mixed
                     headerHeight: Math.round(rows[0].getBoundingClientRect().top - header.getBoundingClientRect().top),
                     headerPadding: [headerStyle.paddingTop, headerStyle.paddingBottom],
                     headerFont: [headerText.style.fontSize, headerText.style.lineHeight, headerText.style.fontWeight, headerText.style.color],
-                    actionEnd: Math.round(Math.max(...[...rows[0].children].map((cell) => cell.getBoundingClientRect().right)) - lastAction.right),
+                    actionEnd: lastAction ? Math.round(Math.max(...[...rows[0].children].map((cell) => cell.getBoundingClientRect().right)) - lastAction.right) : null,
                 }
             }
 
@@ -58,6 +58,15 @@ function parityMeasure(int $width): mixed
                 ),
                 grid: gridMeasure('content.grid'),
                 nested: gridMeasure('content.nested'),
+                editable: (() => {
+                    const container = document.querySelector('[id="form.editable"] .fi-data-grid-section')
+
+                    return measure(
+                        container,
+                        [...container.querySelectorAll('.grid-canvas .slick-row')].sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top),
+                        [...container.querySelectorAll('.slick-header-column')],
+                    )
+                })(),
             }
         }
         JS);
@@ -77,6 +86,16 @@ it('draws an entry grid with child rows like a native Filament table, apart from
 
     expect(collect($sizes['nested'])->except(['cellX', 'headerX'])->all())
         ->toBe(collect($sizes['native'])->except(['cellX', 'headerX'])->all());
+})->with([
+    'large screen' => 1280,
+    'small screen' => 480,
+]);
+
+it('draws an editable grid like a native Filament table', function (int $width): void {
+    $sizes = parityMeasure($width);
+
+    expect(collect($sizes['editable'])->except(['actionEnd'])->all())
+        ->toBe(collect($sizes['native'])->except(['actionEnd'])->all());
 })->with([
     'large screen' => 1280,
     'small screen' => 480,
