@@ -33,7 +33,9 @@ it('shows grouped record actions in a menu that is not clipped by the grid', fun
         }
         JS);
 
-    expect($clipped)->toBeFalse();
+    expect($clipped)->toBeFalse()
+        ->and($page->script(openDropdownLift('.fi-data-grid-record-actions')))->toBe('30/30')
+        ->and($page->script(sprintf('getComputedStyle(document.querySelector(%s)).zIndex', json_encode(ORDER_LINES.' .fi-data-grid-entry-content'))))->toBe('3');
 });
 
 it('opens the record when a row with a recordUrl() is clicked', function (): void {

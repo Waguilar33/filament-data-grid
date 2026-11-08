@@ -81,6 +81,18 @@ function clippedContentIn(string $scope): string
         JS, json_encode("{$scope} .slick-header-column, {$scope} .slick-cell, {$scope} .fi-data-grid-child-cell"));
 }
 
+function openDropdownLift(string $actions): string
+{
+    return sprintf(<<<'JS'
+        () => {
+            const panel = [...document.querySelectorAll(%s)].find((element) => element.style.display !== 'none')
+            const row = panel.closest('.slick-row')
+
+            return `${getComputedStyle(row).zIndex}/${getComputedStyle(row.closest('.fi-data-grid')).zIndex}`
+        }
+        JS, json_encode("{$actions} .fi-dropdown-panel"));
+}
+
 function scrollsSideways(string $scope): string
 {
     return sprintf(

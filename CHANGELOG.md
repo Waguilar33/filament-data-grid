@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## Unreleased
+
+- Opening the sidebar no longer freezes Filament pages for over half a second. The grid's stylesheet found open dropdowns by their inline `display` style inside `:has()`, so every inline style change on the page (Alpine transitions on each sidebar item) made the browser re-check those rules against the whole document. It now uses the `aria-expanded` that Filament puts on the open dropdown's trigger. Open row and record action menus still draw above the rows below them.
+
 ## v1.0.0-beta.35 - 2026-11-08
 
 - A `DataGridEntry` stays invisible, at its reserved height, until it has measured its columns in a visible container, so a grid that opens in a tab or relation manager never shows placeholder column widths first. The reserved height before the grid loads now matches a Filament table's rows.

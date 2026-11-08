@@ -102,6 +102,8 @@ return [
         'scans' => 'Escaneo',
     ],
     'actions' => [
+        'flag' => 'Marcar para revisión',
+        'flagged' => 'Ajuste marcado para revisión',
         'save' => 'Guardar',
         'edit_in_slide_over' => 'Editar en panel lateral',
         'add_sample_lines' => 'Agregar líneas de ejemplo',

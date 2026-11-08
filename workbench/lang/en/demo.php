@@ -102,6 +102,8 @@ return [
         'scans' => 'Scanning',
     ],
     'actions' => [
+        'flag' => 'Flag for review',
+        'flagged' => 'Adjustment flagged for review',
         'save' => 'Save',
         'edit_in_slide_over' => 'Edit in a slide-over',
         'add_sample_lines' => 'Add sample lines',
