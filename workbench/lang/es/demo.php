@@ -237,6 +237,8 @@ return [
         'scan' => 'Escanea o escribe',
     ],
     'parity' => [
+        'editable' => 'Data grid editable',
+        'editable_description' => 'Las mismas filas en un DataGrid editable.',
         'navigation' => 'Paridad con Filament',
         'native' => 'Tabla de Filament',
         'native_description' => 'Una tabla nativa de Filament con las mismas filas.',

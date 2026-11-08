@@ -18,7 +18,7 @@ function childGrid(int $position): string
 
 function childCell(int $position, int $row, int $column): string
 {
-    return sprintf('%s .slick-row[style*="top: %dpx"] .slick-cell.l%d', childGrid($position), $row * 44, $column);
+    return sprintf('%s .slick-row[style*="top: %dpx"] .slick-cell.l%d', childGrid($position), $row * TABLE_ROW_HEIGHT, $column);
 }
 
 function visitDispatch(): AwaitableWebpage
@@ -38,16 +38,16 @@ function visitDispatch(): AwaitableWebpage
 
 it('updates the parent total live while the next child cell is being edited', function (): void {
     visitDispatch()
-        ->assertSeeIn(productRow(44).' .slick-cell.l3', '5')
+        ->assertSeeIn(productRow(TABLE_ROW_HEIGHT).' .slick-cell.l3', '5')
         ->click(childCell(1, 0, 2))
         ->keys(childCell(1, 0, 2).' input', ['6', 'Enter'])
         ->keys(childCell(1, 1, 2).' input', ['3'])
         ->wait(1.5)
-        ->assertSeeIn(productRow(44).' .slick-cell.l3', '11')
+        ->assertSeeIn(productRow(TABLE_ROW_HEIGHT).' .slick-cell.l3', '11')
         ->assertValue(childCell(1, 1, 2).' input', '3')
         ->keys(childCell(1, 1, 2).' input', ['Enter'])
         ->wait(1.5)
-        ->assertSeeIn(productRow(44).' .slick-cell.l3', '9')
+        ->assertSeeIn(productRow(TABLE_ROW_HEIGHT).' .slick-cell.l3', '9')
         ->assertNoJavaScriptErrors();
 });
 

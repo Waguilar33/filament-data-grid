@@ -58,9 +58,9 @@ it('grows editable parent and child rows to fit their tallest cell', function ()
 
     expect($parents->pluck('clipped')->unique()->all())->toBe([false])
         ->and($children->pluck('clipped')->unique()->all())->toBe([false])
-        ->and($parents['Olive oil 1 L']['height'])->toBeGreaterThan(44)
+        ->and($parents['Olive oil 1 L']['height'])->toBeGreaterThan(TABLE_ROW_HEIGHT)
         ->and($parents->first()['height'])->toBeGreaterThanOrEqual($parents['Olive oil 1 L']['height'])
-        ->and($children->pluck('height')->max())->toBeGreaterThan(44);
+        ->and($children->pluck('height')->max())->toBeGreaterThan(TABLE_ROW_HEIGHT);
 });
 
 it('measures editable rows again when the grid gets narrower', function (): void {
@@ -87,5 +87,5 @@ it('keeps editable rows fitted after a live change and after opening and closing
 
     expect(collect($fit['parents'])->pluck('clipped')->unique()->all())->toBe([false])
         ->and(collect($fit['children'])->pluck('clipped')->unique()->all())->toBe([false])
-        ->and(collect($fit['parents'])->keyBy('text')['Olive oil 1 L']['height'])->toBeGreaterThan(44);
+        ->and(collect($fit['parents'])->keyBy('text')['Olive oil 1 L']['height'])->toBeGreaterThan(TABLE_ROW_HEIGHT);
 });

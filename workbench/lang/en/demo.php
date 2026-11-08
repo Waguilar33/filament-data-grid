@@ -237,6 +237,8 @@ return [
         'scan' => 'Scan or type',
     ],
     'parity' => [
+        'editable' => 'Editable data grid',
+        'editable_description' => 'The same rows in an editable DataGrid.',
         'navigation' => 'Filament parity',
         'native' => 'Filament table',
         'native_description' => 'A native Filament table with the same rows.',

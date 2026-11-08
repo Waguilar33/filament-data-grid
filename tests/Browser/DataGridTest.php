@@ -12,7 +12,7 @@ const SCANS = '[id="form.scans"]';
 
 function cell(int $row, int $column, string $grid = LINES): string
 {
-    return sprintf('%s .slick-row[style*="top: %dpx"] .slick-cell.l%d', $grid, $row * 44, $column);
+    return sprintf('%s .slick-row[style*="top: %dpx"] .slick-cell.l%d', $grid, $row * TABLE_ROW_HEIGHT, $column);
 }
 
 function savedState(string $grid = 'lines'): string
@@ -86,7 +86,7 @@ it('moves down with Enter and up with Shift+Enter while typing', function (): vo
     visitDemo()
         ->click(cell(0, 1))
         ->keys(cell(0, 1).' input', ['3', 'Enter'])
-        ->assertScript('document.activeElement.closest(".slick-row").style.top', '44px')
+        ->assertScript('document.activeElement.closest(".slick-row").style.top', TABLE_ROW_HEIGHT.'px')
         ->keys(cell(1, 1).' input', ['4', 'Shift+Enter'])
         ->assertScript('document.activeElement.closest(".slick-row").style.top', '0px')
         ->click('Save')
@@ -99,7 +99,7 @@ it('skips rows without an input in the column on Enter and Shift+Enter', functio
     visitDemo()
         ->click(cell(0, 1, SCANS))
         ->keys(cell(0, 1, SCANS).' input', ['A', 'Enter'])
-        ->assertScript('document.querySelector(\''.SCANS.' .slick-cell.active\').closest(".slick-row").style.top', '88px')
+        ->assertScript('document.querySelector(\''.SCANS.' .slick-cell.active\').closest(".slick-row").style.top', (2 * TABLE_ROW_HEIGHT).'px')
         ->keys(cell(2, 1, SCANS), ['C', 'Shift+Enter'])
         ->assertScript('document.querySelector(\''.SCANS.' .slick-cell.active\').closest(".slick-row").style.top', '0px');
 });
@@ -108,7 +108,7 @@ it('stays on the row when no row below has an input in the column', function ():
     visitDemo()
         ->click(cell(1, 5))
         ->keys(cell(1, 5).' input', ['!', 'Enter'])
-        ->assertScript('document.querySelector(\''.LINES.' .slick-cell.active\').closest(".slick-row").style.top', '44px');
+        ->assertScript('document.querySelector(\''.LINES.' .slick-cell.active\').closest(".slick-row").style.top', TABLE_ROW_HEIGHT.'px');
 });
 
 it('opens a select cell from the keyboard and moves on after picking', function (): void {

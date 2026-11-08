@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace Workbench\App\Filament\Pages;
 
 use Filament\Actions\Action;
+use Filament\Forms\Components\Repeater\TableColumn as FormTableColumn;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\RepeatableEntry\TableColumn;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\EmbeddedSchema;
 use Filament\Schemas\Components\EmbeddedTable;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -16,14 +20,52 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
+use Waguilar\FilamentDataGrid\DataGrid;
 use Waguilar\FilamentDataGrid\DataGridEntry;
 use Waguilar\FilamentDataGrid\Support\IconHeader;
 
+/**
+ * @property-read Schema $form
+ */
 final class ParityDemo extends Page implements HasTable
 {
     use InteractsWithTable;
 
     protected static ?int $navigationSort = 20;
+
+    /**
+     * @var array<string, mixed>|null
+     */
+    public ?array $data = [];
+
+    public function mount(): void
+    {
+        $this->form->fill(['editable' => array_values(array_map(fn (array $row): array => array_diff_key($row, ['lines' => true]), self::rows()))]);
+    }
+
+    public function form(Schema $schema): Schema
+    {
+        return $schema
+            ->components([
+                DataGrid::make('editable')
+                    ->hiddenLabel()
+                    ->heading(__('demo::demo.parity.editable'))
+                    ->description(__('demo::demo.parity.editable_description'))
+                    ->icon(Heroicon::OutlinedTableCells)
+                    ->reorderable(false)
+                    ->table([
+                        FormTableColumn::make(__('demo::demo.parity.product')),
+                        FormTableColumn::make(__('demo::demo.parity.quantity'))->alignEnd(),
+                        FormTableColumn::make(__('demo::demo.parity.status')),
+                    ])
+                    ->schema([
+                        TextInput::make('product'),
+                        TextInput::make('quantity')->numeric(),
+                        Select::make('status')->options(['Ready' => 'Ready', 'Waiting' => 'Waiting']),
+                    ]),
+            ])
+            ->statePath('data');
+    }
 
     public static function getNavigationLabel(): string
     {
@@ -55,6 +97,7 @@ final class ParityDemo extends Page implements HasTable
                 ->heading(__('demo::demo.parity.grid'))
                 ->description(__('demo::demo.parity.grid_description'))
                 ->icon(Heroicon::OutlinedTableCells),
+            EmbeddedSchema::make('form'),
             self::grid('nested')
                 ->heading(__('demo::demo.parity.nested'))
                 ->description(__('demo::demo.parity.nested_description'))
