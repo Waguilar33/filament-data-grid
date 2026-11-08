@@ -87,18 +87,43 @@ function gridEdges(string $url, string $card, ?int $width = null): mixed
         () => {
             const card = document.querySelector(%s)
             const { left, right } = card.getBoundingClientRect()
-            const contentStart = (cell) => Math.round(cell.getBoundingClientRect().left + parseFloat(getComputedStyle(cell).paddingLeft) - left)
+            const textBoxes = (cell) => {
+                const walker = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT)
+                const boxes = []
+                let node
+
+                while ((node = walker.nextNode())) {
+                    if (node.textContent.trim() && !node.parentElement.closest('.fi-sr-only')) {
+                        const range = document.createRange()
+                        range.selectNodeContents(node)
+                        boxes.push(range.getBoundingClientRect())
+                    }
+                }
+
+                return [...boxes, ...[...cell.querySelectorAll('svg')].map((svg) => svg.getBoundingClientRect())].filter((box) => box.width > 0)
+            }
+            const contentEnd = (cell) => {
+                const link = cell.querySelector('.fi-data-grid-record-link svg')
+
+                if (link) {
+                    return link.getBoundingClientRect().right
+                }
+
+                const padded = cell.querySelector(':scope > .fi-ta-col > .fi-ta-text') ?? cell
+
+                return padded.getBoundingClientRect().right - parseFloat(getComputedStyle(padded).paddingRight)
+            }
+            const contentStart = (cell) => Math.round(Math.min(...textBoxes(cell).map((box) => box.left)) - left)
             const grid = card.querySelector('.fi-data-grid-canvas')
             const row = grid.querySelector('.fi-data-grid-parent-row') ?? grid.querySelector('.grid-canvas .slick-row')
-                        const last = [...row.querySelectorAll('.slick-cell')].at(-1)
-            const lastContent = last.querySelector('.fi-data-grid-record-link svg') ?? last
+            const last = [...row.querySelectorAll('.slick-cell')].at(-1)
 
             return {
                 icon: Math.round(card.querySelector('.fi-section-header > svg, .fi-ta-header svg').getBoundingClientRect().left - left),
                 title: Math.round(card.querySelector('.fi-section-header-heading, .fi-ta-header-heading').getBoundingClientRect().left - left),
-                                header: contentStart([...grid.querySelectorAll('.slick-header-column')].find((cell) => !cell.querySelector('.fi-sr-only'))),
+                                header: contentStart([...grid.querySelectorAll('.slick-header-column')].find((cell) => textBoxes(cell).length > 0)),
                 cell: contentStart([...row.querySelectorAll('.slick-cell')].find((cell) => !cell.classList.contains('fi-data-grid-toggle-cell'))),
-                lastEnd: Math.round(right - lastContent.getBoundingClientRect().right + (lastContent === last ? parseFloat(getComputedStyle(last).paddingRight) : 0)),
+                lastEnd: Math.round(right - contentEnd(last)),
             }
         }
         JS, json_encode($card)));

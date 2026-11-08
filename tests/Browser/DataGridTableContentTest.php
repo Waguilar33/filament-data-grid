@@ -8,7 +8,7 @@ const TABLE_GRID = '.fi-data-grid-in-table';
 
 function tableRow(int $row): string
 {
-    return sprintf('%s .slick-row[style*="top: %dpx"]', TABLE_GRID, $row * 44);
+    return sprintf('%s .slick-row[style*="top: %dpx"]', TABLE_GRID, $row * TABLE_ROW_HEIGHT);
 }
 
 function visitTable(string $query = ''): AwaitableWebpage

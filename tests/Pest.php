@@ -11,6 +11,8 @@ use Waguilar\FilamentDataGrid\Tests\TestCase;
 
 pest()->extend(TestCase::class)->in('Feature', 'Browser');
 
+const TABLE_ROW_HEIGHT = 57;
+
 pest()->beforeEach(function (): void {
     View::addNamespace('filament-data-grid-tests', __DIR__.'/Fixtures/views');
     LinesForm::$initialLines = [];

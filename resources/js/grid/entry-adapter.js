@@ -6,8 +6,7 @@ const TOGGLE_COLUMN = '__toggle'
 const ACTIONS_COLUMN = '__actions'
 const LINK_COLUMN = '__link'
 const LINK_WIDTH = 44
-const ROW_HEIGHT = 44
-const CHILD_HEADER_HEIGHT = 32
+const FALLBACK_ROW_HEIGHT = 44
 const DEFAULT_CHILD_TABLE_PADDING = 15
 const TOGGLE_WIDTH = 44
 const TOGGLE_BUTTON_INSET = 4
@@ -15,6 +14,7 @@ const TOGGLE_ICON_WIDTH = 20
 const UNMEASURED_WIDTH = 160
 const CHILD_TABLE_BORDER = 1
 const INTRINSIC_WIDTHS = ['max-content', '0px']
+const ACTIONS_CELL_CLASSES = 'fi-ta-cell fi-data-grid-cell fi-data-grid-record-actions-cell fi-align-end'
 
 const toPixels = (width) => {
     if (!width) {
@@ -76,29 +76,40 @@ const contentBoxes = (node, range) => {
     return [node.getBoundingClientRect(), ...[...node.childNodes].flatMap((child) => contentBoxes(child, range))]
 }
 
+const horizontalPadding = (element) => {
+    const style = getComputedStyle(element)
+
+    return parseFloat(style.paddingLeft) + parseFloat(style.paddingRight)
+}
+
 const outerContentWidth = (cell, range) => {
-    const style = getComputedStyle(cell)
-    const padding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight)
+    const text = cell.querySelector(':scope > .fi-ta-col > .fi-ta-text')
+    const padding = horizontalPadding(cell) + (text ? horizontalPadding(text) : 0)
     const boxes = [...cell.childNodes].flatMap((child) => contentBoxes(child, range)).filter((box) => box.width > 0)
     const content = boxes.length > 0 ? Math.max(...boxes.map((box) => box.right)) - Math.min(...boxes.map((box) => box.left)) : 0
 
     return Math.ceil(Math.max(cell.getBoundingClientRect().width, content + padding))
 }
 
-const probeRequest = (wrapper, classes, content) => ({ key: `${wrapper}|${classes}|${content}`, wrapper, classes, content })
+const probeRequest = (wrapper, classes, content, edge = '') => ({ key: `${wrapper}|${classes}|${edge}|${content}`, wrapper, classes, content, edge })
+
+const tableCellHtml = (html, alignment) => `<div class="fi-ta-col"><div class="fi-ta-text fi-align-${alignment ?? 'start'}">${html}</div></div>`
 
 const cellContent = (cell) => (cell && cell.visible !== false ? (cell.html ?? '') : '')
 
-const childCellClasses = (column) => `fi-data-grid-child-cell fi-align-${column.alignment ?? 'start'}${column.actions ? ' fi-data-grid-child-actions-cell' : ''}`
+const childCellClasses = (column, isHeader = false) =>
+    `${isHeader ? 'fi-ta-header-cell' : 'fi-ta-cell'} fi-data-grid-child-cell fi-align-${column.alignment ?? 'start'}${column.actions ? ' fi-data-grid-child-actions-cell' : ''}`
+
+const childCellContent = (cell, column) => (column.actions ? cellContent(cell) : tableCellHtml(cellContent(cell), column.alignment))
 
 const childCellHtml = (cell, column, isHeader) => {
-    const classes = childCellClasses(column)
+    const classes = childCellClasses(column, isHeader)
 
     if (isHeader) {
         return `<div class="${classes}" role="columnheader">${headerLabel(column)}</div>`
     }
 
-    return `<div class="${classes}" role="cell">${cellContent(cell)}</div>`
+    return `<div class="${classes}" role="cell">${childCellContent(cell, column)}</div>`
 }
 
 export function createEntryGrid(element, { payload, translations, icons, isDarkMode, onChange, childTables = null }) {
@@ -110,6 +121,20 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
     let filters = {}
     const expanded = new Set()
     const measuredHeights = new Map()
+    let tableRowHeight = null
+
+    const rowHeight = () => tableRowHeight ?? FALLBACK_ROW_HEIGHT
+
+    const measureTableRowHeight = () => {
+        const probe = document.createElement('div')
+        probe.className = 'fi-data-grid-row-probe'
+        probe.innerHTML = `<div class="slick-row fi-data-grid-parent-row"><div class="slick-cell fi-ta-cell fi-data-grid-cell">${tableCellHtml('<div class="fi-in-text-item fi-size-sm">&nbsp;</div>')}</div></div>`
+        element.appendChild(probe)
+        const height = Math.ceil(probe.querySelector('.slick-cell').getBoundingClientRect().height)
+        probe.remove()
+
+        tableRowHeight = height > 0 ? height : null
+    }
     let measuredWidths = null
     let columnWidths = []
     const intrinsicWidths = new Map()
@@ -325,7 +350,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         const { position, classes } = totalPosition(node, column)
 
         node.className = `slick-footerrow-column ${position} ${classes} fi-data-grid-total-cell`
-        node.innerHTML = totalHtml(column.field)
+        node.innerHTML = column.cssClass.includes('fi-ta-cell') ? tableCellHtml(totalHtml(column.field), classes.match(/\bfi-align-(\S+)/)?.[1]) : totalHtml(column.field)
     }
 
     const renderTotals = () => {
@@ -357,7 +382,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
             return ''
         }
 
-        return { html: cell.html ?? '', addClasses: 'fi-data-grid-entry' }
+        return { html: tableCellHtml(cell.html ?? '', column.alignment), addClasses: 'fi-data-grid-entry' }
     }
 
     const columnDefinitions = () => {
@@ -371,8 +396,9 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
             sortable: false,
             focusable: false,
             selectable: false,
-            cssClass: `fi-data-grid-cell fi-align-${column.alignment ?? 'start'}`,
-            headerCssClass: `fi-data-grid-header fi-align-${column.alignment ?? 'start'}`,
+            alignment: column.alignment ?? 'start',
+            cssClass: `fi-ta-cell fi-data-grid-cell fi-align-${column.alignment ?? 'start'}`,
+            headerCssClass: `fi-ta-header-cell fi-data-grid-header fi-align-${column.alignment ?? 'start'}`,
             formatter: formatCell,
         }))
 
@@ -388,7 +414,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
                 focusable: false,
                 selectable: false,
                 cssClass: 'fi-data-grid-cell fi-data-grid-toggle-cell',
-                headerCssClass: 'fi-data-grid-header',
+                headerCssClass: 'fi-ta-header-cell fi-data-grid-header',
                 formatter: (rowIndex, cellIndex, value, column, item) =>
                     item.kind === 'parent' ? formatToggle(rowIndex, cellIndex, value, column, item) : formatChildRow(item),
             })
@@ -405,8 +431,8 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
                 sortable: false,
                 focusable: false,
                 selectable: false,
-                cssClass: 'fi-data-grid-cell fi-data-grid-record-actions-cell fi-align-end',
-                headerCssClass: 'fi-data-grid-header',
+                cssClass: ACTIONS_CELL_CLASSES,
+                headerCssClass: 'fi-ta-header-cell fi-data-grid-header',
                 formatter: (rowIndex, cellIndex, value, column, item) => (item.kind === 'parent' ? (item.row.actions ?? '') : ''),
             })
         }
@@ -423,7 +449,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
                 focusable: false,
                 selectable: false,
                 cssClass: 'fi-data-grid-cell fi-data-grid-record-link-cell',
-                headerCssClass: 'fi-data-grid-header',
+                headerCssClass: 'fi-ta-header-cell fi-data-grid-header',
                 formatter: (rowIndex, cellIndex, value, column, item) => (item.kind === 'parent' ? fitIconHtml(item.row.link ?? '', 'end', element) : ''),
             })
         }
@@ -484,15 +510,18 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         const probe = document.createElement('div')
         probe.className = 'fi-data-grid-width-probe'
         probe.innerHTML = pending
-            .map(
-                (request) =>
-                    `<div class="${request.wrapper}">${INTRINSIC_WIDTHS.map((width) => `<div class="${request.classes}" style="width: ${width}">${request.content}</div>`).join('')}</div>`,
+            .flatMap((request) =>
+                INTRINSIC_WIDTHS.map(
+                    (width) =>
+                        `<div class="${request.wrapper}">${request.edge.includes('start') ? '' : '<div hidden></div>'}<div class="${request.classes}" style="width: ${width}">${request.content}</div>${request.edge.includes('end') ? '' : '<div hidden></div>'}</div>`,
+                ),
             )
             .join('')
         element.appendChild(probe)
 
         const range = document.createRange()
-        const sizes = [...probe.children].map((wrapper) => [...wrapper.children].map((cell) => outerContentWidth(cell, range)))
+        const widths = [...probe.children].map((wrapper) => outerContentWidth(wrapper.querySelector(':scope > :not([hidden])'), range))
+        const sizes = pending.map((request, index) => widths.slice(index * INTRINSIC_WIDTHS.length, (index + 1) * INTRINSIC_WIDTHS.length))
 
         probe.remove()
         pending.forEach((request, index) => {
@@ -515,20 +544,28 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         return payload.wrapCells ? span : { min: span.max, max: span.max }
     }
 
-    const parentRequests = (column, parents) => [
-        probeRequest('', `slick-header-column ${column.headerCssClass}`, column.name),
-        ...(hasTotals() ? [probeRequest('', `slick-cell ${column.cssClass} fi-data-grid-total-cell`, totalHtml(column.field))] : []),
-        ...parents.map((item) => probeRequest('', `slick-cell ${column.cssClass} fi-data-grid-entry`, cellContent(item.row.cells[column.field]))),
+    const parentRequests = (column, parents, edge) => [
+        probeRequest('', `slick-header-column ${column.headerCssClass}`, column.name, edge),
+        ...(hasTotals() ? [probeRequest('', `slick-cell ${column.cssClass} fi-data-grid-total-cell`, tableCellHtml(totalHtml(column.field), column.alignment), edge)] : []),
+        ...parents.map((item) => probeRequest('', `slick-cell ${column.cssClass} fi-data-grid-entry`, tableCellHtml(cellContent(item.row.cells[column.field]), column.alignment), edge)),
     ]
+
+    const actionsEdge = () => (payload.rows.some((row) => row.link) ? '' : 'end')
 
     const actionsRequests = () =>
         payload.rows
             .filter((row) => row.actions)
-            .map((row) => probeRequest('', 'slick-cell fi-data-grid-cell fi-data-grid-record-actions-cell fi-align-end', row.actions))
+            .map((row) => probeRequest('', ACTIONS_CELL_CLASSES, row.actions, actionsEdge()))
+
+    const childEdge = (row, index) => {
+        const shown = shownChildColumns(row)
+
+        return [shown[0] === index ? 'start' : '', shown.at(-1) === index ? 'end' : ''].join(' ')
+    }
 
     const childRequests = (row, column, index) => [
-        probeRequest('fi-data-grid-child-header', childCellClasses(column), headerLabel(column)),
-        ...row.children.map((cells) => probeRequest('', childCellClasses(column), cellContent(cells[index]))),
+        probeRequest('fi-data-grid-child-header', childCellClasses(column, true), headerLabel(column), childEdge(row, index)),
+        ...row.children.map((cells) => probeRequest('', childCellClasses(column), childCellContent(cells[index], column), childEdge(row, index))),
     ]
 
     const flexibleChildColumns = (row) =>
@@ -543,7 +580,9 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
     const childActionsRequests = (openRows) => {
         const index = childActionsIndex()
 
-        return index === -1 ? [] : openRows.flatMap((row) => row.children.map((cells) => probeRequest('', childCellClasses(payload.childColumns[index]), cellContent(cells[index]))))
+        return index === -1
+            ? []
+            : openRows.flatMap((row) => row.children.map((cells) => probeRequest('', childCellClasses(payload.childColumns[index]), cellContent(cells[index]), childEdge(row, index))))
     }
 
     let childActionsWidth = 0
@@ -590,7 +629,8 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
 
         const openRows = hasChildTable() ? parents.map((item) => item.row).filter((row) => expanded.has(row.key) && row.children.length > 0) : []
         const flexibleColumns = columns.filter((column) => column.fixedWidth === null)
-        const parentRequestsByColumn = flexibleColumns.map((column) => parentRequests(column, parents))
+        const edgeOf = (column) => [column === columns[0] ? 'start' : '', column === columns.at(-1) ? 'end' : ''].join(' ')
+        const parentRequestsByColumn = flexibleColumns.map((column) => parentRequests(column, parents, edgeOf(column)))
         const childRequestsByRow = openRows.map((row) => flexibleChildColumns(row).map(({ column, index }) => childRequests(row, column, index)))
         const actions = actionsRequests()
         const childActions = childActionsRequests(openRows)
@@ -651,17 +691,19 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
             ? `parent:${item.row.key}`
             : item.kind === 'child-slot'
               ? `slot:${item.row.key}:${item.slot}`
-              : `child:${item.row.key}:${item.childIndex}`
+              : item.kind === 'child-header'
+                ? `header:${item.row.key}`
+                : `child:${item.row.key}:${item.childIndex}`
 
     const needsMeasuring = (item) =>
-        (item.kind === 'child' || item.kind === 'child-slot' || (item.kind === 'parent' && typeof item.row.height !== 'number')) &&
+        (item.kind === 'child' || item.kind === 'child-header' || item.kind === 'child-slot' || (item.kind === 'parent' && typeof item.row.height !== 'number')) &&
         !measuredHeights.has(measureKey(item))
 
     const parentProbeHtml = (item, columns) => {
         const cells = columns
             .map((column, index) => {
                 const cell = item.row.cells[column.field]
-                const html = cell && cell.visible !== false ? (cell.html ?? '') : ''
+                const html = cell && cell.visible !== false ? tableCellHtml(cell.html ?? '', column.alignment) : ''
 
                 return `<div class="slick-cell ${column.cssClass} fi-data-grid-entry" style="width: ${columnWidths[index]}px">${html}</div>`
             })
@@ -690,6 +732,12 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         }
 
         measuredWidths = signature
+
+        if (tableRowHeight === null) {
+            measureTableRowHeight()
+            grid?.setOptions({ rowHeight: rowHeight(), footerRowHeight: rowHeight() })
+        }
+
         const pending = visible.filter(needsMeasuring)
 
         if (pending.length === 0) {
@@ -708,22 +756,18 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
 
         probe.remove()
         pending.forEach((item, index) =>
-            measuredHeights.set(measureKey(item), Math.max(item.kind === 'child-slot' ? 0 : ROW_HEIGHT, Math.ceil(heights[index]))),
+            measuredHeights.set(measureKey(item), Math.max(item.kind === 'child-slot' || item.kind === 'child-header' ? 0 : rowHeight(), Math.ceil(heights[index]))),
         )
     }
 
-    const parentRowHeight = (item) => item.row.height ?? measuredHeights.get(measureKey(item)) ?? ROW_HEIGHT
+    const parentRowHeight = (item) => item.row.height ?? measuredHeights.get(measureKey(item)) ?? rowHeight()
 
     const contentHeight = (item) => {
-        if (item.kind === 'child-header') {
-            return CHILD_HEADER_HEIGHT
-        }
-
         if (item.kind === 'child-table') {
             return childTables.height(item.row.key)
         }
 
-        return measuredHeights.get(measureKey(item)) ?? (item.kind === 'child-slot' ? 0 : ROW_HEIGHT)
+        return measuredHeights.get(measureKey(item)) ?? (item.kind === 'child-slot' ? 0 : rowHeight())
     }
 
     const childRowHeight = (item) =>
@@ -786,20 +830,22 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
     indexRows()
     computeVisible()
 
+    measureTableRowHeight()
+
     grid = new SlickGrid(element, dataProvider, initialColumns, {
         editable: false,
         enableCellNavigation: false,
         enableColumnReorder: false,
         frozenColumn: frozenColumnIndex(),
         autoHeight: true,
-        rowHeight: ROW_HEIGHT,
+        rowHeight: rowHeight(),
         enableVariableRowHeight: true,
         showHeaderRow: false,
         showTopPanel: false,
         showPreHeaderPanel: false,
         createFooterRow: hasTotals(),
         showFooterRow: hasTotals() && hasMatchingRows,
-        footerRowHeight: ROW_HEIGHT,
+        footerRowHeight: rowHeight(),
         enableTextSelectionOnCells: true,
         darkMode: isDarkMode,
         devMode: false,
