@@ -2,7 +2,7 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
-## Unreleased
+## v1.0.0-beta.33 - 2026-11-07
 
 - Fix: record actions of a `DataGridEntry` in a relation manager's `content()`, with no table there, opened no modal: Filament draws action modals only from pages and tables. The grid now draws them itself when it isn't on a page, once per Livewire component.
 - A `DataGridEntry` with no rows at all no longer shows its search and filters toolbar, so an empty state sits right under the heading. A search or filter that matches nothing keeps the toolbar.
