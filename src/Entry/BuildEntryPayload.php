@@ -49,6 +49,7 @@ final readonly class BuildEntryPayload
             'rows' => $this->rows($entry, $items),
             'childTable' => $entry->hasChildTable(),
             'childTablePadding' => $entry->getChildTablePadding(),
+            'wrapCells' => $entry->canWrapCells(),
             'frozenColumns' => min($entry->getFrozenColumns(), count($columns)),
             'serverSide' => $entry->isServerSide(),
             'totals' => $this->describeTotals($entry),

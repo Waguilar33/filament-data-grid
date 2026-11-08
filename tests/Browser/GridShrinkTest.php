@@ -17,7 +17,10 @@ it('shrinks a grid back inside its card when the page gets narrower', function (
 
             const card = root.parentElement
 
-            return Math.max(0, Math.round([...canvas.querySelectorAll('.slick-header-column')].at(-1).getBoundingClientRect().right - card.getBoundingClientRect().right))
+            const lastHeaderRight = [...canvas.querySelectorAll('.slick-header-column')].at(-1).getBoundingClientRect().right
+            const visibleRight = Math.min(lastHeaderRight, canvas.getBoundingClientRect().right)
+
+            return Math.max(0, Math.round(visibleRight - card.getBoundingClientRect().right))
         })
         JS);
 

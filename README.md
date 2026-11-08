@@ -494,19 +494,25 @@ Livewire must be able to find the component on later requests. On Livewire 3 tha
 
 ### Column widths
 
-Columns fit their content, the way an HTML table does. The browser measures the header and the cells of the rows on the current page, each at its widest (on one line) and at its narrowest (wrapped wherever the text can break, such as at spaces and hyphens, with each badge, icon and action kept whole):
+Columns fit their content, and cell text stays on one line. The browser measures the header and the cells of the rows on the current page, each on one line, with each badge, icon and action kept whole:
 
-- When every column fits on one line, each column gets its widest width, and the spare room goes to the columns in proportion to that width. Long text, such as a name or an address, gets most of it, and short columns, such as an icon or a date, stay narrow.
-- When they don't fit, text wraps: each column shrinks towards its narrowest width, in proportion to how much it can shrink.
-- When even the narrowest widths don't fit, the grid scrolls sideways. Badges, icons with text, record actions and header labels are never cut off.
+- When every column fits, each column gets its one-line width, and the spare room goes to the columns in proportion to that width. Long text, such as a name or an address, gets most of it, and short columns, such as an icon or a date, stay narrow.
+- When they don't fit, no column gets narrower than its one-line width: the grid scrolls sideways instead. Rows keep their height, and nothing is cut off.
 
-`TableColumn::width()` sets a fixed width in pixels or rem, which wins over the content and takes no spare room. A child column also takes any other CSS width, such as `30%` of the child table. The arrow, record action and record link columns size themselves. Each open child table sizes its own columns, from its header and its own rows, in the width the open row leaves it; the same rules apply, and `width()` on a child `TableColumn` wins there too. If a child table doesn't fit even at its narrowest, the parent columns widen to make room and the grid scrolls sideways.
+To let text wrap instead, call `wrapCells()`. Each column is then also measured at its narrowest (wrapped wherever the text can break, such as at spaces and hyphens). When the columns don't fit on one line, each shrinks towards its narrowest width, in proportion to how much it can shrink, and rows grow to fit the wrapped text. Only when even the narrowest widths don't fit does the grid scroll sideways:
+
+```php
+DataGridEntry::make('deliveries')
+    ->wrapCells()
+```
+
+`TableColumn::width()` sets a fixed width in pixels or rem, which wins over the content and takes no spare room. Text inside a fixed width wraps when it doesn't fit, with or without `wrapCells()`. A child column also takes any other CSS width, such as `30%` of the child table. The arrow, record action and record link columns size themselves. Each open child table sizes its own columns, from its header and its own rows, in the width the open row leaves it; the same rules apply, including `wrapCells()`, and `width()` on a child `TableColumn` wins there too. If a child table doesn't fit, the parent columns widen to make room and the grid scrolls sideways.
 
 The browser measures again when the window or the grid resizes, the page, search, filters or data change, or a row opens.
 
 ### Row height
 
-Each parent and child row grows to fit its tallest cell, so text can wrap and an entry's `belowContent()`, such as a code badge under a product name, shows in full. A row is never shorter than 44 pixels, and the cells stay centred vertically:
+Each parent and child row grows to fit its tallest cell, so wrapped text and an entry's `belowContent()`, such as a code badge under a product name, show in full. A row is never shorter than 44 pixels, and the cells stay centred vertically:
 
 ```php
 use Filament\Schemas\Components\Text;

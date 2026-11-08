@@ -519,3 +519,9 @@ it('sizes the expand icon small by default and per entry', function (): void {
     expect(mountDeliveries()->html())->toContain($expandIcon.'sm')
         ->and(mountDeliveries(fn (DataGridEntry $entry): DataGridEntry => $entry->expandIconSize(IconSize::Large))->html())->toContain($expandIcon.'lg');
 });
+
+it('keeps cells on one line unless wrapCells() is set', function (): void {
+    expect(deliveriesPayload(mountDeliveries())['wrapCells'])->toBeFalse()
+        ->and(deliveriesPayload(mountDeliveries(fn (DataGridEntry $entry): DataGridEntry => $entry->wrapCells()))['wrapCells'])->toBeTrue()
+        ->and(deliveriesPayload(mountDeliveries(fn (DataGridEntry $entry): DataGridEntry => $entry->wrapCells(fn (): bool => false)))['wrapCells'])->toBeFalse();
+});

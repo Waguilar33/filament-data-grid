@@ -272,17 +272,43 @@ it('sizes columns to their content, without clipping or scrolling at a wide wind
         ->and($page->script(headerWidth(ROUTE, 'Tipo')))->toBeLessThan($page->script(headerWidth(ROUTE, 'Entrega')));
 });
 
-it('shrinks columns towards their content and scrolls only when even that does not fit', function (): void {
-    $page = visitRoute('?locale=es')->resize(1024, 900)->wait(0.5);
+it('keeps cells on one line and scrolls sideways when the columns do not fit', function (): void {
+    $page = visitRoute('?locale=es')->resize(1600, 900)->wait(0.5);
+
+    $heights = $page->script(parentRowHeights(ROUTE));
 
     expect($page->script(clippedContentIn(ROUTE)))->toBe([])
         ->and($page->script(scrollsSideways(ROUTE)))->toBeFalse();
 
-    $page->resize(480, 900)->wait(0.5);
+    $page->resize(1024, 900)->wait(0.5);
 
     expect($page->script(clippedContentIn(ROUTE)))->toBe([])
-        ->and($page->script(scrollsSideways(ROUTE)))->toBeTrue();
+        ->and($page->script(scrollsSideways(ROUTE)))->toBeTrue()
+        ->and($page->script(parentRowHeights(ROUTE)))->toBe($heights)
+        ->and(array_count_values($heights)[44] ?? 0)->toBeGreaterThan(0);
 });
+
+it('wraps cells and shrinks columns towards their content with wrapCells()', function (): void {
+    $server = '[id="content.server_deliveries"]';
+    $page = visitRoute('?locale=es')->resize(1024, 900)->wait(0.5);
+
+    expect($page->script(clippedContentIn($server)))->toBe([])
+        ->and($page->script(scrollsSideways($server)))->toBeFalse()
+        ->and(max($page->script(parentRowHeights($server))))->toBeGreaterThan(44);
+
+    $page->resize(480, 900)->wait(0.5);
+
+    expect($page->script(clippedContentIn($server)))->toBe([])
+        ->and($page->script(scrollsSideways($server)))->toBeTrue();
+});
+
+function parentRowHeights(string $grid): string
+{
+    return sprintf(
+        '[...document.querySelectorAll(%s)].map((row) => Math.round(row.getBoundingClientRect().height))',
+        json_encode("{$grid} .slick-row:not(.fi-data-grid-child-row-wrapper)"),
+    );
+}
 
 it('sizes the columns again for a search and for a page loaded from the server', function (): void {
     $server = '[id="content.server_deliveries"]';

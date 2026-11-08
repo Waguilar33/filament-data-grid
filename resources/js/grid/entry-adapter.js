@@ -502,8 +502,8 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         })
     }
 
-    const spanOf = (requests) =>
-        requests.reduce(
+    const spanOf = (requests) => {
+        const span = requests.reduce(
             (span, request) => {
                 const size = intrinsicWidths.get(request.key)
 
@@ -511,6 +511,9 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
             },
             { min: 0, max: 0 },
         )
+
+        return payload.wrapCells ? span : { min: span.max, max: span.max }
+    }
 
     const parentRequests = (column, parents) => [
         probeRequest('', `slick-header-column ${column.headerCssClass}`, column.name),

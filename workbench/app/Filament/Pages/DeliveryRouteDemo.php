@@ -54,6 +54,7 @@ final class DeliveryRouteDemo extends Page
                 ->description(__('demo::demo.route.descriptions.server'))
                 ->icon(Heroicon::OutlinedServerStack)
                 ->serverSide()
+                ->wrapCells()
                 ->records(fn (?string $search, int $page, ?int $recordsPerPage, array $filters): LengthAwarePaginator => $this->searchDeliveries($search, $page, $recordsPerPage, $filters)),
             self::rows('planned_deliveries')
                 ->heading(__('demo::demo.route.sections.planned'))
