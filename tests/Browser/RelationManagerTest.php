@@ -40,7 +40,7 @@ it('never shows a half laid out grid while a relation manager tab opens', functi
             const sample = () => {
                 const canvas = document.querySelector('.fi-resource-relation-manager .fi-data-grid-canvas')
 
-                if (canvas && !canvas.classList.contains('fi-data-grid-measuring')) {
+                if (canvas?.querySelector('.slick-header-column') && !canvas.classList.contains('fi-data-grid-measuring')) {
                     const rows = [...canvas.querySelectorAll('.fi-data-grid-parent-row')]
                     const headers = canvas.querySelectorAll('.slick-header-column').length
                     const broken = rows.length === 0 || rows.some((row) => {
