@@ -51,6 +51,11 @@ it('never shows a half laid out grid while a relation manager tab opens', functi
                     })
 
                     window.__frames.push(broken)
+
+                    if (broken) {
+                        window.__details = window.__details ?? rows.map((row) => [...row.querySelectorAll('.slick-cell')].map((cell) => [Math.round(cell.getBoundingClientRect().width), Math.round(cell.getBoundingClientRect().height), cell.textContent.trim().slice(0, 20)]))
+                        window.__details.push({ headers, width: canvas.clientWidth })
+                    }
                 }
 
                 if (window.__frames.length < 60) {
@@ -66,5 +71,5 @@ it('never shows a half laid out grid while a relation manager tab opens', functi
 
     $frames = $page->script('window.__frames');
 
-    expect($frames)->not->toBeEmpty()->not->toContain(true);
+    expect($frames)->not->toBeEmpty()->not->toContain(true, json_encode($page->script('window.__details ?? null')));
 });
