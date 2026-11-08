@@ -58,7 +58,6 @@ abstract class TestCase extends Orchestra
             ...parent::getPackageProviders($app),
             BladeIconsServiceProvider::class,
             BladeHeroiconsServiceProvider::class,
-            LivewireServiceProvider::class,
             SupportServiceProvider::class,
             SchemasServiceProvider::class,
             ActionsServiceProvider::class,
@@ -68,6 +67,8 @@ abstract class TestCase extends Orchestra
             TablesServiceProvider::class,
             WidgetsServiceProvider::class,
             FilamentServiceProvider::class,
+            // Livewire wires up component hooks when it boots, so it must boot after Filament registers its hooks, as it does in an app.
+            LivewireServiceProvider::class,
             FilamentDataGridServiceProvider::class,
             WorkbenchServiceProvider::class,
             DemoPanelProvider::class,

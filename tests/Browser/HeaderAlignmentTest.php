@@ -26,7 +26,7 @@ it('draws a compact grid header exactly like a compact section header', function
 });
 
 it('draws grid and table icon headers exactly like a Filament section header', function (): void {
-    $measure = fn (string $url, string $header): mixed => visit($url)->resize(1280, 900)->waitForEvent('networkidle')->wait(0.3)->script(sprintf(<<<'JS'
+    $measure = fn (string $url, string $header): mixed => visit($url)->resize(1280, 900)->waitForEvent('networkidle')->assertScript(GRID_SETTLED)->script(sprintf(<<<'JS'
         () => {
             const header = document.querySelector(%s)
             const box = header.getBoundingClientRect()
@@ -83,7 +83,7 @@ function gridEdges(string $url, string $card, ?int $width = null): mixed
         $page->resize($width, 900);
     }
 
-    return $page->waitForEvent('networkidle')->wait(0.5)->script(sprintf(<<<'JS'
+    return $page->waitForEvent('networkidle')->assertScript(GRID_SETTLED)->script(sprintf(<<<'JS'
         () => {
             const card = document.querySelector(%s)
             const { left, right } = card.getBoundingClientRect()
@@ -156,7 +156,7 @@ it('narrows a default grid’s insets to 16 pixels on small screens, like a Fila
 
 function glyphEdges(string $url, string $card): mixed
 {
-    return visit($url)->waitForEvent('networkidle')->wait(0.5)->script(sprintf(<<<'JS'
+    return visit($url)->waitForEvent('networkidle')->assertScript(GRID_SETTLED)->script(sprintf(<<<'JS'
         async () => {
             for (let tries = 0; !document.querySelector(%1$s)?.querySelector('.fi-data-grid-row-toggle:not(.fi-data-grid-row-toggle-expanded) svg') && tries < 100; tries++) {
                 await new Promise((resolve) => setTimeout(resolve, 50))
@@ -188,7 +188,7 @@ it('lines an editable grid with a header up like an entry grid', function (): vo
 });
 
 it('centers the drawn expanded chevron on its row toggle', function (string $url, string $card): void {
-    $offset = visit($url)->waitForEvent('networkidle')->wait(0.5)->script(sprintf(<<<'JS'
+    $offset = visit($url)->waitForEvent('networkidle')->assertScript(GRID_SETTLED)->script(sprintf(<<<'JS'
         async () => {
             const card = () => document.querySelector(%1$s)
             const expanded = () => card()?.querySelector('.fi-data-grid-canvas .fi-data-grid-row-toggle-expanded svg')

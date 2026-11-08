@@ -31,25 +31,36 @@ function openMethod(AwaitableWebpage $page, int $row, string $method): Awaitable
     $page->script(sprintf(<<<'JS'
         async () => {
             document.querySelectorAll('.fi-data-grid-in-table .fi-data-grid-row-toggle')[%1$d].click()
-            await new Promise((resolve) => setTimeout(resolve, 100))
-            document.querySelector('%2$s').scrollIntoView()
 
-            for (let tries = 0; !document.querySelector('%2$s .fi-ta-table') && tries < 80; tries++) {
-                await new Promise((resolve) => setTimeout(resolve, 50))
+            for (let tries = 0; !document.querySelector('%2$s')?.getClientRects().length && tries < 80; tries++) {
+                await new Promise((resolve) => setTimeout(resolve, 25))
             }
 
-            await new Promise((resolve) => setTimeout(resolve, 300))
+            document.querySelector('%2$s').scrollIntoView()
+
+            for (let tries = 0; !document.querySelector('%2$s .fi-ta-table') && tries < 160; tries++) {
+                await new Promise((resolve) => setTimeout(resolve, 25))
+            }
+
+            for (let frame = 0, tries = 0; (frame < 3 || document.getAnimations().length > 0) && tries < 200; frame++, tries++) {
+                await new Promise((resolve) => requestAnimationFrame(resolve))
+            }
         }
         JS, $row, childTableHost($method)));
 
     return $page;
 }
 
+function rowTopScript(string $label): string
+{
+    return sprintf(<<<'JS'
+        () => parseInt([...document.querySelectorAll('.fi-data-grid-in-table .slick-row.fi-data-grid-parent-row')].find((row) => row.innerText.includes(%s))?.style.top ?? '-1')
+        JS, json_encode($label));
+}
+
 function rowTopOf(AwaitableWebpage $page, string $label): int
 {
-    $top = $page->script(sprintf(<<<'JS'
-        () => parseInt([...document.querySelectorAll('.fi-data-grid-in-table .slick-row.fi-data-grid-parent-row')].find((row) => row.innerText.includes(%s))?.style.top ?? '-1')
-        JS, json_encode($label)));
+    $top = $page->script(rowTopScript($label));
 
     return is_int($top) ? $top : -1;
 }
@@ -72,10 +83,12 @@ it('moves the rows below when the child table grows or shrinks', function (): vo
     $page = openMethod(visitShift(), 0, 'cash');
     $before = rowTopOf($page, 'Card');
 
-    $page->select(childTableHost('cash').' .fi-pagination-records-per-page-select:not(.fi-compact) select', 'all')->wait(2);
+    $page->select(childTableHost('cash').' .fi-pagination-records-per-page-select:not(.fi-compact) select', 'all')
+        ->assertScript(sprintf('(%s)() > %d && document.getAnimations().length === 0', rowTopScript('Card'), $before + 500));
     $after = rowTopOf($page, 'Card');
 
-    $page->type(childTableHost('cash').' .fi-ta-search-field input', 'R-1034')->wait(2);
+    $page->type(childTableHost('cash').' .fi-ta-search-field input', 'R-1034')
+        ->assertScript(sprintf('(%s)() < %d && document.getAnimations().length === 0', rowTopScript('Card'), $before));
     $searched = rowTopOf($page, 'Card');
 
     expect($after)->toBeGreaterThan($before + 500)
@@ -87,7 +100,8 @@ it('moves the rows below when the child table grows or shrinks', function (): vo
 it('keeps each child table and its state when the page re-renders', function (): void {
     $page = openMethod(visitShift(), 0, 'cash');
 
-    $page->type(childTableHost('cash').' .fi-ta-search-field input', 'R-100')->wait(2);
+    $page->type(childTableHost('cash').' .fi-ta-search-field input', 'R-100')
+        ->assertSeeIn(childTableHost('cash'), 'Showing 1 to 9 of 9 results');
 
     $page->script(<<<'JS'
         async () => {
@@ -107,13 +121,10 @@ it('keeps each child table and its state when the page re-renders', function ():
 it('selects child records and runs a bulk action through its modal', function (): void {
     openMethod(visitShift(), 0, 'cash')
         ->click(childTableHost('cash').' thead input[type="checkbox"]')
-        ->wait(1)
         ->assertSeeIn(childTableHost('cash'), '10 records selected')
         ->click(childTableHost('cash').' button:has-text("Reconcile")')
-        ->wait(1)
         ->assertVisible('.fi-modal-window:has-text("Reconcile")')
         ->click('.fi-modal-window button:has-text("Confirm")')
-        ->wait(1.5)
         ->assertSee('Reconciled 10 movements')
         ->assertNoJavaScriptErrors();
 });
@@ -121,14 +132,15 @@ it('selects child records and runs a bulk action through its modal', function ()
 it('drops the child tables of parents that Filament filters out, and mounts them again when they return', function (): void {
     $page = openMethod(visitShift(), 0, 'cash');
 
-    $page->type('.fi-ta-header-toolbar .fi-ta-search-field input >> nth=0', 'card')->wait(2);
+    $page->type('.fi-ta-header-toolbar .fi-ta-search-field input >> nth=0', 'card');
 
     $page->assertCount(SHIFT_GRID.' .fi-data-grid-child-table-host', 1)
         ->assertMissing(childTableHost('cash'))
         ->assertNotPresent(SHIFT_GRID.' .fi-data-grid-parent-row-expanded')
         ->assertScript("document.querySelector('".childTableHost('card')."').style.display", 'none');
 
-    $page->clear('.fi-ta-header-toolbar .fi-ta-search-field input >> nth=0')->wait(2);
+    $page->clear('.fi-ta-header-toolbar .fi-ta-search-field input >> nth=0')
+        ->assertCount(SHIFT_GRID.' .fi-data-grid-child-table-host', 4);
 
     openMethod($page, 0, 'cash')
         ->assertSeeIn(childTableHost('cash'), 'R-1001')

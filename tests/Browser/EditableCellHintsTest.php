@@ -52,8 +52,8 @@ it('adds the pencil when a live change makes a column editable, without closing 
     visitDemo()
         ->click(cell(0, 0, RECEIPTS))
         ->keys(cell(0, 0, RECEIPTS).' input', ['R', 'C', '-', '1', 'Enter'])
-        ->wait(1.5)
         ->assertScript(headerHasPencil(RECEIPTS, 1), true)
+        ->assertScript('() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve(document.getAnimations().length === 0))))')
         ->assertPresent(cell(1, 0, RECEIPTS).' input')
         ->assertPresent(cell(0, 1, RECEIPTS).' .fi-data-grid-editable-value');
 });
@@ -61,10 +61,11 @@ it('adds the pencil when a live change makes a column editable, without closing 
 it('lightens editable cells of highlighted columns only', function (): void {
     $page = visitDemo()
         ->click(cell(0, 0, RECEIPTS))
-        ->keys(cell(0, 0, RECEIPTS).' input', ['R', 'C', '-', '1', 'Enter'])
-        ->wait(1.5);
+        ->keys(cell(0, 0, RECEIPTS).' input', ['R', 'C', '-', '1', 'Enter']);
 
     $transparent = 'rgba(0, 0, 0, 0)';
+
+    $page->assertScript(sprintf('%s !== %s && document.getAnimations().length === 0', computed(cell(0, 1, RECEIPTS), 'backgroundColor'), json_encode($transparent)));
 
     expect($page->script(computed(cell(0, 1, RECEIPTS), 'backgroundColor')))->not->toBe($transparent)
         ->and($page->script(computed(cell(1, 1, RECEIPTS), 'backgroundColor')))->toBe($transparent)
@@ -91,7 +92,7 @@ it('steps a masked number with the editor’s buttons and keeps typing focus', f
         ->keys(countedInput(0), 'Tab')
         ->assertSeeIn(cell(0, COUNTED, COUNTS), '1,499')
         ->click('Save')
-        ->wait(1.5)
+        ->assertPresent('[data-saved-state]')
         ->assertScript(savedState('counts').'[0].counted', 1499)
         ->assertNoJavaScriptErrors();
 });

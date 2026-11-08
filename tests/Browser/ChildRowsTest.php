@@ -25,11 +25,9 @@ it('updates the parent total live while the next child cell is being edited', fu
         ->click(childCell(1, 0, 2))
         ->keys(childCell(1, 0, 2).' input', ['6', 'Enter'])
         ->keys(childCell(1, 1, 2).' input', ['3'])
-        ->wait(1.5)
         ->assertSeeIn(productRow(TABLE_ROW_HEIGHT).' .slick-cell.l3', '11')
         ->assertValue(childCell(1, 1, 2).' input', '3')
         ->keys(childCell(1, 1, 2).' input', ['Enter'])
-        ->wait(1.5)
         ->assertSeeIn(productRow(TABLE_ROW_HEIGHT).' .slick-cell.l3', '9')
         ->assertNoJavaScriptErrors();
 });
@@ -38,7 +36,6 @@ it('moves to the next unit after a scanned code and Enter', function (): void {
     visitDispatch()
         ->click(childCell(2, 1, 1))
         ->keys(childCell(2, 1, 1).' input', ['E', 'M', '-', '9', 'Enter'])
-        ->wait(1.5)
         ->assertSeeIn(childCell(2, 1, 1), 'EM-9')
         ->assertNoJavaScriptErrors();
 });
@@ -46,9 +43,8 @@ it('moves to the next unit after a scanned code and Enter', function (): void {
 it('opens the product that holds a server error and lists the error under the grid', function (): void {
     visitDispatch()
         ->click(PRODUCTS.' .slick-row:has-text("Espresso machine") .fi-data-grid-row-toggle')
-        ->wait(0.5)
+        ->assertCount(PRODUCTS.' .fi-data-grid-child-host:has-text("EM-4471")', 0)
         ->click('Save')
-        ->wait(2)
         ->assertSee('Units row 2')
         ->assertPresent(PRODUCTS.' .fi-data-grid-child-host:has-text("EM-4471") .fi-data-grid-cell-invalid')
         ->assertNoJavaScriptErrors();

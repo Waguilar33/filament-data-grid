@@ -101,12 +101,10 @@ it('searches parents and keeps their open children with them', function (): void
     visitRoute()
         ->click(parentRow('DLV-2026-0000010').' .fi-data-grid-row-toggle')
         ->type(ROUTE.' .fi-ta-search-field input', 'karen')
-        ->wait(0.5)
         ->assertSeeIn(routeRow(0), 'DLV-2026-0000010')
         ->assertSeeIn(ROUTE.' .fi-data-grid-child-header', 'Product')
         ->assertScript(visibleRowCount('.fi-data-grid-parent-row'), 2)
         ->type(ROUTE.' .fi-ta-search-field input', 'nobody')
-        ->wait(0.5)
         ->assertSee('No results.')
         ->assertNoJavaScriptErrors();
 });
@@ -143,12 +141,12 @@ it('keeps rows stacked and badges inside their cells after the window is resized
     visitRoute()
         ->click(parentRow('DLV-2026-0000002').' .fi-data-grid-row-toggle')
         ->resize(800, 900)
-        ->wait(0.5)
+        ->assertScript(GRID_SETTLED)
         ->assertScript(rowsAreStacked(), true)
         ->assertScript(badgesFitTheirCells('Tropical Tea 100 g'), true)
         ->assertScript(badgesFitTheirCells('DLV-2026-0000004'), true)
         ->resize(1600, 900)
-        ->wait(0.5)
+        ->assertScript(GRID_SETTLED)
         ->assertScript(rowsAreStacked(), true)
         ->assertScript(badgesFitTheirCells('Tropical Tea 100 g'), true)
         ->assertScript(badgesFitTheirCells('DLV-2026-0000004'), true)
@@ -168,14 +166,11 @@ it('loads pages and search results from the server and keeps them across re-rend
     $page = visitRoute()
         ->assertSeeIn($server.' .fi-pagination-overview', 'Showing 1 to 10 of 240 results')
         ->click($server.' .fi-pagination-items [rel="next"]')
-        ->wait(1)
         ->assertSeeIn($server.' .fi-pagination-overview', 'Showing 11 to 20 of 240 results')
         ->assertSeeIn($firstRow, 'DLV-2026-0000011')
         ->type($server.' .fi-ta-search-field input', 'karen')
-        ->wait(1.5)
         ->assertSeeIn($server.' .fi-pagination-overview', 'Showing 1 to 10 of 21 results')
         ->click($server.' .fi-pagination-items [rel="next"]')
-        ->wait(1)
         ->assertSeeIn($firstRow, 'DLV-2026-0000120');
 
     $page->script('() => Livewire.all()[0].$wire.$refresh()');
@@ -194,18 +189,15 @@ it('filters rows with Filament filters in the browser and on the server', functi
         ->click(ROUTE.' .fi-data-grid-filters-trigger')
         ->select(ROUTE.' .fi-ta-filters select', 'partial')
         ->click(ROUTE.' .fi-data-grid-filters-apply')
-        ->wait(0.5)
         ->assertScript(visibleRowCount('.fi-data-grid-parent-row'), 5)
         ->assertSeeIn(ROUTE.' .fi-data-grid-filters-trigger', '1')
         ->click($server.' .fi-data-grid-filters-trigger')
         ->select($server.' .fi-ta-filters select', 'partial')
         ->click($server.' .fi-data-grid-filter-option:has-text("Karen Ortiz") input')
         ->click($server.' .fi-data-grid-filters-apply')
-        ->wait(1)
         ->assertScript(sprintf('document.querySelectorAll(%s).length', json_encode($server.' .fi-data-grid-parent-row')), 5)
         ->click($server.' .fi-data-grid-filters-trigger')
         ->click($server.' .fi-data-grid-filters-reset')
-        ->wait(1)
         ->assertSeeIn($server.' .fi-pagination-overview', 'Showing 1 to 10 of 240 results')
         ->assertNoJavaScriptErrors();
 });
@@ -213,14 +205,13 @@ it('filters rows with Filament filters in the browser and on the server', functi
 it('shows the details above and the notes below the child table of an open row', function (): void {
     visitRoute()
         ->click(ROUTE.' .slick-row:has-text("DLV-2026-0000004") .fi-data-grid-row-toggle')
-        ->wait(0.5)
         ->assertSeeIn(ROUTE.' .fi-data-grid-child-slot-above', '128 Elm Street, Suite 5')
         ->assertSeeIn(ROUTE.' .fi-data-grid-child-slot-above', 'R-05')
         ->assertSeeIn(ROUTE.' .fi-data-grid-child-slot-below', 'Call before arriving')
         ->assertScript(sprintf('document.querySelector(%s).getBoundingClientRect().height >= document.querySelector(%s).scrollHeight', json_encode(ROUTE.' .fi-data-grid-child-slot-above'), json_encode(ROUTE.' .fi-data-grid-child-slot-above')), true)
         ->click(ROUTE.' .slick-row:has-text("DLV-2026-0000004") .fi-data-grid-row-toggle')
         ->click(ROUTE.' .slick-row:has-text("DLV-2026-0000001") .fi-data-grid-row-toggle')
-        ->wait(0.5)
+        ->assertScript(GRID_SETTLED)
         ->assertPresent(ROUTE.' .fi-data-grid-child-slot-above')
         ->assertMissing(ROUTE.' .fi-data-grid-child-slot-below')
         ->assertNoJavaScriptErrors();
@@ -229,7 +220,8 @@ it('shows the details above and the notes below the child table of an open row',
 it('centres badges vertically in their cells', function (): void {
     $page = visitRoute()
         ->click(ROUTE.' .slick-row:has-text("DLV-2026-0000004") .fi-data-grid-row-toggle')
-        ->wait(0.5);
+        ->assertPresent(ROUTE.' .fi-data-grid-child-header')
+        ->assertScript(GRID_SETTLED);
 
     $gaps = $page->script(sprintf(<<<'JS'
         () => [...document.querySelectorAll(%s)].map((badge) => {
@@ -245,7 +237,7 @@ it('centres badges vertically in their cells', function (): void {
 });
 
 it('sizes columns to their content, without clipping or scrolling at a wide window', function (): void {
-    $page = visitRoute('?locale=es')->resize(1600, 900)->wait(0.5);
+    $page = visitRoute('?locale=es')->resize(1600, 900)->assertScript(GRID_SETTLED);
 
     expect($page->script(clippedContentIn(ROUTE)))->toBe([])
         ->and($page->script(scrollsSideways(ROUTE)))->toBeFalse()
@@ -254,14 +246,14 @@ it('sizes columns to their content, without clipping or scrolling at a wide wind
 });
 
 it('keeps cells on one line and scrolls sideways when the columns do not fit', function (): void {
-    $page = visitRoute('?locale=es')->resize(1600, 900)->wait(0.5);
+    $page = visitRoute('?locale=es')->resize(1600, 900)->assertScript(GRID_SETTLED);
 
     $heights = $page->script(parentRowHeights(ROUTE));
 
     expect($page->script(clippedContentIn(ROUTE)))->toBe([])
         ->and($page->script(scrollsSideways(ROUTE)))->toBeFalse();
 
-    $page->resize(1024, 900)->wait(0.5);
+    $page->resize(1024, 900)->assertScript(GRID_SETTLED);
 
     expect($page->script(clippedContentIn(ROUTE)))->toBe([])
         ->and($page->script(scrollsSideways(ROUTE)))->toBeTrue()
@@ -271,13 +263,13 @@ it('keeps cells on one line and scrolls sideways when the columns do not fit', f
 
 it('wraps cells and shrinks columns towards their content with wrapCells()', function (): void {
     $server = '[id="content.server_deliveries"]';
-    $page = visitRoute('?locale=es')->resize(1024, 900)->wait(0.5);
+    $page = visitRoute('?locale=es')->resize(1024, 900)->assertScript(GRID_SETTLED);
 
     expect($page->script(clippedContentIn($server)))->toBe([])
         ->and($page->script(scrollsSideways($server)))->toBeFalse()
         ->and(max($page->script(parentRowHeights($server))))->toBeGreaterThan(TABLE_ROW_HEIGHT);
 
-    $page->resize(480, 900)->wait(0.5);
+    $page->resize(480, 900)->assertScript(GRID_SETTLED);
 
     expect($page->script(clippedContentIn($server)))->toBe([])
         ->and($page->script(scrollsSideways($server)))->toBeTrue();
@@ -293,19 +285,19 @@ function parentRowHeights(string $grid): string
 
 it('sizes the columns again for a search and for a page loaded from the server', function (): void {
     $server = '[id="content.server_deliveries"]';
-    $page = visitRoute('?locale=es')->resize(1600, 900)->wait(0.5);
+    $page = visitRoute('?locale=es')->resize(1600, 900)->assertScript(GRID_SETTLED);
     $customerWidth = $page->script(headerWidth(ROUTE, 'Cliente'));
 
     $page->type(ROUTE.' .fi-ta-search-field input', 'karen')
-        ->wait(0.5)
-        ->assertScript(visibleRowCount('.fi-data-grid-parent-row'), 2);
+        ->assertScript(visibleRowCount('.fi-data-grid-parent-row'), 2)
+        ->assertScript(GRID_SETTLED);
 
     expect($page->script(headerWidth(ROUTE, 'Cliente')))->not->toBe($customerWidth)
         ->and($page->script(clippedContentIn(ROUTE)))->toBe([]);
 
     $page->click($server.' .fi-pagination-items [rel="next"]')
-        ->wait(1)
-        ->assertSeeIn($server.' .fi-pagination-overview', 'Se muestran de 11 a 20');
+        ->assertSeeIn($server.' .fi-pagination-overview', 'Se muestran de 11 a 20')
+        ->assertScript(GRID_SETTLED);
 
     expect($page->script(clippedContentIn($server)))->toBe([]);
 });
@@ -313,7 +305,8 @@ it('sizes the columns again for a search and for a page loaded from the server',
 it('keeps an explicit column width', function (): void {
     $page = visitRoute()
         ->click(parentRow('DLV-2026-0000001').' .fi-data-grid-row-toggle')
-        ->wait(0.5);
+        ->assertPresent(ROUTE.' .fi-data-grid-child-header')
+        ->assertScript(GRID_SETTLED);
 
     expect($page->script(headerWidth(ROUTE, 'Preparation')))->toBe(192)
         ->and($page->script(sprintf('document.querySelector(%s).getBoundingClientRect().width', json_encode(ROUTE.' .fi-data-grid-child-header .fi-data-grid-child-cell:nth-child(2)'))))->toBe(144);
@@ -324,7 +317,8 @@ it('sizes the columns of each open child table to its own rows', function (): vo
         ->resize(1600, 900)
         ->click(parentRow('DLV-2026-0000001').' .fi-data-grid-row-toggle')
         ->click(parentRow('DLV-2026-0000002').' .fi-data-grid-row-toggle')
-        ->wait(0.5);
+        ->assertScript(visibleRowCount('.fi-data-grid-child-header'), 2)
+        ->assertScript(GRID_SETTLED);
 
     $templates = $page->script(sprintf(
         '() => [...document.querySelectorAll(%s)].sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top).map((header) => header.style.gridTemplateColumns)',
@@ -393,7 +387,8 @@ function perPageSelectReceivesClicks(string $grid): string
 it('keeps the rows above the pagination, so rows taller than one line never cover the per-page select', function (): void {
     visitRoute()
         ->click(routeRow(0).' .fi-data-grid-row-toggle')
-        ->wait(0.5)
+        ->assertPresent(ROUTE.' .fi-data-grid-child-header')
+        ->assertScript(GRID_SETTLED)
         ->assertScript(rowsPaneEndsWithItsGrid(ROUTE), true)
         ->assertScript(perPageSelectReceivesClicks(ROUTE), true)
         ->select(ROUTE.' .fi-pagination-records-per-page-select:not(.fi-compact) select', '5')
@@ -404,12 +399,15 @@ it('keeps the rows above the pagination, so rows taller than one line never cove
 });
 
 it('hides the pagination bar while every row fits on the smallest page', function (): void {
-    $page = visitRoute()->type(ROUTE.' .fi-ta-search-field input', 'karen')->wait(0.5);
+    $page = visitRoute()->type(ROUTE.' .fi-ta-search-field input', 'karen')
+        ->assertScript(visibleRowCount('.fi-data-grid-parent-row'), 2)
+        ->assertScript(paginationBarIsShown(ROUTE), false);
 
     expect($page->script(paginationBarIsShown(ROUTE)))->toBeFalse()
         ->and($page->script(visibleRowCount('.fi-data-grid-parent-row')))->toBe(2);
 
-    $page->clear(ROUTE.' .fi-ta-search-field input')->wait(0.5);
+    $page->clear(ROUTE.' .fi-ta-search-field input')
+        ->assertScript(paginationBarIsShown(ROUTE));
 
     expect($page->script(paginationBarIsShown(ROUTE)))->toBeTrue();
 });
@@ -420,15 +418,17 @@ it('offers only the page sizes that make sense for the matching rows', function 
     expect($page->script(pageSizeOptions(ROUTE)))->toBe(['5', '10', '25', 'all']);
 
     $page->select(ROUTE.' .fi-pagination-records-per-page-select:not(.fi-compact) select', '25')
-        ->wait(0.3)
+        ->assertSee('Showing 1 to 23 of 23 results')
         ->type(ROUTE.' .fi-ta-search-field input', 'DLV-2026-000000')
-        ->wait(0.5);
+        ->assertScript(visibleRowCount('.fi-data-grid-parent-row'), 9)
+        ->assertScript(selectedPageSize(ROUTE), '10');
 
     expect($page->script(pageSizeOptions(ROUTE)))->toBe(['5', '10', 'all'])
         ->and($page->script(selectedPageSize(ROUTE)))->toBe('10')
         ->and($page->script(visibleRowCount('.fi-data-grid-parent-row')))->toBe(9);
 
-    $page->clear(ROUTE.' .fi-ta-search-field input')->wait(0.5);
+    $page->clear(ROUTE.' .fi-ta-search-field input')
+        ->assertScript(selectedPageSize(ROUTE), '25');
 
     expect($page->script(pageSizeOptions(ROUTE)))->toBe(['5', '10', '25', 'all'])
         ->and($page->script(selectedPageSize(ROUTE)))->toBe('25');
@@ -436,11 +436,14 @@ it('offers only the page sizes that make sense for the matching rows', function 
 
 it('hides the pagination bar of a server-side grid while its rows fit on the smallest page', function (): void {
     $server = '[id="content.server_deliveries"]';
-    $page = visitRoute()->type($server.' .fi-ta-search-field input', 'karen')->wait(1);
+    $page = visitRoute()->type($server.' .fi-ta-search-field input', 'karen')
+        ->assertSeeIn($server.' .fi-pagination-overview', 'Showing 1 to 10 of 21 results');
 
     expect($page->script(paginationBarIsShown($server)))->toBeTrue();
 
-    $page->clear($server.' .fi-ta-search-field input')->type($server.' .fi-ta-search-field input', 'DLV-2026-0000240')->wait(1);
+    $page->clear($server.' .fi-ta-search-field input')->type($server.' .fi-ta-search-field input', 'DLV-2026-0000240')
+        ->assertScript(sprintf('document.querySelectorAll(%s).length', json_encode($server.' .fi-data-grid-parent-row')), 1)
+        ->assertScript(paginationBarIsShown($server), false);
 
     expect($page->script(paginationBarIsShown($server)))->toBeFalse()
         ->and($page->script(sprintf('document.querySelectorAll(%s).length', json_encode($server.' .fi-data-grid-parent-row'))))->toBe(1);

@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 it('reserves the height the grid draws, totals row included, before the grid loads', function (string $url): void {
-    $page = visit($url)->resize(1440, 900)->waitForEvent('networkidle')->wait(1);
+    $page = visit($url)->resize(1440, 900)->waitForEvent('networkidle')->assertScript(GRID_SETTLED);
 
     $mismatches = $page->script(<<<'JS'
         async () => {

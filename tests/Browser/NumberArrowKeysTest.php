@@ -18,7 +18,7 @@ it('steps an unmasked number cell with the arrow keys without leaving the row', 
         ->assertScript('document.activeElement.closest(".slick-row").style.top', TABLE_ROW_HEIGHT.'px')
         ->keys(quantityInput(1), 'Enter')
         ->click('Save')
-        ->wait(1.5)
+        ->assertPresent('[data-saved-state]')
         ->assertScript(savedState().'[1].quantity', 2.5)
         ->assertNoJavaScriptErrors();
 });
@@ -51,7 +51,7 @@ it('steps a masked number cell from the number it shows and keeps the mask', fun
         ->assertValue(countedInput(1), '249.752')
         ->keys(countedInput(1), 'Enter')
         ->click('Save')
-        ->wait(1.5)
+        ->assertPresent('[data-saved-state]')
         ->assertScript(savedState('counts').'[0].counted', 1501)
         ->assertScript(savedState('counts').'[1].counted', 249.752)
         ->assertNoJavaScriptErrors();

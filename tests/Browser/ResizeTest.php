@@ -24,11 +24,11 @@ function columnsOutOfLine(): string
 }
 
 it('keeps headers, rows and totals in line after the grid is resized', function (): void {
-    $page = visit('/demo/cash-shift-demo')->resize(1440, 900)->waitForEvent('networkidle')->wait(1);
+    $page = visit('/demo/cash-shift-demo')->resize(1440, 900)->waitForEvent('networkidle')->assertScript(GRID_SETTLED);
 
     foreach ([900, 1200, 1440] as $width) {
         $page->script(sprintf('document.querySelector(".fi-main").style.maxWidth = "%dpx"', $width));
-        $page->wait(0.3);
+        $page->assertScript(GRID_SETTLED);
 
         expect($page->script(columnsOutOfLine()))->toBe([])
             ->and($page->script(clippedContentIn('.fi-data-grid-entry-grid')))->toBe([]);
@@ -36,13 +36,14 @@ it('keeps headers, rows and totals in line after the grid is resized', function 
 });
 
 it('refits open child rows when the grid is resized', function (): void {
-    $page = visit('/demo/delivery-route-demo')->resize(1440, 900)->waitForEvent('networkidle')->wait(1)
+    $page = visit('/demo/delivery-route-demo')->resize(1440, 900)->waitForEvent('networkidle')->assertScript(GRID_SETTLED)
         ->click('[id="content.deliveries"] .fi-data-grid-row-toggle >> nth=0')
-        ->wait(0.5);
+        ->assertPresent('[id="content.deliveries"] .fi-data-grid-child-row')
+        ->assertScript(GRID_SETTLED);
 
     foreach ([900, 1200, 1440] as $width) {
         $page->script(sprintf('document.querySelector(".fi-main").style.maxWidth = "%dpx"', $width));
-        $page->wait(0.3);
+        $page->assertScript(GRID_SETTLED);
 
         expect($page->script(clippedContentIn('[id="content.deliveries"]')))->toBe([])
             ->and($page->script(scrollsSideways('[id="content.deliveries"]')))->toBeFalse()

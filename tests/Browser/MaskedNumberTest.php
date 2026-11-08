@@ -21,7 +21,7 @@ it('masks digits typed on a focused cell and stores the plain number on enter', 
 
     $page->assertSeeIn(cell(0, COUNTED, COUNTS), '1,234,567')
         ->click('Save')
-        ->wait(1.5)
+        ->assertPresent('[data-saved-state]')
         ->assertScript(savedState('counts').'[0].counted', 1234567)
         ->assertNoJavaScriptErrors();
 });
@@ -35,7 +35,7 @@ it('keeps a number finer than the mask precision when a cell is opened and close
         ->click(cell(0, 1, COUNTS))
         ->keys(cell(0, 1, COUNTS).' input', 'Escape')
         ->click('Save')
-        ->wait(1.5)
+        ->assertPresent('[data-saved-state]')
         ->assertScript(savedState('counts').'[1].counted', 250.7525);
 });
 
@@ -47,7 +47,7 @@ it('commits a masked value with tab', function (): void {
         ->keys(countedInput(1), 'Tab')
         ->assertSeeIn(cell(1, COUNTED, COUNTS), '9,876.5')
         ->click('Save')
-        ->wait(1.5)
+        ->assertPresent('[data-saved-state]')
         ->assertScript(savedState('counts').'[1].counted', 9876.5);
 });
 
@@ -59,7 +59,7 @@ it('masks a pasted value and strips its separators before saving', function (): 
         ->keys(countedInput(0), 'Enter')
         ->assertSeeIn(cell(0, COUNTED, COUNTS), '1,234.5')
         ->click('Save')
-        ->wait(1.5)
+        ->assertPresent('[data-saved-state]')
         ->assertScript(savedState('counts').'[0].counted', 1234.5);
 });
 
@@ -84,7 +84,7 @@ it('follows a mask with a comma as the decimal separator', function (): void {
         ->keys(countedInput(1), 'Enter')
         ->assertSeeIn(cell(1, COUNTED, COUNTS), '1.234,5')
         ->click('Guardar')
-        ->wait(1.5)
+        ->assertPresent('[data-saved-state]')
         ->assertScript(savedState('counts').'[1].counted', 1234.5);
 });
 

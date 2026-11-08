@@ -34,15 +34,31 @@ function openDropdownSearch(): string
     return '.fi-dropdown-panel:not([style*="display: none"]) .fi-select-input-search-ctn input';
 }
 
+function searchResultsFor(string $term): string
+{
+    return sprintf(<<<'JS'
+        (() => {
+            const panel = document.querySelector('.fi-dropdown-panel:not([style*="display: none"])')
+            const options = [...panel.querySelectorAll('[role="option"]')].filter((option) => option.checkVisibility())
+
+            return !panel.querySelector('.fi-select-input-message') && options.length > 0 && options.every((option) => option.textContent.toLowerCase().includes(%s))
+        })()
+        JS, json_encode($term));
+}
+
+function noModalOpen(): string
+{
+    return '![...document.querySelectorAll(".fi-modal-window")].some((modal) => modal.checkVisibility())';
+}
+
 it('picks a product with the Filament select, recalculates the row and appends a blank row', function (): void {
     $page = visitDemo()
         ->assertSee('Creamy Coffee 100 g')
         ->assertPresent(cell(0, 0).' .fi-select-input-btn')
         ->click(cell(2, 0).' .fi-select-input-btn')
         ->typeSlowly(openDropdownSearch(), 'honey', 30)
-        ->wait(1.6)
-        ->keys(openDropdownSearch(), ['ArrowDown', 'Enter'])
-        ->wait(1.5);
+        ->assertScript(searchResultsFor('honey'))
+        ->keys(openDropdownSearch(), ['ArrowDown', 'Enter']);
 
     $page->assertSeeIn(cell(2, 0).' .fi-select-input-value-label', 'Honey')
         ->assertScript('document.activeElement.matches(".fi-data-grid-editor-number")')
@@ -59,7 +75,7 @@ it('moves down with Enter and up with Shift+Enter while typing', function (): vo
         ->keys(cell(1, 1).' input', ['4', 'Shift+Enter'])
         ->assertScript('document.activeElement.closest(".slick-row").style.top', '0px')
         ->click('Save')
-        ->wait(1.5)
+        ->assertPresent('[data-saved-state]')
         ->assertScript(savedState().'[0].quantity', 3)
         ->assertScript(savedState().'[1].quantity', 4);
 });
@@ -87,7 +103,6 @@ it('opens a select cell from the keyboard and moves on after picking', function 
         ->keys(LINES.' .slick-cell.active', ['ArrowRight', 'Enter'])
         ->assertVisible('.fi-dropdown-panel:not([style*="display: none"])')
         ->keys('.fi-dropdown-panel:not([style*="display: none"])', ['k', 'Enter'])
-        ->wait(0.5)
         ->assertSeeIn(cell(0, 2).' .fi-select-input-value-label', 'Kilogram')
         ->assertScript('document.querySelector(".slick-cell.active").classList.contains("l3")');
 });
@@ -97,7 +112,7 @@ it('saves a value typed into a cell without pressing Enter', function (): void {
         ->click(cell(0, 1))
         ->typeSlowly(cell(0, 1).' input', '7', 30)
         ->click('Save')
-        ->wait(1.5)
+        ->assertPresent('[data-saved-state]')
         ->assertScript(savedState().'[0].quantity', 7)
         ->assertScript(savedState().'[0].note', 'seeded')
         ->assertScript(savedState().'.length', 2);
@@ -107,13 +122,11 @@ it('shows a server error on the cell of its row and keeps it after deleting anot
     $page = visitDemo()
         ->click(cell(1, 1))
         ->keys(cell(1, 1).' input', 'Backspace')
-        ->click('Save')
-        ->wait(1.5);
+        ->click('Save');
 
     $page->assertSee('Row 2 · Quantity: The quantity field is required.')
         ->assertAttributeContains(cell(1, 1), 'class', 'fi-data-grid-cell-invalid')
         ->click(cell(0, 7).' a:has-text("Delete"), '.cell(0, 7).' button:has-text("Delete")')
-        ->wait(1.5)
         ->assertSee('Row 1 · Quantity: The quantity field is required.')
         ->assertAttributeContains(cell(0, 1), 'class', 'fi-data-grid-cell-invalid');
 });
@@ -121,7 +134,7 @@ it('shows a server error on the cell of its row and keeps it after deleting anot
 it('opens a row action shown on the row', function (): void {
     visitDemo()
         ->click(cell(0, 7).' a:has-text("Stock"), '.cell(0, 7).' button:has-text("Stock")')
-        ->wait(1)
+        ->assertVisible('.fi-modal-window')
         ->assertSee('Creamy Coffee 100 g')
         ->assertSee('Available');
 });
@@ -131,17 +144,15 @@ it('searches inside a slide-over without closing it on Escape', function (): voi
 
     visitDemo()
         ->click('Edit in a slide-over')
-        ->wait(1)
         ->click(cell(1, 0, $slideOver).' .fi-select-input-btn')
         ->typeSlowly(openDropdownSearch(), 'tea', 30)
-        ->wait(1.6)
+        ->assertScript(searchResultsFor('tea'))
         ->keys(openDropdownSearch(), 'Escape')
         ->assertVisible('.fi-modal-window')
         ->click(cell(1, 0, $slideOver).' .fi-select-input-btn')
         ->typeSlowly(openDropdownSearch(), 'tea', 30)
-        ->wait(1.6)
+        ->assertScript(searchResultsFor('tea'))
         ->keys(openDropdownSearch(), ['ArrowDown', 'Enter'])
-        ->wait(1.5)
         ->assertSeeIn(cell(1, 0, $slideOver).' .fi-select-input-value-label', 'Tea')
         ->keys(cell(1, 1, $slideOver).' input', 'Escape')
         ->wait(0.5)
@@ -153,10 +164,8 @@ it('searches inside a slide-over without closing it on Escape', function (): voi
 it('adds rows with the add action and accepts rows pushed by the server', function (): void {
     visitDemo()
         ->click('Add adjustment')
-        ->wait(1)
         ->assertPresent(cell(2, 1, ADJUSTMENTS))
         ->click('Add sample lines')
-        ->wait(1)
         ->assertSee('Crispy Chocolate 100 g')
         ->assertPresent(cell(4, 0));
 });
@@ -169,7 +178,7 @@ it('reorders rows by dragging the handle', function (): void {
     $page->assertSeeIn(cell(0, 1, ADJUSTMENTS), 'Late delivery')
         ->waitForEvent('networkidle')
         ->click('Save')
-        ->wait(1.5)
+        ->assertPresent('[data-saved-state]')
         ->assertScript(savedState('adjustments').'[0].reason', 'Late delivery');
 });
 
@@ -181,14 +190,14 @@ it('edits a date, a radio and a field without an inline editor', function (): vo
         ->click(cell(0, 2, ADJUSTMENTS).' .fi-select-input-btn')
         ->click('.fi-dropdown-panel:not([style*="display: none"]) [role="option"]:nth-child(2)')
         ->click(cell(1, 5, ADJUSTMENTS))
-        ->wait(1)
+        ->assertVisible('.fi-modal-window input')
         ->assertSee('Color')
         ->type('.fi-modal-window input', '#123456')
         ->click('.fi-modal-window .fi-modal-heading')
         ->press('Submit')
-        ->wait(1)
+        ->assertScript(noModalOpen())
         ->click('Save')
-        ->wait(1.5)
+        ->assertPresent('[data-saved-state]')
         ->assertScript(savedState('adjustments').'[1].date', '2026-11-15')
         ->assertScript(savedState('adjustments').'[0].kind', 'debit')
         ->assertScript(savedState('adjustments').'[1].color', '#123456');
@@ -223,7 +232,7 @@ it('starts editing a text cell by typing on it', function (): void {
         ->keys(cell(0, 1).' input', 'Escape')
         ->keys(LINES.' .slick-cell.active', ['9', 'Enter'])
         ->click('Save')
-        ->wait(1.5)
+        ->assertPresent('[data-saved-state]')
         ->assertScript(savedState().'[0].quantity', 9);
 });
 
@@ -262,7 +271,7 @@ it('opens a grouped row action menu above the rows below it', function (): void 
     $page->script(sprintf('document.querySelector(%s).scrollIntoView({ block: "center" })', json_encode(ADJUSTMENTS)));
 
     $page->click(ADJUSTMENTS.' .slick-row >> nth=0 >> .fi-data-grid-row-actions .fi-dropdown-trigger button')
-        ->wait(0.5)
+        ->assertScript(sprintf('[...document.querySelectorAll(%s)].some((panel) => panel.style.display !== "none")', json_encode(ADJUSTMENTS.' .fi-data-grid-row-actions .fi-dropdown-panel')))
         ->assertScript(openDropdownLift(ADJUSTMENTS.' .fi-data-grid-row-actions'), '30/30')
         ->assertScript(<<<'JS'
             () => {
@@ -273,7 +282,6 @@ it('opens a grouped row action menu above the rows below it', function (): void 
             }
             JS, true)
         ->click('.fi-dropdown-list-item:has-text("Flag for review"):visible')
-        ->wait(1)
         ->assertSee('Adjustment flagged for review')
         ->assertNoJavaScriptErrors();
 });

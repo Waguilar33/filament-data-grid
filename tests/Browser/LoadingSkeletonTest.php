@@ -21,6 +21,16 @@ function skeletonBarsIn(string $grid): string
         JS, json_encode("{$grid} .fi-data-grid-canvas .slick-cell .fi-ta-text"));
 }
 
+function gridRevealed(): string
+{
+    return sprintf(
+        'document.querySelector(%1$s) === null && document.querySelector(%2$s) !== null && document.querySelector(%3$s) === null && document.getAnimations().length === 0',
+        json_encode(SERVER_DELIVERIES.' .fi-data-grid-skeleton'),
+        json_encode(SERVER_DELIVERIES.' .slick-header-column'),
+        json_encode(SERVER_DELIVERIES.' .fi-data-grid-measuring'),
+    );
+}
+
 function skeletonFitsGrid(): string
 {
     return <<<'JS'
@@ -68,21 +78,23 @@ it('replaces the skeleton with the grid once it has measured its columns', funct
 });
 
 it('shows Filament skeleton bars over the rows while a server page loads', function (): void {
-    $page = visit('/demo/delivery-route-demo')->resize(1440, 900)->waitForEvent('networkidle')->wait(1);
+    $page = visit('/demo/delivery-route-demo')->resize(1440, 900)->waitForEvent('networkidle')->assertScript(gridRevealed());
 
     $page->script(delayLivewireRequests(3000));
-    $page->type(SERVER_DELIVERIES.' .fi-ta-search-field input', 'karen')->wait(1.2);
+    $page->type(SERVER_DELIVERIES.' .fi-ta-search-field input', 'karen')
+        ->assertScript(sprintf('(%s)() > 0', skeletonBarsIn(SERVER_DELIVERIES)));
 
     expect($page->script(skeletonBarsIn(SERVER_DELIVERIES)))->toBeGreaterThan(0)
         ->and($page->script(sprintf('document.querySelector(%s).classList.contains("fi-data-grid-loading")', json_encode(SERVER_DELIVERIES.' .fi-data-grid-entry-content'))))->toBeFalse();
 
-    $page->wait(3)->assertSeeIn(SERVER_DELIVERIES.' .fi-pagination-overview', 'Showing 1 to 10 of 21 results');
+    $page->assertSeeIn(SERVER_DELIVERIES.' .fi-pagination-overview', 'Showing 1 to 10 of 21 results')
+        ->assertScript(sprintf('(%s)() === 0', skeletonBarsIn(SERVER_DELIVERIES)));
 
     expect($page->script(skeletonBarsIn(SERVER_DELIVERIES)))->toBe(0);
 });
 
 it('waits for Livewire\'s loading delay before showing skeleton bars', function (): void {
-    $page = visit('/demo/delivery-route-demo')->resize(1440, 900)->waitForEvent('networkidle')->wait(1);
+    $page = visit('/demo/delivery-route-demo')->resize(1440, 900)->waitForEvent('networkidle')->assertScript(gridRevealed());
 
     $page->script(<<<'JS'
         () => {
@@ -96,14 +108,15 @@ it('waits for Livewire\'s loading delay before showing skeleton bars', function 
             }
         }
         JS);
-    $page->type(SERVER_DELIVERIES.' .fi-ta-search-field input', 'karen')->wait(1.2);
+    $page->type(SERVER_DELIVERIES.' .fi-ta-search-field input', 'karen')
+        ->assertScript(sprintf('window.__barsSoon !== null && (%s)() > 0', skeletonBarsIn(SERVER_DELIVERIES)));
 
     expect($page->script('window.__barsSoon'))->toBeFalse()
         ->and($page->script(skeletonBarsIn(SERVER_DELIVERIES)))->toBeGreaterThan(0);
 });
 
 it('dims a grid without a loading skeleton while a server page loads, as before', function (): void {
-    $page = visit('/demo/delivery-route-demo?skeleton=0')->resize(1440, 900)->waitForEvent('networkidle')->wait(1);
+    $page = visit('/demo/delivery-route-demo?skeleton=0')->resize(1440, 900)->waitForEvent('networkidle')->assertScript(gridRevealed());
 
     expect($page->content())->not->toContain('fi-data-grid-skeleton');
 
@@ -121,11 +134,12 @@ it('shows skeleton bars in a grid inside a Filament table with a loading skeleto
         ->assertScript('document.querySelectorAll(".fi-data-grid-skeleton").length === 0 && document.getAnimations().length === 0');
 
     $page->script(delayLivewireRequests(3000));
-    $page->type('.fi-ta-ctn .fi-ta-header-toolbar .fi-ta-search-field input >> nth=0', 'ca')->wait(1.4);
+    $page->type('.fi-ta-ctn .fi-ta-header-toolbar .fi-ta-search-field input >> nth=0', 'ca')
+        ->assertScript(sprintf('(%s)() > 0', skeletonBarsIn('[id="methods"]')));
 
     expect($page->script(skeletonBarsIn('[id="methods"]')))->toBeGreaterThan(0);
 
-    $page->wait(3.5);
+    $page->assertScript(sprintf('(%s)() === 0', skeletonBarsIn('[id="methods"]')));
 
     expect($page->script(skeletonBarsIn('[id="methods"]')))->toBe(0);
 });

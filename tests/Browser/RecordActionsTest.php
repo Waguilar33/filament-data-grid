@@ -19,10 +19,10 @@ it('shows each row only the record actions it may use', function (): void {
 
 it('shows grouped record actions in a menu that is not clipped by the grid', function (): void {
     $page = visit('/demo/order-lines-demo')->waitForEvent('networkidle')
-        ->wait(0.5)
+        ->assertScript(GRID_SETTLED)
         ->click(orderLineRow('Wild Bread').' .fi-dropdown-trigger')
-        ->wait(0.5)
-        ->assertVisible('.fi-dropdown-panel:not([style*="display: none"])');
+        ->assertVisible('.fi-dropdown-panel:not([style*="display: none"])')
+        ->assertScript('document.getAnimations().length === 0');
 
     $clipped = $page->script(<<<'JS'
         () => {
@@ -39,26 +39,27 @@ it('shows grouped record actions in a menu that is not clipped by the grid', fun
 });
 
 it('opens the record when a row with a recordUrl() is clicked', function (): void {
-    $page = visit('/demo/order-lines-demo')->waitForEvent('networkidle')->wait(0.5);
+    $page = visit('/demo/order-lines-demo')->waitForEvent('networkidle')->assertScript(GRID_SETTLED);
 
     expect($page->script(sprintf('document.querySelectorAll(%s).length', json_encode(ORDER_LINES.' .fi-data-grid-record-link'))))->toBeGreaterThan(0);
 
-    $page->click(orderLineRow('Wild Bread').' .fi-data-grid-entry >> nth=0')->wait(0.3);
+    $page->click(orderLineRow('Wild Bread').' .fi-data-grid-entry >> nth=0')
+        ->assertScript('location.hash !== ""');
 
     expect($page->script('location.hash'))->toMatch('/^#line-\d+$/');
 });
 
 it('keeps record actions from opening the record of a row with a recordUrl()', function (): void {
-    $page = visit('/demo/order-lines-demo')->waitForEvent('networkidle')->wait(0.5)
+    $page = visit('/demo/order-lines-demo')->waitForEvent('networkidle')
+        ->assertScript(GRID_SETTLED)
         ->click(orderLineRow('Rustic Tea').' button:has-text("Adjust")')
-        ->wait(0.5)
         ->assertSee('Receipt');
 
     expect($page->script('location.hash'))->toBe('');
 });
 
 it('opens the record of a row in a new tab on a ctrl-click', function (): void {
-    $page = visit('/demo/order-lines-demo')->waitForEvent('networkidle')->wait(0.5);
+    $page = visit('/demo/order-lines-demo')->waitForEvent('networkidle')->assertScript(GRID_SETTLED);
 
     $page->script('() => { window.__opened = []; window.open = (url, target) => { window.__opened.push([url, target]) } }');
     $page->script(sprintf(

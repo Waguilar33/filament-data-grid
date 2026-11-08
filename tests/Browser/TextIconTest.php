@@ -35,7 +35,7 @@ function iconGaps(AwaitableWebpage $page, string $scope): mixed
 }
 
 it('spaces a text entry icon in a grid cell like the same entry outside the grid', function (): void {
-    $gaps = iconGaps(visit('/demo/order-lines-demo')->waitForEvent('networkidle')->wait(0.5), 'main');
+    $gaps = iconGaps(visit('/demo/order-lines-demo')->waitForEvent('networkidle')->assertScript(GRID_SETTLED), 'main');
 
     $outside = collect($gaps)->firstWhere('cell', 'outside');
     $parents = collect($gaps)->where('cell', 'parent');
@@ -46,10 +46,10 @@ it('spaces a text entry icon in a grid cell like the same entry outside the grid
 });
 
 it('spaces text entry icons the same in parent and child cells, before and after the text', function (): void {
-    $page = visit('/demo/delivery-route-demo')->waitForEvent('networkidle')->wait(0.5);
+    $page = visit('/demo/delivery-route-demo')->waitForEvent('networkidle')->assertScript(GRID_SETTLED);
     $page->script("() => document.querySelector('[id=\"content.deliveries\"] .fi-data-grid-row-toggle').click()");
 
-    $gaps = collect(iconGaps($page->wait(0.5), '[id="content.deliveries"]'));
+    $gaps = collect(iconGaps($page->assertPresent('[id="content.deliveries"] .fi-data-grid-child-cell')->assertScript(GRID_SETTLED), '[id="content.deliveries"]'));
 
     expect($gaps->pluck('cell')->unique()->sort()->values()->all())->toBe(['child', 'parent'])
         ->and($gaps->pluck('position')->unique()->sort()->values()->all())->toBe(['after', 'before'])
