@@ -6,6 +6,16 @@ use Pest\Browser\Api\AwaitableWebpage;
 
 const DISPATCH = '[id="form.dispatch"]';
 
+const HEADER_ALIGNED = <<<'JS'
+    (() => {
+        const grid = document.querySelector('[id="form.dispatch"]')
+        const header = grid.querySelector('.slick-pane-right .slick-header-column .slick-column-name')
+        const text = grid.querySelector('.slick-pane-right .slick-cell.l1 .fi-in-text-item')
+
+        return Math.round(header.getBoundingClientRect().left) === Math.round(text.getBoundingClientRect().left)
+    })()
+    JS;
+
 const COLUMN_FIT = <<<'JS'
     (() => {
         const grid = document.querySelector('[id="form.dispatch"] .fi-data-grid-canvas')
@@ -19,9 +29,9 @@ const COLUMN_FIT = <<<'JS'
     })()
     JS;
 
-function visitWidths(int $width): AwaitableWebpage
+function visitWidths(int $width, string $query = ''): AwaitableWebpage
 {
-    return visit('/demo/content-widths-demo')->resize($width, 900)->waitForEvent('networkidle')->assertScript(GRID_SETTLED);
+    return visit('/demo/content-widths-demo'.$query)->resize($width, 900)->waitForEvent('networkidle')->assertScript(GRID_SETTLED);
 }
 
 function columnWidth(int $column): string
@@ -33,17 +43,9 @@ it('fits editable grid columns to their content and shares the spare room', func
     $page = visitWidths(1920)
         ->assertScript(COLUMN_FIT, json_encode(['clipped' => [], 'tall' => false, 'overflows' => false]));
 
-    expect($page->script(columnWidth(1)))->toBeGreaterThan($page->script(columnWidth(0)))
-        ->and($page->script(columnWidth(5)))->toBeGreaterThanOrEqual(160)
-        ->and($page->script(<<<'JS'
-            () => {
-                const grid = document.querySelector('[id="form.dispatch"]')
-                const header = grid.querySelector('.slick-pane-right .slick-header-column .slick-column-name')
-                const text = grid.querySelector('.slick-pane-right .slick-cell.l1 .fi-in-text-item')
-
-                return Math.round(header.getBoundingClientRect().left) === Math.round(text.getBoundingClientRect().left)
-            }
-            JS))->toBeTrue();
+    expect($page->script(columnWidth(5)))->toBeGreaterThan($page->script(columnWidth(1)) + 20)
+        ->and($page->script(columnWidth(6)))->toBeGreaterThanOrEqual(128)
+        ->and($page->script(HEADER_ALIGNED))->toBeTrue();
 });
 
 it('scrolls a narrow editable grid sideways instead of wrapping, with the frozen column in place', function (): void {
@@ -82,4 +84,19 @@ it('widens a select column for a longer picked option', function (): void {
         ->click('.fi-dropdown-panel:not([style*="display: none"]) .fi-select-input-option:last-child')
         ->assertScript(sprintf('document.querySelector(%s)?.textContent.trim()', json_encode(cell(1, 4, DISPATCH).' .fi-select-input-value-label')), 'South > Main loading dock')
         ->assertScript('JSON.parse('.COLUMN_FIT.').clipped.length', 0);
+});
+
+it('shares the room again when the grid narrows and widens, without wrapping', function (): void {
+    $fits = json_encode(['clipped' => [], 'tall' => false, 'overflows' => false]);
+
+    visitWidths(1920)
+        ->assertScript(COLUMN_FIT, $fits)
+        ->resize(1024, 900)
+        ->assertScript(COLUMN_FIT, json_encode(['clipped' => [], 'tall' => false, 'overflows' => true]))
+        ->resize(1920, 900)
+        ->assertScript(COLUMN_FIT, $fits);
+});
+
+it('lines up the first scrolling header with its cells in a compact grid', function (): void {
+    visitWidths(1024, '?compact=1')->assertScript(HEADER_ALIGNED, true);
 });

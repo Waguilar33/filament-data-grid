@@ -213,19 +213,19 @@
 }
 
 /* SlickGrid splits frozen rows into two panes, so each pane's inner edge isn't a table edge. */
-.fi-data-grid-canvas .slick-pane-right .fi-ta-cell:first-child {
+.fi-data-grid-canvas .slick-pane.slick-pane-right .fi-ta-cell:first-child {
     padding-inline-start: 0;
 }
 
-.fi-data-grid-canvas .slick-pane-left.frozen .fi-ta-cell:last-child {
+.fi-data-grid-canvas .slick-pane.slick-pane-left.frozen .fi-ta-cell:last-child {
     padding-inline-end: 0;
 }
 
-.fi-data-grid-canvas .slick-pane-right .fi-ta-header-cell:first-of-type {
+.fi-data-grid-canvas .slick-pane.slick-pane-right .fi-ta-header-cell:first-of-type {
     padding-inline-start: calc(var(--spacing) * 3);
 }
 
-.fi-data-grid-canvas .slick-pane-left.frozen .fi-ta-header-cell:last-of-type {
+.fi-data-grid-canvas .slick-pane.slick-pane-left.frozen .fi-ta-header-cell:last-of-type {
     padding-inline-end: calc(var(--spacing) * 3);
 }
 
