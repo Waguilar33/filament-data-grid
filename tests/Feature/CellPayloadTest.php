@@ -159,14 +159,14 @@ it('keeps hidden fields in the row state without a column', function (): void {
         ->and($component->instance()->form->getState()['lines'])->toBe([['name' => 'a', 'reference' => 'ref-1']]);
 });
 
-it('passes the flexible column minimum width to the browser', function (string|int|null $width, string|int $expected): void {
+it('passes the flexible column minimum width to the browser', function (string|int|null $width, string|int|null $expected): void {
     $component = mountLines([], fn (): array => [
         tap(DataGrid::make('lines')->schema([TextInput::make('a')]), fn (DataGrid $grid): mixed => $width === null ?: $grid->flexibleColumnMinWidth($width)),
     ]);
 
     expect(grid($component)->getGridPayload()['flexibleColumnMinWidth'])->toBe($expected);
 })->with([
-    'default' => [null, 160],
+    'default' => [null, null],
     'rem' => ['10rem', '10rem'],
     'pixels' => [120, 120],
 ]);

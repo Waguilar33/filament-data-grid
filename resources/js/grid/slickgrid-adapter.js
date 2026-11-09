@@ -4,14 +4,15 @@ import { DateEditor, NumberEditor, TextEditor } from './editors.js'
 import { mountSelectCell } from './select-cell.js'
 import { hasMask, maskedText } from './mask.js'
 import { createChildRows } from './child-rows.js'
+import { createWidthProbe, distribute, probeRequest, sumOf, toPixels } from './column-widths.js'
 
 const ACTIONS_COLUMN = '__actions'
 const MOVE_COLUMN = '__move'
 const TOGGLE_COLUMN = '__toggle'
 const TOGGLE_WIDTH = 44
 const FALLBACK_ROW_HEIGHT = 44
-const FLEXIBLE_MIN_WIDTH = 160
 const ACTIONS_WIDTH = 56
+const UNMEASURED_WIDTH = 160
 const INLINE_ACTIONS_PADDING = 24
 const INLINE_ACTIONS_CLASS = 'fi-data-grid-inline-actions'
 const MOVE_WIDTH = 36
@@ -19,20 +20,6 @@ const EDGE_ICON_WIDTH = 20
 const EDGE_ICON_GAP = 4
 const EDITABLE_TYPES = ['text', 'number', 'select', 'toggle', 'date', 'modal']
 const UNDERLINED_TYPES = ['text', 'number', 'date', 'modal']
-
-const toPixels = (width) => {
-    if (!width) {
-        return null
-    }
-
-    const number = parseFloat(width)
-
-    if (String(width).endsWith('rem')) {
-        return number * parseFloat(getComputedStyle(document.documentElement).fontSize)
-    }
-
-    return String(width).endsWith('px') || /^\d+$/.test(String(width)) ? number : null
-}
 
 const EDITORS = { text: TextEditor, number: NumberEditor, date: DateEditor }
 
@@ -162,7 +149,7 @@ export function createGrid(
         return Math.max(ACTIONS_WIDTH, widest + INLINE_ACTIONS_PADDING)
     }
 
-    const flexibleMinWidth = () => toPixels(payload.flexibleColumnMinWidth) ?? FLEXIBLE_MIN_WIDTH
+    const flexibleMinWidth = () => toPixels(payload.flexibleColumnMinWidth) ?? 0
 
     const columnDefinitions = () => {
         const columns = payload.columns.map((column) => ({
@@ -170,7 +157,7 @@ export function createGrid(
             field: column.field,
             name: columnHeader(column),
             fixedWidth: userWidths.get(column.field) ?? toPixels(column.width),
-            width: userWidths.get(column.field) ?? toPixels(column.width) ?? flexibleMinWidth(),
+            width: userWidths.get(column.field) ?? toPixels(column.width) ?? Math.max(flexibleMinWidth(), UNMEASURED_WIDTH),
             minWidth: 60,
             resizable: true,
             sortable: false,
@@ -314,6 +301,17 @@ export function createGrid(
         return frozenColumns() - 1 + (payload.reorderable ? 1 : 0)
     }
 
+    function cellClasses(type, cell) {
+        return [
+            cell.error ? 'fi-data-grid-cell-invalid' : '',
+            cell.disabled ? 'fi-data-grid-cell-disabled' : '',
+            ['toggle', 'modal'].includes(type) && !cell.disabled ? 'fi-data-grid-cell-clickable' : '',
+            EDITABLE_TYPES.includes(type) && !cell.disabled ? 'fi-data-grid-cell-editable' : '',
+        ]
+            .filter(Boolean)
+            .join(' ')
+    }
+
     function formatCell(rowIndex, cellIndex, value, column, item) {
         const row = rows.get(item.__key)
         const cell = row?.cells?.[column.field]
@@ -323,14 +321,7 @@ export function createGrid(
         }
 
         const type = column.source.editor.type
-        const classes = [
-            cell.error ? 'fi-data-grid-cell-invalid' : '',
-            cell.disabled ? 'fi-data-grid-cell-disabled' : '',
-            ['toggle', 'modal'].includes(type) && !cell.disabled ? 'fi-data-grid-cell-clickable' : '',
-            EDITABLE_TYPES.includes(type) && !cell.disabled ? 'fi-data-grid-cell-editable' : '',
-        ]
-            .filter(Boolean)
-            .join(' ')
+        const classes = cellClasses(type, cell)
 
         if (type === 'select') {
             return { html: wrapTableCell(selectCellElement(item, column, cell, value), column.source.alignment ?? 'start'), addClasses: classes, toolTip: cell.error ?? '' }
@@ -383,6 +374,7 @@ export function createGrid(
             }
         })
 
+        remeasureColumns()
         syncRowHeights()
     }
 
@@ -412,6 +404,8 @@ export function createGrid(
 
                 item[column.field] = nextValue
                 wrapper.title = stripHtml(nextLabel ?? '')
+                contentSpans = null
+                queueMicrotask(fitColumns)
                 onCellChange(item.__key, column.field, nextValue, Boolean(rows.get(item.__key)?.cells?.[column.field]?.live))
 
                 if (!isMultiple && wrapper.contains(document.activeElement)) {
@@ -747,32 +741,161 @@ export function createGrid(
 
     let headerHeight = null
 
+    const contentWidths = createWidthProbe(element, { wraps: false })
+    const MAX_CACHED_WIDTHS = 2000
+    let contentSpans = null
+    let pendingWidths = false
+
+    const selectedLabels = (item, column, cell) => {
+        const value = item[column.field]
+        const isServerValue = JSON.stringify(rows.get(item.__key)?.state?.[column.field]) === JSON.stringify(value)
+        const select = selects.get(selectKey(item.__key, column.field))
+
+        if (column.source.editor.select.isMultiple) {
+            const values = Array.isArray(value) ? value : []
+
+            return isServerValue ? (cell.labels ?? []).map((option) => option.label) : values.map((option) => select?.select.labelRepository?.[option] ?? String(option))
+        }
+
+        if (isBlank(value)) {
+            return []
+        }
+
+        return [(isServerValue ? cell.label : select?.label) ?? String(value)]
+    }
+
+    const selectHtml = (labels, config, { isClearable = false } = {}) => {
+        const text = (label) => (config.isHtmlAllowed ? label : escapeHtml(label))
+        const badge = (label) =>
+            `<span class="fi-badge fi-size-md fi-color fi-color-primary"><span class="fi-badge-label-ctn"><span class="fi-badge-label">${text(label)}</span></span><button type="button" class="fi-badge-delete-btn"><span class="fi-badge-delete-btn-icon"></span></button></span>`
+        const value =
+            labels.length === 0
+                ? `<span class="fi-select-input-placeholder">${escapeHtml(config.placeholder ?? '')}</span>`
+                : config.isMultiple
+                  ? `<div class="fi-select-input-value-badges-ctn">${labels.map(badge).join('')}</div>`
+                  : `<span class="fi-select-input-value-label">${text(labels[0])}</span>`
+        const isCleared = isClearable && labels.length > 0 && !config.isMultiple
+        const classes = ['fi-select-input-ctn', config.isMultiple ? 'fi-select-input-ctn-multiple' : '', isCleared ? 'fi-select-input-ctn-clearable' : ''].filter(Boolean).join(' ')
+
+        return `<div class="fi-data-grid-select fi-select-input"><div class="${classes}"><button type="button" class="fi-select-input-btn"><div class="fi-select-input-value-ctn">${value}</div></button>${isCleared ? '<button type="button" class="fi-select-input-value-remove-btn"></button>' : ''}</div></div>`
+    }
+
+    const cellRequest = (item, column, cellIndex, edge) => {
+        const cell = rows.get(item.__key)?.cells?.[column.field]
+        const type = column.source.editor.type
+
+        if (!cell?.visible) {
+            return null
+        }
+
+        if (type === 'select') {
+            const isClearable = (cell.canSelectPlaceholder ?? true) && !cell.disabled
+            const html = wrapTableCell(selectHtml(selectedLabels(item, column, cell), column.source.editor.select, { isClearable }), column.source.alignment ?? 'start').outerHTML
+
+            return probeRequest('', `slick-cell ${column.cssClass} ${cellClasses(type, cell)}`, html, edge)
+        }
+
+        const output = formatCell(0, cellIndex, item[column.field], column, item)
+        const html = output.html instanceof Element ? output.html.outerHTML : (output.html ?? '')
+
+        return probeRequest('', `slick-cell ${column.cssClass} ${output.addClasses ?? ''}`, html, edge)
+    }
+
+    const placeholderRequest = (column, edge) => {
+        const editor = column.source.editor
+        const alignment = column.source.alignment ?? 'start'
+
+        if (editor.type === 'select') {
+            return probeRequest('', `slick-cell ${column.cssClass} fi-data-grid-cell-editable`, wrapTableCell(selectHtml([], editor.select), alignment).outerHTML, edge)
+        }
+
+        if (!UNDERLINED_TYPES.includes(editor.type) || isBlank(editor.placeholder)) {
+            return null
+        }
+
+        const html = renderCell({ type: editor.type, value: null, cell: {}, label: null, placeholder: editor.placeholder, translations, icons, isEditable: true })
+
+        return probeRequest('', `slick-cell ${column.cssClass} fi-data-grid-cell-editable`, wrapTableCell(html, alignment).outerHTML, edge)
+    }
+
+    const measureContent = () => {
+        const columns = grid.getColumns()
+        const parents = items.filter((item) => !isPlaceholder(item))
+        const edgeOf = (index) => [index === 0 ? 'start' : '', index === columns.length - 1 ? 'end' : ''].join(' ')
+        const requestsByField = new Map(
+            columns.flatMap((column, index) =>
+                column.source && !column.fixedWidth
+                    ? [[
+                          column.field,
+                          [
+                              probeRequest('', `slick-header-column ${column.headerCssClass}`, column.name, edgeOf(index)),
+                              placeholderRequest(column, edgeOf(index)),
+                              ...parents.map((item) => cellRequest(item, column, index, edgeOf(index))),
+                          ].filter(Boolean),
+                      ]]
+                    : [],
+            ),
+        )
+
+        contentWidths.measure([...requestsByField.values()].flat())
+        contentSpans = new Map([...requestsByField].map(([field, requests]) => [field, contentWidths.spanOf(requests).max]))
+    }
+
+    const remeasureColumns = () => {
+        contentSpans = null
+
+        if (contentWidths.size() > MAX_CACHED_WIDTHS) {
+            contentWidths.clear()
+        }
+
+        fitColumns()
+    }
+
     const fitColumns = () => {
-        if (definedEdgeInset !== edgeInset() && !isBusy()) {
+        if (isBusy()) {
+            pendingWidths = true
+
+            return
+        }
+
+        if (element.clientWidth === 0) {
+            return
+        }
+
+        pendingWidths = false
+
+        if (definedEdgeInset !== edgeInset()) {
             grid.setColumns(columnDefinitions())
+            contentSpans = null
+        }
+
+        if (contentSpans === null) {
+            measureContent()
         }
 
         const columns = grid.getColumns()
-        const available = element.clientWidth
-        const fixed = columns.reduce((sum, column) => sum + (column.fixedWidth ?? 0), 0)
+        const fixed = sumOf(columns.map((column) => column.fixedWidth ?? 0))
         const flexible = columns.filter((column) => !column.fixedWidth)
-        const flexibleWidth = Math.max(
-            flexibleMinWidth(),
-            Math.floor((available - fixed) / Math.max(flexible.length, 1)),
-        )
+        const spans = flexible.map((column) => {
+            const width = Math.max(contentSpans.get(column.field) ?? 0, flexibleMinWidth())
+
+            return { min: width, max: width }
+        })
+        const flexibleWidths = distribute(spans, element.clientWidth - fixed)
+        const widthOf = new Map(flexible.map((column, index) => [column.id, flexibleWidths[index]]))
 
         const currentHeaderHeight = element.querySelector('.slick-header')?.offsetHeight ?? null
         const changed =
             currentHeaderHeight !== headerHeight ||
-            columns.some((column) => column.width !== (column.fixedWidth ?? flexibleWidth))
+            columns.some((column) => column.width !== (column.fixedWidth ?? widthOf.get(column.id)))
 
-        if (!changed || isBusy()) {
+        if (!changed) {
             return
         }
 
         headerHeight = currentHeaderHeight
         columns.forEach((column) => {
-            column.width = column.fixedWidth ?? flexibleWidth
+            column.width = column.fixedWidth ?? widthOf.get(column.id)
         })
 
         grid.setColumns(columns)
@@ -806,6 +929,13 @@ export function createGrid(
         })
     })
     resizeObserver.observe(element)
+
+    const remeasureFonts = () => {
+        contentWidths.clear()
+        remeasureColumns()
+    }
+
+    document.fonts?.addEventListener?.('loadingdone', remeasureFonts)
     element.querySelectorAll('.slick-header').forEach((header) => resizeObserver.observe(header))
 
     grid.onColumnsResized.subscribe((event, { triggeredByColumn }) => {
@@ -847,6 +977,7 @@ export function createGrid(
         const cell = rows.get(item.__key)?.cells?.[column.field]
 
         onCellChange(item.__key, column.field, isBlank(item[column.field]) ? null : item[column.field], Boolean(cell?.live))
+        remeasureColumns()
         syncRowHeights()
     })
 
@@ -854,6 +985,10 @@ export function createGrid(
         queueMicrotask(() => {
             if (isBusy()) {
                 return
+            }
+
+            if (pendingWidths) {
+                fitColumns()
             }
 
             if (pendingRowHeights) {
@@ -1080,6 +1215,8 @@ export function createGrid(
         payload = nextPayload
         indexRows()
         items = buildItems(localChanges)
+        contentSpans = null
+        pendingWidths = true
 
         const heightsChanged = syncChildren(force)
 
@@ -1175,6 +1312,7 @@ export function createGrid(
 
         setPayload(nextPayload, localChanges, force = false) {
             applyPayload(nextPayload, localChanges, force)
+            fitColumns()
             syncRowHeights()
         },
 
@@ -1188,6 +1326,7 @@ export function createGrid(
             childRows?.destroy()
             cancelAnimationFrame(resizeFrame)
             resizeObserver.disconnect()
+            document.fonts?.removeEventListener?.('loadingdone', remeasureFonts)
             selects.forEach(({ select }) => select.destroy())
             selects.clear()
             rowMoveManager.dispose()
