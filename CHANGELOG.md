@@ -2,7 +2,7 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
-## Unreleased
+## v1.0.0-beta.39 - 2026-11-09
 
 - The editable `DataGrid` sizes its columns to their content, like `DataGridEntry`: each column without a `width()` is at least as wide as its header and its widest cell on one line (entries, input values with their suffix icons, select labels with their clear button and arrow, and placeholders), and the spare room is shared in proportion to those widths. Visible change: columns that used to share the room equally now size to their content, and a grid whose content doesn't fit scrolls sideways instead of wrapping or cutting off text. Values typed or picked in the browser widen their column before they reach the server. `width()` still wins, and columns the user resized keep their width.
 - `flexibleColumnMinWidth()` is now an optional floor on top of the content width, with no default; it was 160 pixels. Grids that set it keep it.
