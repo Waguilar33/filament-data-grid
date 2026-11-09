@@ -63,7 +63,7 @@ class DataGrid extends Repeater
 
     protected int|Closure $frozenColumns = 0;
 
-    protected string|int|Closure $flexibleColumnMinWidth = 160;
+    protected string|int|Closure|null $flexibleColumnMinWidth = null;
 
     protected int|Closure $childTablePadding = 15;
 
@@ -202,18 +202,18 @@ class DataGrid extends Repeater
         return is_int($count) ? max(0, $count) : 0;
     }
 
-    public function flexibleColumnMinWidth(string|int|Closure $width): static
+    public function flexibleColumnMinWidth(string|int|Closure|null $width): static
     {
         $this->flexibleColumnMinWidth = $width;
 
         return $this;
     }
 
-    public function getFlexibleColumnMinWidth(): string|int
+    public function getFlexibleColumnMinWidth(): string|int|null
     {
         $width = $this->evaluate($this->flexibleColumnMinWidth);
 
-        return is_string($width) || is_int($width) ? $width : 160;
+        return is_string($width) || is_int($width) ? $width : null;
     }
 
     public function childTablePadding(int|Closure $pixels): static

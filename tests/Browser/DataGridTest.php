@@ -249,7 +249,7 @@ it('sizes the actions column to the inline row actions', function (): void {
     expect($fits)->toBeTrue();
 });
 
-it('fits a narrow container with the flexible column below the old 240px floor', function (): void {
+it('fits a narrow container without scrolling when the content fits', function (): void {
     $measure = visitDemo()->script(<<<'JS'
         () => {
             const viewport = document.querySelector('[id="form.adjustments"] .slick-viewport-right')
@@ -262,7 +262,7 @@ it('fits a narrow container with the flexible column below the old 240px floor',
         JS);
 
     expect($measure['overflow'])->toBeLessThanOrEqual(0)
-        ->and($measure['flexible'])->toBeGreaterThanOrEqual(160)->toBeLessThan(240);
+        ->and($measure['flexible'])->toBeLessThan(240);
 });
 
 it('opens a grouped row action menu above the rows below it', function (): void {

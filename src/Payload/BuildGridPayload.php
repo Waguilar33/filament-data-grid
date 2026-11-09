@@ -22,7 +22,7 @@ final readonly class BuildGridPayload
     ) {}
 
     /**
-     * @return array{columns: list<array<string, mixed>>, rows: list<array<string, mixed>>, hasActions: bool, actionTemplates: array<string, string>, rowKeyPlaceholder: string, frozenColumns: int, flexibleColumnMinWidth: string|int, reorderable: bool, hasChildRows: bool, childTablePadding: int, highlightEditableColumns: bool|list<string>, cellIcons: array<string, string>}
+     * @return array{columns: list<array<string, mixed>>, rows: list<array<string, mixed>>, hasActions: bool, actionTemplates: array<string, string>, rowKeyPlaceholder: string, frozenColumns: int, flexibleColumnMinWidth: string|int|null, reorderable: bool, hasChildRows: bool, childTablePadding: int, highlightEditableColumns: bool|list<string>, cellIcons: array<string, string>}
      */
     public function handle(DataGrid $grid): array
     {

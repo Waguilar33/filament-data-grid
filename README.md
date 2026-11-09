@@ -252,9 +252,18 @@ DataGridEntry::make('deliveries')
 
 Frozen columns are ignored while a grid has child rows. On `DataGridEntry` that means any row that can open: a row with child rows, a `childTable()`, or `expandedAbove()` and `expandedBelow()` content, because an open row spans every column.
 
-## Flexible column width
+## Column widths
 
-The editable `DataGrid` has one flexible column: the one without a `width()`. It takes the room the fixed-width columns leave, and never gets narrower than 160px; if the grid is narrower than that, it scrolls sideways. Change the floor per grid, in pixels or rem:
+Columns fit their content, and cell text stays on one line, as in [`DataGridEntry`](#column-widths-1). The browser measures each column without a `width()` from its header and the cells of every row, each on one line: entries with their badges and icons, the value of each input with its suffix icon, the chosen option of each select with its clear button and arrow, and the input's placeholder, so an empty cell doesn't make its column narrower:
+
+- When every column fits, each column gets its one-line width, and the spare room goes to the columns in proportion to that width.
+- When they don't fit, no column gets narrower than its one-line width: the grid scrolls sideways instead. Rows keep their height, and nothing is cut off.
+
+`TableColumn::width()` sets a fixed width in pixels or rem, which wins over the content and takes no spare room. In a fixed column, an input or select value that doesn't fit ends in an ellipsis, and entry text wraps. A column the user widens or narrows by dragging its header edge keeps that width. Frozen columns work as before.
+
+The browser measures again when the rows change, when a cell's value changes (including values typed or picked that haven't reached the server yet), and when fonts load. When the window or the grid resizes, such as when Filament's sidebar opens or closes, it shares out the room again without measuring.
+
+To keep columns without a `width()` from getting narrower than a minimum, in pixels or rem, set a floor for the grid. There is none by default:
 
 ```php
 DataGrid::make('lines')
@@ -498,7 +507,7 @@ Livewire must be able to find the component on later requests. On Livewire 3 tha
 
 ### Column widths
 
-Columns fit their content, and cell text stays on one line. The browser measures the header and the cells of the rows on the current page, each on one line, with each badge, icon and action kept whole:
+Columns fit their content, and cell text stays on one line. The editable `DataGrid` sizes its columns the same way ([Column widths](#column-widths)). The browser measures the header and the cells of the rows on the current page, each on one line, with each badge, icon and action kept whole:
 
 - When every column fits, each column gets its one-line width, and the spare room goes to the columns in proportion to that width. Long text, such as a name or an address, gets most of it, and short columns, such as an icon or a date, stay narrow.
 - When they don't fit, no column gets narrower than its one-line width: the grid scrolls sideways instead. Rows keep their height, and nothing is cut off.

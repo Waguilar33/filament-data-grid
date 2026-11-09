@@ -1,6 +1,7 @@
 import { SlickGrid } from '@slickgrid-universal/common'
 import { escapeHtml, fitIconHtml, headerGlyphOffset } from './cells.js'
 import { formatTotal, sumTotals } from './totals.js'
+import { createWidthProbe, distribute, probeRequest, sumOf, toPixels } from './column-widths.js'
 
 const TOGGLE_COLUMN = '__toggle'
 const ACTIONS_COLUMN = '__actions'
@@ -13,22 +14,7 @@ const TOGGLE_BUTTON_INSET = 4
 const TOGGLE_ICON_WIDTH = 20
 const UNMEASURED_WIDTH = 160
 const CHILD_TABLE_BORDER = 1
-const INTRINSIC_WIDTHS = ['max-content', '0px']
 const ACTIONS_CELL_CLASSES = 'fi-ta-cell fi-data-grid-cell fi-data-grid-record-actions-cell fi-align-end'
-
-const toPixels = (width) => {
-    if (!width) {
-        return null
-    }
-
-    const number = parseFloat(width)
-
-    if (String(width).endsWith('rem')) {
-        return number * parseFloat(getComputedStyle(document.documentElement).fontSize)
-    }
-
-    return String(width).endsWith('px') || /^\d+$/.test(String(width)) ? number : null
-}
 
 const headerLabel = (column) =>
     column.headerHidden
@@ -37,61 +23,6 @@ const headerLabel = (column) =>
 
 const childGridTemplate = (columns) =>
     columns.map((column) => (column.width ? column.width : 'minmax(0, 1fr)')).join(' ')
-
-const sumOf = (numbers) => numbers.reduce((sum, number) => sum + number, 0)
-
-const distribute = (spans, available) => {
-    const minSum = sumOf(spans.map((span) => span.min))
-    const maxSum = sumOf(spans.map((span) => span.max))
-
-    if (spans.length === 0 || minSum >= available) {
-        return spans.map((span) => span.min)
-    }
-
-    const widths = spans.map((span) =>
-        maxSum <= available
-            ? span.max + (maxSum > 0 ? ((available - maxSum) * span.max) / maxSum : (available - maxSum) / spans.length)
-            : span.max - ((maxSum - available) * (span.max - span.min)) / (maxSum - minSum),
-    )
-    const floored = widths.map(Math.floor)
-
-    for (let index = 0, remainder = available - sumOf(floored); remainder > 0; index = (index + 1) % floored.length, remainder--) {
-        floored[index]++
-    }
-
-    return floored
-}
-
-const contentBoxes = (node, range) => {
-    if (node.nodeType === Node.TEXT_NODE) {
-        range.selectNodeContents(node)
-
-        return [...range.getClientRects()]
-    }
-
-    if (node.nodeType !== Node.ELEMENT_NODE || node.classList.contains('fi-sr-only')) {
-        return []
-    }
-
-    return [node.getBoundingClientRect(), ...[...node.childNodes].flatMap((child) => contentBoxes(child, range))]
-}
-
-const horizontalPadding = (element) => {
-    const style = getComputedStyle(element)
-
-    return parseFloat(style.paddingLeft) + parseFloat(style.paddingRight)
-}
-
-const outerContentWidth = (cell, range) => {
-    const text = cell.querySelector(':scope > .fi-ta-col > .fi-ta-text')
-    const padding = horizontalPadding(cell) + (text ? horizontalPadding(text) : 0)
-    const boxes = [...cell.childNodes].flatMap((child) => contentBoxes(child, range)).filter((box) => box.width > 0)
-    const content = boxes.length > 0 ? Math.max(...boxes.map((box) => box.right)) - Math.min(...boxes.map((box) => box.left)) : 0
-
-    return Math.ceil(Math.max(cell.getBoundingClientRect().width, content + padding))
-}
-
-const probeRequest = (wrapper, classes, content, edge = '') => ({ key: `${wrapper}|${classes}|${edge}|${content}`, wrapper, classes, content, edge })
 
 const tableCellHtml = (html, alignment) => `<div class="fi-ta-col"><div class="fi-ta-text fi-align-${alignment ?? 'start'}">${html}</div></div>`
 
@@ -141,7 +72,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
     let contentFits = false
     let isLaidOut = false
     let heightsFollowWidth = true
-    const intrinsicWidths = new Map()
+    const intrinsicWidths = createWidthProbe(element)
     const childTemplates = new Map()
     let totals = {}
     let hasMatchingRows = true
@@ -512,46 +443,8 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
 
     const childTablePadding = () => payload.childTablePadding ?? DEFAULT_CHILD_TABLE_PADDING
 
-    const measureIntrinsicWidths = (requests) => {
-        const pending = [...new Map(requests.filter((request) => !intrinsicWidths.has(request.key)).map((request) => [request.key, request])).values()]
-
-        if (pending.length === 0) {
-            return
-        }
-
-        const probe = document.createElement('div')
-        probe.className = 'fi-data-grid-width-probe'
-        probe.innerHTML = pending
-            .flatMap((request) =>
-                INTRINSIC_WIDTHS.map(
-                    (width) =>
-                        `<div class="${request.wrapper}">${request.edge.includes('start') ? '' : '<div hidden></div>'}<div class="${request.classes}" style="width: ${width}">${request.content}</div>${request.edge.includes('end') ? '' : '<div hidden></div>'}</div>`,
-                ),
-            )
-            .join('')
-        element.appendChild(probe)
-
-        const range = document.createRange()
-        const widths = [...probe.children].map((wrapper) => outerContentWidth(wrapper.querySelector(':scope > :not([hidden])'), range))
-        const sizes = pending.map((request, index) => widths.slice(index * INTRINSIC_WIDTHS.length, (index + 1) * INTRINSIC_WIDTHS.length))
-
-        probe.remove()
-        pending.forEach((request, index) => {
-            const [max, min] = sizes[index]
-
-            intrinsicWidths.set(request.key, { min: Math.min(min, max), max })
-        })
-    }
-
     const spanOf = (requests) => {
-        const span = requests.reduce(
-            (span, request) => {
-                const size = intrinsicWidths.get(request.key)
-
-                return { min: Math.max(span.min, size.min), max: Math.max(span.max, size.max) }
-            },
-            { min: 0, max: 0 },
-        )
+        const span = intrinsicWidths.spanOf(requests)
 
         return payload.wrapCells ? span : { min: span.max, max: span.max }
     }
@@ -647,7 +540,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         const actions = actionsRequests()
         const childActions = childActionsRequests(openRows)
 
-        measureIntrinsicWidths([...parentRequestsByColumn.flat(), ...childRequestsByRow.flat(2), ...actions, ...childActions])
+        intrinsicWidths.measure([...parentRequestsByColumn.flat(), ...childRequestsByRow.flat(2), ...actions, ...childActions])
 
         childActionsWidth = childActions.length > 0 ? spanOf(childActions).max : 0
 

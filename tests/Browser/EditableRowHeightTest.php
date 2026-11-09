@@ -63,12 +63,14 @@ it('grows editable parent and child rows to fit their tallest cell', function ()
         ->and($children->pluck('height')->max())->toBeGreaterThan(TABLE_ROW_HEIGHT);
 });
 
-it('measures editable rows again when the grid gets narrower', function (): void {
+it('scrolls instead of wrapping editable rows when the grid gets narrower', function (): void {
     $wide = collect(rowFit(visitAllocation())['parents'])->first()['height'];
-    $narrow = rowFit(visitAllocation(700));
+    $page = visitAllocation(700);
+    $narrow = rowFit($page);
 
-    expect(collect($narrow['parents'])->first()['height'])->toBeGreaterThan($wide)
-        ->and(collect($narrow['parents'])->pluck('clipped')->unique()->all())->toBe([false]);
+    expect(collect($narrow['parents'])->first()['height'])->toBe($wide)
+        ->and(collect($narrow['parents'])->pluck('clipped')->unique()->all())->toBe([false])
+        ->and($page->script(sprintf('() => [...document.querySelectorAll(%s)].some((viewport) => viewport.scrollWidth > viewport.clientWidth)', json_encode(ALLOCATION.' > * .fi-data-grid-canvas .slick-viewport'))))->toBeTrue();
 });
 
 it('keeps editable rows fitted after a live change and after opening and closing a row', function (): void {
