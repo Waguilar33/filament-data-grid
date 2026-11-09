@@ -2,7 +2,7 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
-## Unreleased
+## v1.0.0-beta.38 - 2026-11-08
 
 - Inside a Filament table (`toTableContent()`), a grid field whose table column is `toggleable()` follows Filament's column manager: toggled off, the grid drops its column; toggled on, it comes back. `isToggledHiddenByDefault` and the toggles Filament keeps in the session apply too. Fields without a toggleable column of the same name are shown as before.
 
