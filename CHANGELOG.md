@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## Unreleased
+
+- Inside a Filament table (`toTableContent()`), a grid field whose table column is `toggleable()` follows Filament's column manager: toggled off, the grid drops its column; toggled on, it comes back. `isToggledHiddenByDefault` and the toggles Filament keeps in the session apply too. Fields without a toggleable column of the same name are shown as before.
+
 ## v1.0.0-beta.37 - 2026-11-08
 
 - `DataGridEntry::loadingSkeleton()`, like Filament's table option. Before the grid has measured its columns it shows Filament table rows with skeleton bars sized to the real content, then fades in and eases to its own height. While a `serverSide()` grid loads, its rows show Filament's skeleton bars instead of dimming, after Livewire's loading delay. A grid inside a Filament table with `loadingSkeleton()` turns it on by itself. Off by default; `DataGridEntry::configureUsing()` turns it on for every grid.

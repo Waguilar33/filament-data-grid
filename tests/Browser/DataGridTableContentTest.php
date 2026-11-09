@@ -169,3 +169,19 @@ it('keeps the frozen first column in place while the rest scrolls sideways', fun
         ->assertUrlIs('*delivery-route-demo*')
         ->assertNoJavaScriptErrors();
 });
+
+it('shows and hides grid columns from the table column manager', function (): void {
+    $headers = 'JSON.stringify([...document.querySelectorAll(".fi-data-grid-in-table .slick-header-column")].map((header) => header.textContent.trim()))';
+
+    $page = visit('/demo/toggleable-columns-demo')
+        ->waitForEvent('networkidle')
+        ->assertScript($headers, json_encode(['Delivery', 'Address', 'Customer']))
+        ->click('.fi-ta-col-manager-dropdown .fi-icon-btn')
+        ->click('.fi-ta-col-manager-label:has-text("Route") input')
+        ->click('.fi-ta-col-manager-label:has-text("Address") input')
+        ->click('.fi-ta-col-manager-actions-ctn button')
+        ->assertScript($headers, json_encode(['Delivery', 'Route', 'Customer']))
+        ->assertScript('document.querySelector(".fi-data-grid-in-table .slick-viewport-left .slick-header-column, .fi-data-grid-in-table .slick-pane-left .slick-header-column")?.textContent.trim()', 'Delivery');
+
+    $page->assertScript(GRID_SETTLED)->assertNoJavaScriptErrors();
+});

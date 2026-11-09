@@ -786,7 +786,23 @@ public function table(Table $table): Table
 }
 ```
 
-`toTableContent()` uses Filament's `content()` hook, so the table works the same as any other Filament table, with `query()` or `records()`. Each parent row also shows the table's `recordActions()` (Filament Actions, so their modals and slide-overs work as usual) and, when the table has a `recordUrl()`, a chevron that opens the record. Clicking the row opens the record too; the arrow at the start of the row opens its child rows. It works in a relation manager, whose table already has the relationship query. Define the grid's columns with `table()` and `schema()` as above. The table's `columns()` still decide what can be searched and sorted, but aren't shown. Leave `searchable()`, `filters()` and `paginated()` off the grid itself here, because the table does that work.
+`toTableContent()` uses Filament's `content()` hook, so the table works the same as any other Filament table, with `query()` or `records()`. Each parent row also shows the table's `recordActions()` (Filament Actions, so their modals and slide-overs work as usual) and, when the table has a `recordUrl()`, a chevron that opens the record. Clicking the row opens the record too; the arrow at the start of the row opens its child rows. It works in a relation manager, whose table already has the relationship query. Define the grid's columns with `table()` and `schema()` as above. The table's `columns()` aren't drawn, but still decide what can be searched and sorted, and which grid columns users can hide. Leave `searchable()`, `filters()` and `paginated()` off the grid itself here, because the table does that work.
+
+To let users hide grid columns, make the table column with the same name as the field `toggleable()`. Filament's column manager then lists it, and the grid follows its choices: a field whose column is toggled off has no grid column, and comes back when it is toggled on. `isToggledHiddenByDefault` and the choices Filament saves in the session work too. Fields without a toggleable column of the same name are always shown:
+
+```php
+$table
+    ->columns([
+        TextColumn::make('number')->searchable(),
+        TextColumn::make('discount')->toggleable(isToggledHiddenByDefault: true),
+    ])
+    ->content(
+        DataGridEntry::make('lines')
+            ->table([TableColumn::make('Number'), TableColumn::make('Discount')])
+            ->schema([TextEntry::make('number'), TextEntry::make('discount')->money('USD')])
+            ->toTableContent(),
+    )
+```
 
 To give the table's header an icon, like a section's, add `header(IconHeader::make($icon))`. It keeps the table's `heading()`, `description()` and header actions, and draws them with the markup of a Filament section header (the icon beside the heading and description, not inside the heading), so they line up exactly like a section's. It works on any Filament table, with or without the grid, including a plain table that lists its own rows:
 
