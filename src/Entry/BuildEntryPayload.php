@@ -34,7 +34,9 @@ final readonly class BuildEntryPayload
         $columns = [];
 
         foreach ($this->cellComponents($template, $children) as $index => $component) {
-            $columns[] = $this->describeColumn($component, $tableColumns[$index] ?? null);
+            if (! $entry->isToggledHidden($this->fieldName($component))) {
+                $columns[] = $this->describeColumn($component, $tableColumns[$index] ?? null);
+            }
         }
 
         return [
@@ -105,8 +107,14 @@ final readonly class BuildEntryPayload
         $children = $entry->getChildRowsEntry($item);
 
         foreach ($this->cellComponents($item, $children) as $component) {
-            $components[$this->fieldName($component)] = $component;
-            $cells[$this->fieldName($component)] = $this->describeCell->handle($component, new MessageBag);
+            $field = $this->fieldName($component);
+
+            if ($entry->isToggledHidden($field)) {
+                continue;
+            }
+
+            $components[$field] = $component;
+            $cells[$field] = $this->describeCell->handle($component, new MessageBag);
         }
 
         return [

@@ -12,6 +12,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Components\Attributes\ExposedLivewireMethod;
 use Filament\Support\Enums\Alignment;
 use Filament\Support\Facades\FilamentAsset;
+use Filament\Tables\Columns\Column;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\BaseFilter;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -100,6 +101,11 @@ class DataGridEntry extends RepeatableEntry
      * @var array<string, array{actions: string|null, link: string|null}>
      */
     protected array $tableRecords = [];
+
+    /**
+     * @var list<string>
+     */
+    protected array $toggledHiddenFields = [];
 
     protected ?Closure $getRecordsUsing = null;
 
@@ -586,6 +592,10 @@ class DataGridEntry extends RepeatableEntry
         $this->tableRecords = [];
         $table = $livewire->getTable();
         $this->hasTableLoadingSkeleton = $table->hasLoadingSkeleton();
+        $this->toggledHiddenFields = array_values(array_map(
+            fn (Column $column): string => $column->getName(),
+            array_filter($table->getColumns(), fn (Column $column): bool => $column->isToggledHidden()),
+        ));
         $describeRecord = app(DescribeTableRecord::class);
 
         foreach ($records instanceof Paginator ? $records->items() : $records as $key => $record) {
@@ -602,6 +612,11 @@ class DataGridEntry extends RepeatableEntry
         $this->state($state)->hiddenLabel();
 
         return Schema::make($livewire)->components([$this]);
+    }
+
+    public function isToggledHidden(string $field): bool
+    {
+        return in_array($field, $this->toggledHiddenFields, true);
     }
 
     public function getChildRowsEntry(Schema $item): ?RepeatableEntry
