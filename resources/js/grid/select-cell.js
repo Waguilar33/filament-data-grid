@@ -2,6 +2,15 @@ import { Select } from '../../../vendor/filament/support/resources/js/utilities/
 
 const blankToNull = (value) => (value === '' || value === undefined ? null : value)
 
+const ABSOLUTE_POSITIONING_CONTEXT = '.fi-absolute-positioning-context'
+
+const keepFixedPositioning = (button) => {
+    const closest = button.closest.bind(button)
+
+    // Filament's Select lets any outer absolute context (every modal) override the grid's fixed one, so the dropdown gets clipped by the grid viewport.
+    button.closest = (selector) => (selector === ABSOLUTE_POSITIONING_CONTEXT ? null : closest(selector))
+}
+
 export function mountSelectCell({ element, column, cell, value, label, callSchemaComponentMethod, onChange }) {
     const config = column.source.editor.select
     const isMultiple = Boolean(config.isMultiple)
@@ -30,6 +39,8 @@ export function mountSelectCell({ element, column, cell, value, label, callSchem
             onChange(nextValue, nextLabel, { isMultiple })
         },
     })
+
+    keepFixedPositioning(select.selectButton)
 
     return select
 }
