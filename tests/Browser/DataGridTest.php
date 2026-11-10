@@ -172,8 +172,11 @@ it('floats a select dropdown in a slide-over above the grid instead of clipping 
             (() => {
                 const search = document.querySelector('.fi-dropdown-panel:not([style*="display: none"]) .fi-select-input-search-ctn input')
                 const box = search.getBoundingClientRect()
+                const panel = search.closest('.fi-dropdown-panel').getBoundingClientRect()
+                const button = search.closest('.fi-data-grid-select').querySelector('.fi-select-input-btn').getBoundingClientRect()
+                const isAnchored = Math.abs(panel.top - button.bottom) <= 8 || Math.abs(panel.bottom - button.top) <= 8
 
-                return search.closest('.fi-dropdown-panel').style.position === 'fixed' && document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2) === search
+                return isAnchored && search.closest('.fi-dropdown-panel').style.position === 'fixed' && document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2) === search
             })()
             JS)
         ->assertNoJavaScriptErrors();
