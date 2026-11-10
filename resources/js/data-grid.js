@@ -23,6 +23,7 @@ export default function dataGrid({ statePath, schemaComponent, actions, expandIc
         controller: null,
         observers: [],
         stopInterceptingMessages: null,
+        isDestroyed: false,
         wasEditingOnKeyDown: false,
 
         init() {
@@ -46,6 +47,7 @@ export default function dataGrid({ statePath, schemaComponent, actions, expandIc
         },
 
         destroy() {
+            this.isDestroyed = true
             this.stopInterceptingMessages?.()
             this.observers.forEach((observer) => observer.disconnect())
             this.controller?.destroy()
@@ -62,7 +64,13 @@ export default function dataGrid({ statePath, schemaComponent, actions, expandIc
         },
 
         applyPayload(force = false) {
-            this.controller.apply(this.$refs.payload.dataset.payload, force)
+            const payload = this.$refs.payload?.dataset.payload
+
+            if (this.isDestroyed || payload === undefined) {
+                return
+            }
+
+            this.controller.apply(payload, force)
         },
 
         observe(element, attributes, callback) {
