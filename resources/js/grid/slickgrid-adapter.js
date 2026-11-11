@@ -156,7 +156,8 @@ export function createGrid(
             id: column.field,
             field: column.field,
             name: columnHeader(column),
-            fixedWidth: userWidths.get(column.field) ?? toPixels(column.width),
+            fixedWidth: userWidths.get(column.field) ?? (column.fitsContent ? null : toPixels(column.width)),
+            fitsContent: Boolean(column.fitsContent),
             width: userWidths.get(column.field) ?? toPixels(column.width) ?? Math.max(flexibleMinWidth(), UNMEASURED_WIDTH),
             minWidth: 60,
             resizable: true,
@@ -875,8 +876,11 @@ export function createGrid(
         }
 
         const columns = grid.getColumns()
-        const fixed = sumOf(columns.map((column) => column.fixedWidth ?? 0))
-        const flexible = columns.filter((column) => !column.fixedWidth)
+        const contentFit = (column) =>
+            column.fitsContent && !column.fixedWidth ? Math.max(toPixels(column.source.width) ?? 0, contentSpans.get(column.field) ?? 0) : null
+        const ownWidth = (column) => column.fixedWidth ?? contentFit(column)
+        const fixed = sumOf(columns.map((column) => ownWidth(column) ?? 0))
+        const flexible = columns.filter((column) => ownWidth(column) === null)
         const spans = flexible.map((column) => {
             const width = Math.max(contentSpans.get(column.field) ?? 0, flexibleMinWidth())
 
@@ -888,7 +892,7 @@ export function createGrid(
         const currentHeaderHeight = element.querySelector('.slick-header')?.offsetHeight ?? null
         const changed =
             currentHeaderHeight !== headerHeight ||
-            columns.some((column) => column.width !== (column.fixedWidth ?? widthOf.get(column.id)))
+            columns.some((column) => column.width !== (ownWidth(column) ?? widthOf.get(column.id)))
 
         if (!changed) {
             return
@@ -896,7 +900,7 @@ export function createGrid(
 
         headerHeight = currentHeaderHeight
         columns.forEach((column) => {
-            column.width = column.fixedWidth ?? widthOf.get(column.id)
+            column.width = ownWidth(column) ?? widthOf.get(column.id)
         })
 
         grid.setColumns(columns)
