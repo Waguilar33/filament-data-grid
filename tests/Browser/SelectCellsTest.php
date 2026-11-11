@@ -178,3 +178,11 @@ it('draws a picked value as Filament does, on one line and without an underline'
 
     $page->assertPresent(cell(0, 0, SELECT_CELLS).' .fi-select-input-value-remove-btn');
 });
+
+it('shows no scrollbars after a row is added when everything fits', function (): void {
+    $page = selectCellsDemo()->click('Add to lines')->assertPresent(cell(3, 0, SELECT_CELLS))->wait(0.5);
+
+    expect($page->script(<<<'JS'
+        (() => [...document.querySelectorAll('[id="form.lines"] .slick-viewport')].map((viewport) => [viewport.scrollWidth - viewport.clientWidth, viewport.scrollHeight - viewport.clientHeight]))()
+        JS))->each->toBe([0, 0]);
+});

@@ -62,3 +62,16 @@ it('sizes an Actions column to its content and gives it no spare room', function
         ->and($widths[0])->toBeGreaterThanOrEqual($widths[1] + 24)
         ->and($widths[2])->toBeFalse();
 });
+
+it('widens an Actions column narrower than its content instead of scrolling, also after adding a row', function (): void {
+    $page = visit('/demo/row-action-cells-demo?actionsWidth=1rem')->resize(1440, 900)->waitForEvent('networkidle')->assertScript(GRID_SETTLED);
+    $overflow = <<<'JS'
+        (() => [...document.querySelectorAll('[id="form.lines"] .slick-viewport')].some((viewport) => viewport.scrollWidth > viewport.clientWidth || viewport.scrollHeight > viewport.clientHeight))()
+        JS;
+
+    expect($page->script($overflow))->toBeFalse();
+
+    $page->click('Add to lines')->assertPresent(cell(3, 0, ACTION_CELLS))->wait(0.5);
+
+    expect($page->script($overflow))->toBeFalse();
+});
