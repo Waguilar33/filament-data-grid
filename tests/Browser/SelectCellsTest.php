@@ -87,7 +87,7 @@ it('opens a select with its options at once, without asking the server', functio
 });
 
 /**
- * Pest re-runs a script that takes over about a second, so each script here returns at once and waits are polled.
+ * Holds the page's requests until the test releases them; Pest re-runs a script that takes over about a second, so each script returns at once.
  */
 function startSlowPick(): string
 {
@@ -98,14 +98,14 @@ function startSlowPick(): string
             const fetch = window.fetch
             window.__pending = 0
             window.__finished = 0
-            window.fetch = async (...args) => {
+            window.__held = []
+            window.fetch = (...args) => {
                 window.__pending++
-                try {
-                    return await fetch(...args)
-                } finally {
-                    window.__finished++
-                }
+                const response = fetch(...args)
+
+                return new Promise((resolve, reject) => window.__held.push(() => response.then(resolve, reject).finally(() => window.__finished++)))
             }
+            window.__release = () => window.__held.splice(0).forEach((release) => release())
             window.__button(0).dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
             window.__button(0).click()
             const option = window.__button(0).closest('.fi-data-grid-select').querySelector('[role="option"]')
@@ -122,6 +122,8 @@ function startSlowPick(): string
 
 const REQUEST_LANDED = 'window.__pending > 0 && window.__finished === window.__pending';
 
+const RELEASE_REQUESTS = '() => window.__release()';
+
 it('opens a select clicked while a slow request lands between mousedown and click', function (): void {
     $page = selectCellsDemo();
     $page->script(startSlowPick());
@@ -129,6 +131,7 @@ it('opens a select clicked while a slow request lands between mousedown and clic
 
     expect($page->script('JSON.stringify([window.__pending, window.__finished, window.__picked])'))->toBe(json_encode([1, 0, 'Product 1']));
 
+    $page->script(RELEASE_REQUESTS);
     $page->assertScript(REQUEST_LANDED)->wait(0.2);
     $page->script('() => window.__target.click()');
 
@@ -144,6 +147,7 @@ it('keeps a select open while a slow request lands', function (): void {
 
     expect($page->script('[window.__finished < window.__pending, window.__target.getAttribute("aria-expanded")]'))->toBe([true, 'true']);
 
+    $page->script(RELEASE_REQUESTS);
     $page->assertScript(REQUEST_LANDED)->wait(0.2)
         ->assertScript('window.__target.isConnected && window.__target === window.__button(1) && window.__closes === 0 && window.__target.getAttribute("aria-expanded") === "true"')
         ->assertSeeIn(cell(0, 2, SELECT_CELLS), 'Picked p1')
