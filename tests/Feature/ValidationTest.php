@@ -44,3 +44,18 @@ it('keeps an error on its row after an earlier row is deleted', function (): voi
     expect(array_column($rows, 'key'))->not->toContain($first)
         ->and($rows[1]['key'])->toBe($third);
 });
+
+it('rejects an option disabled for the row when saving', function (): void {
+    $component = mountLines([['product' => null, 'locked' => true]], fn (): array => [
+        DataGrid::make('lines')->schema([
+            Filament\Forms\Components\Hidden::make('locked'),
+            Filament\Forms\Components\Select::make('product')
+                ->options(['a' => 'Apple', 'b' => 'Banana'])
+                ->disableOptionWhen(fn (string $value, Filament\Schemas\Components\Utilities\Get $get): bool => $value === 'b' && $get->boolean('locked')),
+        ]),
+    ]);
+
+    $key = rowKeys($component)[0];
+
+    $component->set("data.lines.{$key}.product", 'b')->call('save')->assertHasErrors(["data.lines.{$key}.product"]);
+});

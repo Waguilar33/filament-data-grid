@@ -507,8 +507,6 @@
 }
 
 .fi-data-grid .fi-data-grid-canvas .fi-data-grid-select .fi-dropdown-panel {
-    min-width: min(22rem, calc(100vw - 2rem)) !important;
-    max-width: min(32rem, calc(100vw - 2rem)) !important;
     text-align: start;
     white-space: normal;
 }
@@ -801,6 +799,21 @@
     .fi-data-grid-canvas
     :is(.fi-ta-header-cell.fi-data-grid-after-toggle, .fi-data-grid-after-toggle:not(.fi-data-grid-child-row-wrapper > *) > .fi-ta-col > .fi-ta-text) {
     padding-inline-start: calc(var(--spacing) * 3);
+}
+
+/* A select cell's button spans the whole cell, so Filament places and sizes its dropdown against the cell, as against a form field. */
+.fi-data-grid-canvas .fi-data-grid-cell-select > .fi-ta-col,
+.fi-data-grid-canvas .fi-data-grid-cell-select > .fi-ta-col > .fi-ta-text {
+    height: 100%;
+    padding: 0;
+}
+
+:is(.fi-data-grid-heading-has-icon, .fi-ta-ctn:has(.fi-data-grid-icon-header > .fi-section-header > .fi-icon) .fi-data-grid-in-table)
+    .fi-data-grid-canvas
+    .fi-data-grid-after-toggle.fi-data-grid-cell-select:not(.fi-data-grid-child-row-wrapper > *)
+    > .fi-ta-col
+    > .fi-ta-text {
+    padding-inline-start: 0;
 }
 
 .fi-data-grid-canvas .fi-data-grid-record-link-cell-inset:not(.fi-data-grid-child-row-wrapper > *) {

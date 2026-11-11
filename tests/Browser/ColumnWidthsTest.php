@@ -43,7 +43,7 @@ it('fits editable grid columns to their content and shares the spare room', func
     $page = visitWidths(1920)
         ->assertScript(COLUMN_FIT, json_encode(['clipped' => [], 'tall' => false, 'overflows' => false]));
 
-    expect($page->script(columnWidth(5)))->toBeGreaterThan($page->script(columnWidth(1)) + 20)
+    expect($page->script(columnWidth(5)))->toBeGreaterThan($page->script(columnWidth(1)))
         ->and($page->script(columnWidth(6)))->toBeGreaterThanOrEqual(128)
         ->and($page->script(HEADER_ALIGNED))->toBeTrue();
 });

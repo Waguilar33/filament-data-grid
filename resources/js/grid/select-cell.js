@@ -17,8 +17,12 @@ export function mountSelectCell({ element, column, cell, value, label, callSchem
     const state = isMultiple ? (Array.isArray(value) ? value : []) : (value ?? null)
     const callCell = (method, args = {}) => callSchemaComponentMethod(cell.key, method, args)
 
+    const options = cell.options ?? []
+
     const select = new Select({
         ...config,
+        // The payload already holds this cell's getOptionsForJs() from the latest render, so opening needn't wait for a round trip.
+        hasDynamicOptions: config.hasDynamicOptions && options.length === 0,
         ariaLabel: column.source.label,
         canSelectPlaceholder: cell.canSelectPlaceholder ?? true,
         element,
@@ -30,7 +34,7 @@ export function mountSelectCell({ element, column, cell, value, label, callSchem
         initialOptionLabels: isMultiple ? (cell.labels ?? []) : [],
         initialState: state,
         isDisabled: Boolean(cell.disabled),
-        options: cell.options ?? [],
+        options,
         state,
         onStateChange: (state) => {
             const nextValue = isMultiple ? state : blankToNull(state)

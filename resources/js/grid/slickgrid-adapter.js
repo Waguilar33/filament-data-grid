@@ -96,7 +96,7 @@ export function createGrid(
 
     const selectKey = (rowKey, field) => `${rowKey}.${field}`
 
-    const openSelect = () => [...selects.values()].find(({ select }) => select.isOpen) ?? null
+    const busySelect = () => [...selects.values()].find(({ select, element }) => select.isOpen || element.contains(document.activeElement)) ?? null
 
     const destroyDetachedSelects = () => {
         for (const [key, entry] of selects) {
@@ -419,6 +419,7 @@ export function createGrid(
             activateCell(item.__key, column.field)
         })
         wrapper.addEventListener('click', (event) => event.stopPropagation())
+        wrapper.addEventListener('focusout', () => releaseFrozenLength())
         wrapper.addEventListener('keydown', (event) => {
             if (event.key === 'Tab') {
                 event.preventDefault()
@@ -910,7 +911,7 @@ export function createGrid(
         element.classList.toggle('fi-data-grid-overflows', overflows)
     }
 
-    const isBusy = () => grid.getEditorLock().isActive() || openSelect() !== null
+    const isBusy = () => grid.getEditorLock().isActive() || busySelect() !== null
 
     let resizeFrame = null
 
@@ -1212,10 +1213,12 @@ export function createGrid(
             Boolean(nextPayload.hasChildRows) !== Boolean(payload.hasChildRows)
         const editor = grid.getCellEditor()
         const active = grid.getActiveCell()
-        const open = openSelect()
-        const busyKey = editor && active ? items[active.row]?.__key : (open ? [...selects.entries()].find(([, entry]) => entry === open)?.[0].split('.')[0] : null)
+        const open = busySelect()
+        const openKey = open ? [...selects.entries()].find(([, entry]) => entry === open)?.[0] : null
+        const busyKey = editor && active ? items[active.row]?.__key : (openKey ? openKey.slice(0, openKey.lastIndexOf('.')) : null)
         const busyItem = busyKey ? items.find((item) => item.__key === busyKey) : null
         const busyField = editor && active ? grid.getColumns()[active.cell]?.field : null
+        const openField = openKey ? openKey.slice(openKey.lastIndexOf('.') + 1) : null
         const renderedLength = dataProvider.getLength()
 
         payload = nextPayload
@@ -1298,6 +1301,12 @@ export function createGrid(
         if (editor) {
             grid.getColumns().forEach((column, index) => {
                 if (index !== active.cell || !keepsTypedValue) {
+                    grid.updateCell(busyIndex, index)
+                }
+            })
+        } else if (openField !== null) {
+            grid.getColumns().forEach((column, index) => {
+                if (column.field !== openField) {
                     grid.updateCell(busyIndex, index)
                 }
             })
