@@ -6,6 +6,7 @@ namespace Waguilar\FilamentDataGrid\Payload;
 
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater\TableColumn;
+use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Component;
 use Filament\Schemas\Schema;
 use Illuminate\Support\MessageBag;
@@ -71,9 +72,10 @@ final readonly class BuildGridPayload
     private function describeRow(DataGrid $grid, string $key, Schema $item, MessageBag $errors, array &$actionTemplates, array &$cellIcons): array
     {
         $cells = [];
+        $isTrailingBlank = $grid->isTrailingBlankRow($key);
 
         foreach ($this->cellComponents($item) as $component) {
-            $cell = $this->describeCell->handle($component, $errors);
+            $cell = $isTrailingBlank && $component instanceof Actions ? ['visible' => false] : $this->describeCell->handle($component, $errors);
 
             if (is_string($cell['icon'] ?? null)) {
                 $iconKey = md5($cell['icon']);
@@ -86,7 +88,6 @@ final readonly class BuildGridPayload
 
         $rows = $grid->getRawState();
         $state = is_array($rows) && is_array($rows[$key] ?? null) ? $rows[$key] : [];
-        $isTrailingBlank = $grid->isTrailingBlankRow($key);
         $child = $isTrailingBlank ? null : $this->visibleChildGrid($item);
         $hasSlots = ! $isTrailingBlank && $grid->hasExpandedContent();
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Waguilar\FilamentDataGrid\Cells;
 
+use Filament\Actions\ActionGroup;
 use Filament\Forms\Components\Contracts\HasAffixes;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Field;
@@ -12,6 +13,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Infolists\Components\Entry;
+use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Component;
 use Filament\Support\Components\Contracts\HasEmbeddedView;
 use Filament\Support\Enums\IconSize;
@@ -42,6 +44,10 @@ final readonly class DescribeCell
 
         if ($component instanceof Entry) {
             return ['visible' => true, 'html' => $this->entryHtml($component)];
+        }
+
+        if ($component instanceof Actions) {
+            return ['visible' => true, 'html' => $this->actionsHtml($component)];
         }
 
         $statePath = $component->getStatePath();
@@ -119,8 +125,22 @@ final readonly class DescribeCell
     {
         $entry->hiddenLabel();
 
-        $html = $entry instanceof HasEmbeddedView ? $entry->toEmbeddedHtml() : $entry->toHtml();
+        return $this->compact($entry instanceof HasEmbeddedView ? $entry->toEmbeddedHtml() : $entry->toHtml());
+    }
 
+    private function actionsHtml(Actions $actions): string
+    {
+        foreach ($actions->getChildSchema()?->getComponents() ?? [] as $action) {
+            if ($action instanceof ActionGroup) {
+                $action->defaultDropdownPlacement('bottom-end')->defaultDropdownTeleport(true);
+            }
+        }
+
+        return $this->compact($actions->toEmbeddedHtml());
+    }
+
+    private function compact(string $html): string
+    {
         return trim((string) preg_replace('/>\s+</', '> <', $html));
     }
 }
