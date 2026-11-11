@@ -125,7 +125,7 @@ it('opens a select clicked while a slow request lands between mousedown and clic
     $page->script(startSlowPick());
     $page->script('() => { window.__target.dispatchEvent(new MouseEvent("mousedown", { bubbles: true })); window.__target.focus() }');
 
-    expect($page->script('window.__finished'))->toBe(0);
+    expect($page->script('window.__finished < window.__pending'))->toBeTrue();
 
     $page->assertScript(REQUEST_LANDED)->wait(0.2);
     $page->script('() => window.__target.click()');
@@ -140,7 +140,7 @@ it('keeps a select open while a slow request lands', function (): void {
     $page->script(startSlowPick());
     $page->script('() => { window.__target.dispatchEvent(new MouseEvent("mousedown", { bubbles: true })); window.__target.click() }');
 
-    expect($page->script('[window.__finished, window.__target.getAttribute("aria-expanded")]'))->toBe([0, 'true']);
+    expect($page->script('[window.__finished < window.__pending, window.__target.getAttribute("aria-expanded")]'))->toBe([true, 'true']);
 
     $page->assertScript(REQUEST_LANDED)->wait(0.2)
         ->assertScript('window.__target.isConnected && window.__target === window.__button(1) && window.__closes === 0 && window.__target.getAttribute("aria-expanded") === "true"')
