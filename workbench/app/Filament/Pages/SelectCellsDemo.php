@@ -12,6 +12,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Livewire\Attributes\Url;
 use Waguilar\FilamentDataGrid\DataGrid;
 
 /**
@@ -28,6 +29,9 @@ final class SelectCellsDemo extends Page
 
     /** @var array<string, mixed>|null */
     public ?array $savedState = null;
+
+    #[Url]
+    public bool $dense = false;
 
     public function mount(): void
     {
@@ -56,6 +60,7 @@ final class SelectCellsDemo extends Page
                     DataGrid::make('lines')
                         ->hiddenLabel()
                         ->reorderable(false)
+                        ->dense($this->dense)
                         ->table([
                             TableColumn::make('Product'),
                             TableColumn::make('Quantity')->width('8rem')->alignEnd(),

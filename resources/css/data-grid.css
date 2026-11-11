@@ -465,7 +465,6 @@
 }
 
 .fi-data-grid-canvas .slick-cell.fi-data-grid-cell-select {
-    padding: 0;
     overflow: visible;
 }
 
@@ -803,6 +802,27 @@
     .fi-data-grid-canvas
     :is(.fi-ta-header-cell.fi-data-grid-after-toggle, .fi-data-grid-after-toggle:not(.fi-data-grid-child-row-wrapper > *) > .fi-ta-col > .fi-ta-text) {
     padding-inline-start: calc(var(--spacing) * 3);
+}
+
+/* dense() halves Filament's cell and header padding between columns; the grid's outer edges keep theirs so headers and cells stay aligned. */
+.fi-data-grid-dense .fi-data-grid-canvas .fi-ta-text:not(.fi-inline) {
+    padding-block: calc(var(--spacing) * 2);
+}
+
+.fi-data-grid-dense .fi-data-grid-canvas .slick-cell:not(:first-child, .fi-data-grid-cell-select) > .fi-ta-col > .fi-ta-text:not(.fi-inline),
+.fi-data-grid-dense .fi-data-grid-canvas .fi-ta-header-cell:not(:first-of-type),
+.fi-data-grid-dense .fi-data-grid-canvas .slick-cell:not(:first-child) > .fi-data-grid-editor-input {
+    padding-inline-start: calc(var(--spacing) * 1.5);
+}
+
+.fi-data-grid-dense .fi-data-grid-canvas .slick-cell:not(:last-child, .fi-data-grid-cell-select) > .fi-ta-col > .fi-ta-text:not(.fi-inline),
+.fi-data-grid-dense .fi-data-grid-canvas .fi-ta-header-cell:not(:last-of-type),
+.fi-data-grid-dense .fi-data-grid-canvas .slick-cell:not(:last-child) > .fi-data-grid-editor-input {
+    padding-inline-end: calc(var(--spacing) * 1.5);
+}
+
+.fi-data-grid-dense .fi-data-grid-canvas .fi-ta-header-cell {
+    padding-block: calc(var(--spacing) * 1.75);
 }
 
 /* A select cell's button spans the whole cell, so Filament places and sizes its dropdown against the cell, as against a form field. */

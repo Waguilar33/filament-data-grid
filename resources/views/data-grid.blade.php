@@ -51,6 +51,7 @@
         'fi-data-grid fi-fixed-positioning-context',
         'fi-data-grid-has-header' => $hasHeader,
         'fi-data-grid-compact' => $hasHeader && $grid->isCompact(),
+        'fi-data-grid-dense' => $grid->hasDenseRows(),
     ])
 >
     <div

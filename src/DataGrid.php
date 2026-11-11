@@ -19,6 +19,7 @@ use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Js;
 use Waguilar\FilamentDataGrid\Actions\BuildEditCellAction;
+use Waguilar\FilamentDataGrid\Concerns\CanBeDense;
 use Waguilar\FilamentDataGrid\Concerns\HasExpandedContent;
 use Waguilar\FilamentDataGrid\Concerns\HasExpandIconSize;
 use Waguilar\FilamentDataGrid\Concerns\HasGridHeader;
@@ -33,6 +34,7 @@ use function Filament\Support\generate_icon_html;
 
 class DataGrid extends Repeater
 {
+    use CanBeDense;
     use HasExpandedContent;
     use HasExpandIconSize;
     use HasGridHeader;

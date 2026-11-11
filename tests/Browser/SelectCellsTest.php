@@ -47,9 +47,13 @@ it('opens a select dropdown flush with its cell, just below it', function (): vo
     $geometry = $page->script(<<<'JS'
         (() => {
             const panel = document.querySelector('.fi-dropdown-panel:not([style*="display: none"])').getBoundingClientRect()
-            const cell = panel && document.querySelector('[id="form.lines"] .slick-cell.l0 .fi-select-input-btn[aria-expanded="true"]').closest('.slick-cell').getBoundingClientRect()
+            const element = document.querySelector('[id="form.lines"] .slick-cell.l0 .fi-select-input-btn[aria-expanded="true"]').closest('.slick-cell')
+            const cell = element.getBoundingClientRect()
+            const style = getComputedStyle(element)
+            const left = cell.left + parseFloat(style.paddingLeft)
+            const width = cell.width - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)
 
-            return [Math.round(panel.left - cell.left), Math.round(panel.width - cell.width), Math.round(panel.top - cell.bottom)]
+            return [Math.round(panel.left - left), Math.round(panel.width - width), Math.round(panel.top - cell.bottom)]
         })()
         JS);
 
@@ -185,4 +189,49 @@ it('shows no scrollbars after a row is added when everything fits', function ():
     expect($page->script(<<<'JS'
         (() => [...document.querySelectorAll('[id="form.lines"] .slick-viewport')].map((viewport) => [viewport.scrollWidth - viewport.clientWidth, viewport.scrollHeight - viewport.clientHeight]))()
         JS))->each->toBe([0, 0]);
+});
+
+it('halves row and header padding in a dense grid, keeping content centred and unclipped', function (): void {
+    $measure = <<<'JS'
+        (() => {
+            const grid = document.querySelector('[id="form.lines"]')
+            const row = grid.querySelector('.slick-row').getBoundingClientRect()
+            const header = grid.querySelector('.slick-header-column').getBoundingClientRect()
+            const value = grid.querySelector('.slick-row .slick-cell.l1 .fi-data-grid-cell-text').getBoundingClientRect()
+            const label = grid.querySelector('.slick-row .slick-cell.l0 .fi-select-input-placeholder').getBoundingClientRect()
+            const clipped = [...grid.querySelectorAll('.slick-cell .fi-data-grid-cell-text, .slick-column-name')].some((element) => element.scrollWidth > Math.ceil(element.clientWidth))
+
+            return [Math.round(row.height), Math.round(header.height), Math.round(value.top + value.height / 2 - row.top - row.height / 2), Math.round(label.top + label.height / 2 - row.top - row.height / 2), clipped]
+        })()
+        JS;
+
+    $regular = selectCellsDemo()->script($measure);
+    $dense = visit('/demo/select-cells-demo?dense=1')->resize(1440, 900)->waitForEvent('networkidle')->assertScript(GRID_SETTLED);
+    $compact = $dense->script($measure);
+
+    expect($compact[0])->toBeLessThanOrEqual(intdiv($regular[0], 2) + 14)
+        ->and($compact[1])->toBeLessThan($regular[1])
+        ->and(abs((int) $compact[2]))->toBeLessThanOrEqual(1)
+        ->and(abs((int) $compact[3]))->toBeLessThanOrEqual(1)
+        ->and($compact[4])->toBeFalse();
+
+    $dense->click(cell(0, 1, SELECT_CELLS))
+        ->assertPresent(cell(0, 1, SELECT_CELLS).' .fi-data-grid-editor-input')
+        ->click(cell(0, 0, SELECT_CELLS).' .fi-select-input-btn')
+        ->assertVisible(OPEN_PANEL)
+        ->assertNoJavaScriptErrors();
+});
+
+it('lines a first-column select label up with its header', function (): void {
+    $page = selectCellsDemo()->click(productButton(0))->click(OPEN_PANEL.' [role="option"]:has-text("Product 2") >> nth=0')->assertSeeIn(cell(0, 2, SELECT_CELLS), 'Picked p2');
+
+    expect($page->script(<<<'JS'
+        (() => {
+            const grid = document.querySelector('[id="form.lines"]')
+            const header = grid.querySelector('.slick-header-column .slick-column-name').getBoundingClientRect()
+            const label = grid.querySelector('.slick-row .slick-cell.l0 .fi-select-input-value-label').getBoundingClientRect()
+
+            return Math.round(label.left - header.left)
+        })()
+        JS))->toBeBetween(-1, 1);
 });

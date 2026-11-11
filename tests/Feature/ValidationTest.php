@@ -3,7 +3,10 @@
 declare(strict_types=1);
 
 use Filament\Actions\Testing\TestAction;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Utilities\Get;
 use Waguilar\FilamentDataGrid\DataGrid;
 
 it('puts server errors on the cell of the right row', function (): void {
@@ -48,10 +51,10 @@ it('keeps an error on its row after an earlier row is deleted', function (): voi
 it('rejects an option disabled for the row when saving', function (): void {
     $component = mountLines([['product' => null, 'locked' => true]], fn (): array => [
         DataGrid::make('lines')->schema([
-            Filament\Forms\Components\Hidden::make('locked'),
-            Filament\Forms\Components\Select::make('product')
+            Hidden::make('locked'),
+            Select::make('product')
                 ->options(['a' => 'Apple', 'b' => 'Banana'])
-                ->disableOptionWhen(fn (string $value, Filament\Schemas\Components\Utilities\Get $get): bool => $value === 'b' && $get->boolean('locked')),
+                ->disableOptionWhen(fn (string $value, Get $get): bool => $value === 'b' && $get->boolean('locked')),
         ]),
     ]);
 
