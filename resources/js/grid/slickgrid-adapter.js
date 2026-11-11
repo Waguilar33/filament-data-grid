@@ -1,5 +1,5 @@
 import { SlickEditorLock, SlickGrid, SlickRowMoveManager } from '@slickgrid-universal/common'
-import { cellLabel, escapeHtml, fitIconHtml, headerGlyphOffset, headerHtml, isBlank, renderActions, renderCell, wrapTableCell } from './cells.js'
+import { CELL_ACTIONS_CLASS, cellLabel, escapeHtml, fitIconHtml, headerGlyphOffset, headerHtml, isBlank, renderActions, renderCell, wrapTableCell } from './cells.js'
 import { DateEditor, NumberEditor, TextEditor } from './editors.js'
 import { mountSelectCell } from './select-cell.js'
 import { hasMask, maskedText } from './mask.js'
@@ -1122,6 +1122,12 @@ export function createGrid(
 
     grid.onClick.subscribe((event, { row, cell }) => {
         if (isPlaceholder(items[row]) || toggleChildRowAt(row, cell, event.target)) {
+            return
+        }
+
+        if (event.target.closest?.(`.${CELL_ACTIONS_CLASS}`)) {
+            event.stopImmediatePropagation()
+
             return
         }
 

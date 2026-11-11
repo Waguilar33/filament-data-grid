@@ -118,6 +118,7 @@ The grid chooses how to edit each cell from the component you put in the schema:
 | `DatePicker`, `DateTimePicker`, `TimePicker` | The browser's date or time input. It respects `minDate()`, `maxDate()` and `displayFormat()`. |
 | Any other field | Opens in a modal for that row. For example `ColorPicker`, `Textarea` or your own custom field. |
 | An infolist entry, such as `TextEntry` | Read-only. Rendered with Filament's own entry view, so formatting such as `money()` works. |
+| `Actions` | Read-only. The row's own actions, rendered with Filament's view. Needs a `key()`, which names its column. |
 
 Editable cells look like text, not input boxes, and still show what you can change:
 
@@ -140,9 +141,49 @@ TextInput::make('code')
     ->suffixIcon('fal-sharp-barcode-read')
 ```
 
+A field's `prefixAction()` and `suffixAction()` show after the value too, rendered as Filament's own icon buttons. They belong to the field in that row, so `Get` and `Set` in their closures read and write that row, and `visible()` decides for each row. Clicking one runs the action without opening the cell's editor. Unlike the suffix icon, they also show on locked cells. Select cells don't show them, since those are Filament's own select.
+
+```php
+TextInput::make('quantity')
+    ->numeric()
+    ->suffixAction(
+        Action::make('stockWarning')
+            ->icon(Heroicon::OutlinedExclamationTriangle)
+            ->visible(fn (Get $get): bool => $get->float('quantity') > $get->float('stock'))
+            ->action(fn (Get $get, Set $set) => $set('quantity', $get('stock'))),
+    )
+```
+
+### Actions in a cell
+
+To give each row its own actions in a column, put Filament's `Actions` component in the schema, with a `key()` and a `TableColumn` like any other cell. Its actions live in the row's schema, the same as in a Filament repeater, so `Get` and `Set` work on that row and `visible()` is checked per row. An `ActionGroup` inside opens below its trigger and above the rows under it, unless you set its own placement. The trailing empty row shows no actions.
+
+```php
+use Filament\Schemas\Components\Actions;
+
+DataGrid::make('lines')
+    ->table([
+        TableColumn::make('Product'),
+        TableColumn::make('Quantity'),
+        TableColumn::make('Actions')->hiddenHeaderLabel(),
+    ])
+    ->schema([
+        TextEntry::make('product'),
+        TextInput::make('quantity')->numeric(),
+        Actions::make([
+            ActionGroup::make([
+                Action::make('markGift')->action(fn (Set $set) => $set('note', 'Gift')),
+                Action::make('split')->visible(fn (Get $get): bool => $get->float('quantity') > 1),
+            ]),
+        ])->key('lineActions'),
+    ])
+```
+
+To mount one of these actions in a test, point at the row's `Actions` component: `TestAction::make('markGift')->schemaComponent("lines.{$rowKey}.lineActions")`. `extraItemActions()` still work for actions that take the row key from `$arguments['item']`.
+
 A field hidden in every row, with `visible(false)` or a closure that is false for all rows, gets no column. A field hidden in only some rows keeps its column and leaves those cells empty. With no rows, the field's visibility in the row template decides.
 
-A component that is neither a form field nor an infolist entry throws `Waguilar\FilamentDataGrid\Exceptions\UnsupportedCellComponent`.
+A component that is not a form field, an infolist entry or `Actions` throws `Waguilar\FilamentDataGrid\Exceptions\UnsupportedCellComponent`.
 
 Rows grow to fit their tallest cell, never shorter than a Filament table row, so an entry with `belowContent()` or a long name that wraps is never cut off. This applies to child rows too. The grid measures the rows again when the state changes, when a row opens or closes, and when the grid is resized.
 
@@ -220,7 +261,7 @@ DataGrid::make('lines')
     ->trailingEmptyRow()
 ```
 
-The empty row is never validated or saved, and it doesn't count toward `minItems()` or `maxItems()`. Once the grid reaches `maxItems()`, no new empty row is added. By default, it becomes a real row when any editable field without a `default()` gets a value. You can choose which fields count by passing `filledBy`:
+The empty row is never validated or saved, and it doesn't count toward `minItems()` or `maxItems()`. Their errors use the grid's `validationMessages(['min' => ..., 'max' => ...])` when set. Once the grid reaches `maxItems()`, no new empty row is added. By default, it becomes a real row when any editable field without a `default()` gets a value. You can choose which fields count by passing `filledBy`:
 
 ```php
 DataGrid::make('lines')
@@ -305,6 +346,8 @@ DataGrid::make('lines')
         ]),
     ])
 ```
+
+The actions in a group get the row's `$arguments['item']` too, so each can read its row in `visible()`, `hidden()` and `disabled()`. The grid uses `bootUsing()` on grouped actions to give their group that row, so a `bootUsing()` set on an action inside a group is replaced; put that setup in `mountUsing()` instead.
 
 Upgrading from an earlier beta: rows used to put every extra action and delete in a menu automatically. Wrap them in an `ActionGroup` to keep that, and style the group's trigger as you like. The `row_menu` translation is gone, and `DataGridIconAlias::ROW_ACTIONS` is no longer used.
 

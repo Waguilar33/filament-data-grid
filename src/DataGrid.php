@@ -122,11 +122,15 @@ class DataGrid extends Repeater
 
             foreach ($evaluated as $action) {
                 if ($action instanceof ActionGroup) {
-                    foreach ($action->getFlatActions() as $flatAction) {
-                        $this->cachedExtraItemActions[$flatAction->getName()] = $this->prepareAction($flatAction);
+                    $group = $this->prepareActionGroup($action->defaultDropdownPlacement('bottom-end')->defaultDropdownTeleport(true));
+
+                    foreach ($group->getFlatActions() as $name => $flatAction) {
+                        $this->cachedExtraItemActions[$name] = $this->prepareAction(
+                            $flatAction->getClone()->bootUsing(fn (Action $action, array $arguments) => $this->attachRowGroup($action, $group, $arguments)),
+                        );
                     }
 
-                    $this->cachedRowActions[] = $this->prepareActionGroup($action->defaultDropdownPlacement('bottom-end')->defaultDropdownTeleport(true));
+                    $this->cachedRowActions[] = $group;
 
                     continue;
                 }
@@ -138,6 +142,37 @@ class DataGrid extends Repeater
         }
 
         return $this->cachedExtraItemActions;
+    }
+
+    public function actionForRow(Action|ActionGroup $action, string $key): Action|ActionGroup
+    {
+        if ($action instanceof Action) {
+            return $action(['item' => $key]);
+        }
+
+        $group = $action->getClone();
+
+        return $group->actions(array_map(fn (Action|ActionGroup $child): Action|ActionGroup => $this->actionForRow($child, $key), $group->getActions()));
+    }
+
+    /**
+     * @param  array<mixed>  $arguments
+     */
+    private function attachRowGroup(Action $action, ActionGroup $group, array $arguments): void
+    {
+        $item = $arguments['item'] ?? null;
+
+        if (! is_string($item) && ! is_int($item)) {
+            return;
+        }
+
+        $rowGroup = $this->actionForRow($group, (string) $item);
+
+        $rowAction = $rowGroup instanceof ActionGroup ? ($rowGroup->getFlatActions()[$action->getName()] ?? null) : null;
+
+        if ($rowAction !== null) {
+            $action->group($rowAction->getGroup());
+        }
     }
 
     /**

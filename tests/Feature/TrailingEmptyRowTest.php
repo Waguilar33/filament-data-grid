@@ -141,3 +141,17 @@ it('keeps the blank row out of minItems and stops adding it at maxItems', functi
 
     $component->call('save')->assertHasNoErrors();
 });
+
+it('uses the grid validation messages for minItems and maxItems', function (string $limit, array $lines, string $message): void {
+    $component = mountLines($lines, fn (): array => [
+        DataGrid::make('lines')
+            ->{$limit}(2)
+            ->validationMessages(['min' => 'Add at least :min lines.', 'max' => 'Keep it to :max lines.'])
+            ->schema([TextInput::make('quantity')->numeric()]),
+    ]);
+
+    $component->call('save')->assertHasErrors(['data.lines' => $message]);
+})->with([
+    'min' => ['minItems', [['quantity' => 1]], 'Add at least 2 lines.'],
+    'max' => ['maxItems', [['quantity' => 1], ['quantity' => 2], ['quantity' => 3]], 'Keep it to 2 lines.'],
+]);

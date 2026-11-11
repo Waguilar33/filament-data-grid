@@ -15,7 +15,7 @@ final class LimitFilledRows
             $limit = $grid->getMaxItems();
 
             if ($limit !== null && $grid->getItemsCount() > $limit) {
-                $fail($this->message('validation.max.array', ['max' => $limit]));
+                $fail($this->message($grid->getValidationMessages()['max'] ?? 'validation.max.array', ['max' => $limit]));
             }
         };
     }
@@ -26,7 +26,7 @@ final class LimitFilledRows
             $limit = $grid->getMinItems();
 
             if ($limit !== null && $grid->getItemsCount() < $limit) {
-                $fail($this->message('validation.min.array', ['min' => $limit]));
+                $fail($this->message($grid->getValidationMessages()['min'] ?? 'validation.min.array', ['min' => $limit]));
             }
         };
     }

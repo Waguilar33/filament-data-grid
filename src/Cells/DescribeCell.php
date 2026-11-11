@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Waguilar\FilamentDataGrid\Cells;
 
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Forms\Components\Contracts\HasAffixes;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Field;
@@ -12,6 +14,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Infolists\Components\Entry;
+use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Component;
 use Filament\Support\Components\Contracts\HasEmbeddedView;
 use Filament\Support\Enums\IconSize;
@@ -44,6 +47,10 @@ final readonly class DescribeCell
             return ['visible' => true, 'html' => $this->entryHtml($component)];
         }
 
+        if ($component instanceof Actions) {
+            return ['visible' => true, 'html' => $this->actionsHtml($component)];
+        }
+
         $statePath = $component->getStatePath();
         $isLocked = $this->isLocked($component);
 
@@ -55,6 +62,7 @@ final readonly class DescribeCell
             'live' => $component->isLive(),
             'error' => $errors->first($statePath) ?: null,
             'icon' => $isLocked ? null : $this->suffixIcon($component),
+            'actions' => $this->affixActionsHtml($component),
             ...$this->editorState($component, $type),
         ], fn (mixed $value): bool => $value !== null);
     }
@@ -74,6 +82,21 @@ final readonly class DescribeCell
         $icon = $component->getSuffixIcon();
 
         return $icon === null ? null : generate_icon_html($icon, size: IconSize::Small)?->toHtml();
+    }
+
+    private function affixActionsHtml(Component $component): ?string
+    {
+        if (! $component instanceof HasAffixes) {
+            return null;
+        }
+
+        // Filament shares one affix action instance between row clones, and a mounted action must keep its own row, so render a copy bound to this row.
+        $html = implode('', array_map(
+            fn (Action $action): string => ($rowAction = $component->prepareAction($action->getClone()))->isVisible() ? $rowAction->toHtml() : '',
+            [...$component->getPrefixActions(), ...$component->getSuffixActions()],
+        ));
+
+        return $html === '' ? null : $this->compact($html);
     }
 
     /**
@@ -119,8 +142,22 @@ final readonly class DescribeCell
     {
         $entry->hiddenLabel();
 
-        $html = $entry instanceof HasEmbeddedView ? $entry->toEmbeddedHtml() : $entry->toHtml();
+        return $this->compact($entry instanceof HasEmbeddedView ? $entry->toEmbeddedHtml() : $entry->toHtml());
+    }
 
+    private function actionsHtml(Actions $actions): string
+    {
+        foreach ($actions->getChildSchema()?->getComponents() ?? [] as $action) {
+            if ($action instanceof ActionGroup) {
+                $action->defaultDropdownPlacement('bottom-end')->defaultDropdownTeleport(true);
+            }
+        }
+
+        return $this->compact($actions->toEmbeddedHtml());
+    }
+
+    private function compact(string $html): string
+    {
         return trim((string) preg_replace('/>\s+</', '> <', $html));
     }
 }

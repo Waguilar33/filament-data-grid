@@ -25,7 +25,7 @@ final class RenderRowActions
             return null;
         }
 
-        $actions = array_map(fn (Action|ActionGroup $action): Action|ActionGroup => $this->forRow($action, $key), $grid->getRowActions());
+        $actions = array_map(fn (Action|ActionGroup $action): Action|ActionGroup => $grid->actionForRow($action, $key), $grid->getRowActions());
 
         $deleteAction = $grid->isDeletable() ? $grid->getAction($grid->getDeleteActionName()) : null;
 
@@ -58,17 +58,6 @@ final class RenderRowActions
         $templates[$id] = $template;
 
         return $id;
-    }
-
-    private function forRow(Action|ActionGroup $action, string $key): Action|ActionGroup
-    {
-        if ($action instanceof Action) {
-            return $action(['item' => $key]);
-        }
-
-        $group = $action->getClone();
-
-        return $group->actions(array_map(fn (Action|ActionGroup $child): Action|ActionGroup => $this->forRow($child, $key), $group->getActions()));
     }
 
     private function compact(?string $html): ?string
