@@ -48,12 +48,12 @@ it('shows the actions of a locked cell but not its icon', function (): void {
 });
 
 it('runs a suffix action for its row', function (): void {
-    $component = mountLines([['quantity' => 2], ['quantity' => 9]], affixGrid());
+    $component = mountLines([['quantity' => 9], ['quantity' => 7]], affixGrid());
 
     $keys = rowKeys($component);
 
-    $component->callAction(TestAction::make('stockWarning')->schemaComponent("lines.{$keys[1]}.quantity"));
+    $component->callAction(TestAction::make('stockWarning')->schemaComponent("lines.{$keys[0]}.quantity"));
 
-    expect($component->get("data.lines.{$keys[1]}.quantity"))->toEqual(5)
-        ->and($component->get("data.lines.{$keys[0]}.quantity"))->toBe(2);
+    expect($component->get("data.lines.{$keys[0]}.quantity"))->toEqual(5)
+        ->and($component->get("data.lines.{$keys[1]}.quantity"))->toEqual(7);
 });

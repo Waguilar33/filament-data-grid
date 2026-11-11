@@ -53,10 +53,10 @@ it('runs an action in an Actions cell with the row as its Get and Set', function
 
     $keys = rowKeys($component);
 
-    $component->callAction(TestAction::make('mark')->schemaComponent("lines.{$keys[1]}.lineActions"));
+    $component->callAction(TestAction::make('mark')->schemaComponent("lines.{$keys[0]}.lineActions"));
 
-    expect($component->get("data.lines.{$keys[0]}.name"))->toBe('a')
-        ->and($component->get("data.lines.{$keys[1]}.name"))->toBe('b marked');
+    expect($component->get("data.lines.{$keys[0]}.name"))->toBe('a marked')
+        ->and($component->get("data.lines.{$keys[1]}.name"))->toBe('b');
 });
 
 it('hides an action in an Actions cell by its row', function (): void {

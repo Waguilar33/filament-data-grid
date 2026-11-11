@@ -141,7 +141,7 @@ TextInput::make('code')
     ->suffixIcon('fal-sharp-barcode-read')
 ```
 
-A field's `prefixAction()` and `suffixAction()` show after the value too, rendered as Filament's own icon buttons. They belong to the field in that row, so `Get` and `Set` in their closures read and write that row, and `visible()` decides for each row. Clicking one runs the action without opening the cell's editor. Unlike the suffix icon, they also show on locked cells.
+A field's `prefixAction()` and `suffixAction()` show after the value too, rendered as Filament's own icon buttons. They belong to the field in that row, so `Get` and `Set` in their closures read and write that row, and `visible()` decides for each row. Clicking one runs the action without opening the cell's editor. Unlike the suffix icon, they also show on locked cells. Select cells don't show them, since those are Filament's own select.
 
 ```php
 TextInput::make('quantity')

@@ -90,9 +90,9 @@ final readonly class DescribeCell
             return null;
         }
 
-        // Filament shares an affix action instance between row clones, so it must be rebound to this row's field before rendering.
+        // Filament shares one affix action instance between row clones, and a mounted action must keep its own row, so render a copy bound to this row.
         $html = implode('', array_map(
-            fn (Action $action): string => $component->prepareAction($action)->isVisible() ? $action->toHtml() : '',
+            fn (Action $action): string => ($rowAction = $component->prepareAction($action->getClone()))->isVisible() ? $rowAction->toHtml() : '',
             [...$component->getPrefixActions(), ...$component->getSuffixActions()],
         ));
 
