@@ -2,6 +2,13 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.41 - 2026-11-10
+
+- Filament's `Actions` component works as a grid cell. Give it a `key()`; its actions live in each row's schema, so `Get`, `Set` and `visible()` act on that row, as in a Filament repeater. Action groups inside open below the trigger, above the rows under it. The trailing empty row shows no actions. An `Actions` cell without a key throws `UnsupportedCellComponent`.
+- A field's `prefixAction()` and `suffixAction()` show in its cell after the value, as Filament's icon buttons, scoped to the row. Clicking one doesn't open the cell's editor. They show on locked cells too; the plain suffix icon still doesn't.
+- Clicking an action inside an `ActionGroup` in `extraItemActions()` no longer crashes when another action in the group reads `$arguments['item']` in `visible()` or `hidden()`. The group is now checked with every action scoped to the row. Because the grid uses `bootUsing()` to do this, a `bootUsing()` on an action inside a group is replaced; use `mountUsing()`.
+- `minItems()` and `maxItems()` use the grid's `validationMessages()` for `min` and `max` instead of always Laravel's default.
+
 ## v1.0.0-beta.40 - 2026-11-10
 
 - A select cell's dropdown inside a modal or slide-over floats above the grid again, as it does on a page. Filament puts every select in a modal on absolute positioning, which the grid's scroll area clipped: the search box showed half cut off at the grid's bottom edge and the options were hidden.

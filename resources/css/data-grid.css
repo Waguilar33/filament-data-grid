@@ -563,6 +563,14 @@
     margin-inline-start: calc(var(--spacing) * 1.5);
 }
 
+.fi-data-grid-canvas .fi-data-grid-cell-actions {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: calc(var(--spacing) * 1);
+    margin-inline-start: calc(var(--spacing) * 1.5);
+}
+
 .fi-data-grid-canvas .slick-column-name:has(.fi-data-grid-header-edit) {
     display: inline-flex;
     align-items: center;
@@ -648,13 +656,15 @@
 
 /* Never match [style] inside :has(): every inline style change (Alpine transitions) re-checks it against the whole page. */
 .fi-data-grid:has(.fi-data-grid-row-actions :is(.fi-dropdown-trigger[aria-expanded='true'], .fi-dropdown-trigger [aria-expanded='true'])),
-.fi-data-grid:has(.fi-data-grid-record-actions :is(.fi-dropdown-trigger[aria-expanded='true'], .fi-dropdown-trigger [aria-expanded='true'])) {
+.fi-data-grid:has(.fi-data-grid-record-actions :is(.fi-dropdown-trigger[aria-expanded='true'], .fi-dropdown-trigger [aria-expanded='true'])),
+.fi-data-grid:has(.fi-data-grid-entry :is(.fi-dropdown-trigger[aria-expanded='true'], .fi-dropdown-trigger [aria-expanded='true'])) {
     position: relative;
     z-index: 30;
 }
 
 .fi-data-grid-canvas .slick-row:has(.fi-data-grid-row-actions :is(.fi-dropdown-trigger[aria-expanded='true'], .fi-dropdown-trigger [aria-expanded='true'])),
 .fi-data-grid-canvas .slick-row:has(.fi-data-grid-record-actions :is(.fi-dropdown-trigger[aria-expanded='true'], .fi-dropdown-trigger [aria-expanded='true'])),
+.fi-data-grid-canvas .slick-row:has(.fi-data-grid-entry :is(.fi-dropdown-trigger[aria-expanded='true'], .fi-dropdown-trigger [aria-expanded='true'])),
 .fi-data-grid-canvas .slick-row:has(.fi-select-input-btn[aria-expanded='true']) {
     z-index: 30;
 }

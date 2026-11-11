@@ -156,7 +156,7 @@ class DataGrid extends Repeater
     }
 
     /**
-     * @param  array<string, mixed>  $arguments
+     * @param  array<mixed>  $arguments
      */
     private function attachRowGroup(Action $action, ActionGroup $group, array $arguments): void
     {
@@ -168,8 +168,10 @@ class DataGrid extends Repeater
 
         $rowGroup = $this->actionForRow($group, (string) $item);
 
-        if ($rowGroup instanceof ActionGroup) {
-            $action->group($rowGroup->getFlatActions()[$action->getName()]?->getGroup());
+        $rowAction = $rowGroup instanceof ActionGroup ? ($rowGroup->getFlatActions()[$action->getName()] ?? null) : null;
+
+        if ($rowAction !== null) {
+            $action->group($rowAction->getGroup());
         }
     }
 

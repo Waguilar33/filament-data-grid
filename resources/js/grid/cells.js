@@ -33,6 +33,10 @@ const valueHtml = (text, placeholder, isEditable) => {
 
 const iconHtml = (html) => (html ? `<span class="fi-data-grid-cell-icon">${html}</span>` : '')
 
+export const CELL_ACTIONS_CLASS = 'fi-data-grid-cell-actions'
+
+const actionsHtml = (html) => (html ? `<span class="${CELL_ACTIONS_CLASS}">${html}</span>` : '')
+
 const formatDate = (value, inputType) => {
     const [datePart, timePart = ''] = String(value).split(' ')
     const [year, month, day] = datePart.split('-').map(Number)
@@ -71,11 +75,11 @@ export const renderCell = ({ type, value, cell, label, placeholder, translations
         case 'toggle':
             return toggleHtml(Boolean(value), translations)
         case 'date':
-            return valueHtml(label, placeholder, isEditable) + iconHtml(cellIcon ?? icons.date)
+            return valueHtml(label, placeholder, isEditable) + iconHtml(cellIcon ?? icons.date) + actionsHtml(cell.actions)
         case 'modal':
-            return valueHtml(label, placeholder, isEditable) + iconHtml(cellIcon ?? icons.edit)
+            return valueHtml(label, placeholder, isEditable) + iconHtml(cellIcon ?? icons.edit) + actionsHtml(cell.actions)
         default:
-            return valueHtml(value, placeholder, isEditable) + iconHtml(cellIcon)
+            return valueHtml(value, placeholder, isEditable) + iconHtml(cellIcon) + actionsHtml(cell.actions)
     }
 }
 

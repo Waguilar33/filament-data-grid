@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Waguilar\FilamentDataGrid\Cells;
 
+use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Forms\Components\Contracts\HasAffixes;
 use Filament\Forms\Components\DateTimePicker;
@@ -61,6 +62,7 @@ final readonly class DescribeCell
             'live' => $component->isLive(),
             'error' => $errors->first($statePath) ?: null,
             'icon' => $isLocked ? null : $this->suffixIcon($component),
+            'actions' => $this->affixActionsHtml($component),
             ...$this->editorState($component, $type),
         ], fn (mixed $value): bool => $value !== null);
     }
@@ -80,6 +82,21 @@ final readonly class DescribeCell
         $icon = $component->getSuffixIcon();
 
         return $icon === null ? null : generate_icon_html($icon, size: IconSize::Small)?->toHtml();
+    }
+
+    private function affixActionsHtml(Component $component): ?string
+    {
+        if (! $component instanceof HasAffixes) {
+            return null;
+        }
+
+        // Filament shares an affix action instance between row clones, so it must be rebound to this row's field before rendering.
+        $html = implode('', array_map(
+            fn (Action $action): string => $component->prepareAction($action)->isVisible() ? $action->toHtml() : '',
+            [...$component->getPrefixActions(), ...$component->getSuffixActions()],
+        ));
+
+        return $html === '' ? null : $this->compact($html);
     }
 
     /**
