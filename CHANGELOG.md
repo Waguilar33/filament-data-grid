@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.44 - 2026-11-10
+
+- In a `dense()` grid, the open number editor keeps room for its step arrows, which are slightly smaller, so they no longer cover the value. The row keeps its height.
+
 ## v1.0.0-beta.43 - 2026-11-10
 
 - A select cell shows its own row's `placeholder()`, enabled or locked, as Filament's select does in a repeater. It used to show the placeholder evaluated once for the whole column, so a placeholder that depends on the row came out empty.

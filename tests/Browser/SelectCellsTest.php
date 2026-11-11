@@ -241,3 +241,24 @@ it('lines a first-column select label up with its header', function (): void {
         })()
         JS))->toBeBetween(-1, 1);
 });
+
+it('fits an open number editor and its steppers in a dense row', function (): void {
+    $page = visit('/demo/select-cells-demo?dense=1')->resize(1440, 900)->waitForEvent('networkidle')->assertScript(GRID_SETTLED)
+        ->click(cell(0, 1, SELECT_CELLS))
+        ->assertPresent(cell(0, 1, SELECT_CELLS).' .fi-data-grid-stepper');
+
+    $layout = $page->script(<<<'JS'
+        (() => {
+            const cell = document.querySelector('[id="form.lines"] .slick-cell.l1.editable')
+            const input = cell.querySelector('.fi-data-grid-editor-input')
+            const stepper = cell.querySelector('.fi-data-grid-stepper').getBoundingClientRect()
+            const box = cell.getBoundingClientRect()
+            const textEnd = input.getBoundingClientRect().right - parseFloat(getComputedStyle(input).paddingRight)
+            const buttons = [...cell.querySelectorAll('.fi-data-grid-stepper-button')].map((button) => button.getBoundingClientRect())
+
+            return [Math.round(box.height), stepper.left >= textEnd - 0.5, stepper.top >= box.top - 0.5 && stepper.bottom <= box.bottom + 0.5, buttons[0].bottom <= buttons[1].top + 0.5]
+        })()
+        JS);
+
+    expect($layout)->toBe([41, true, true, true]);
+});
