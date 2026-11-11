@@ -182,3 +182,21 @@ it('freezes the leading columns, capped at the number of columns', function (int
     'one' => [1, 1],
     'more than there are' => [5, 2],
 ]);
+
+it('sends each select cell the placeholder of its row', function (): void {
+    $component = mountLines([['store' => 'Corona · COR-1', 'locked' => true], ['store' => null, 'locked' => false]], fn (): array => [
+        DataGrid::make('lines')->schema([
+            Hidden::make('store'),
+            Hidden::make('locked'),
+            Select::make('product')
+                ->options(['a' => 'Apple'])
+                ->placeholder(fn (Get $get): ?string => $get('store'))
+                ->disabled(fn (Get $get): bool => $get->boolean('locked')),
+        ]),
+    ]);
+
+    $grid = grid($component);
+
+    expect(cellOf($grid, 0, 'product'))->toMatchArray(['placeholder' => 'Corona · COR-1', 'disabled' => true])
+        ->and(cellOf($grid, 1, 'product')['placeholder'])->toBe('');
+});
