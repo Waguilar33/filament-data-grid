@@ -306,6 +306,8 @@ DataGrid::make('lines')
     ])
 ```
 
+The actions in a group get the row's `$arguments['item']` too, so each can read its row in `visible()`, `hidden()` and `disabled()`. The grid uses `bootUsing()` on grouped actions to give their group that row, so a `bootUsing()` set on an action inside a group is replaced; put that setup in `mountUsing()` instead.
+
 Upgrading from an earlier beta: rows used to put every extra action and delete in a menu automatically. Wrap them in an `ActionGroup` to keep that, and style the group's trigger as you like. The `row_menu` translation is gone, and `DataGridIconAlias::ROW_ACTIONS` is no longer used.
 
 ## Reordering

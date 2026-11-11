@@ -162,3 +162,41 @@ it('replaces the row key with the shared placeholder', function (): void {
         ->and($payload['actionTemplates'][$payload['rows'][0]['actions']])->toContain($payload['rowKeyPlaceholder'])
         ->and(rowActionsHtml($payload, 1))->toContain($keys[1]);
 });
+
+it('runs an action from a group whose sibling reads the row', function (): void {
+    $component = mountLines([['name' => 'a']], rowActionsGrid([
+        ActionGroup::make([
+            Action::make('archive')->visible(fn (array $arguments, DataGrid $component): bool => $component->getRawItemState($arguments['item'])['name'] === 'a'),
+            renameAction(),
+        ]),
+    ]));
+
+    $key = rowKeys($component)[0];
+
+    $component->callAction(TestAction::make('rename')->schemaComponent('lines')->arguments(['item' => $key]));
+
+    expect($component->get("data.lines.{$key}.name"))->toBe('renamed');
+});
+
+it('keeps an action in a hidden group hidden', function (): void {
+    $component = mountLines([['name' => 'a']], rowActionsGrid([ActionGroup::make([renameAction()])->visible(false)]));
+
+    $component->assertActionHidden(TestAction::make('rename')->schemaComponent('lines')->arguments(['item' => rowKeys($component)[0]]));
+});
+
+it('runs a nested group action whose siblings read the row', function (): void {
+    $readsRow = fn (array $arguments, DataGrid $component): bool => $component->getRawItemState($arguments['item'])['name'] === 'a';
+
+    $component = mountLines([['name' => 'a']], rowActionsGrid([
+        ActionGroup::make([
+            Action::make('archive')->visible($readsRow),
+            ActionGroup::make([Action::make('copy')->visible($readsRow), renameAction()]),
+        ]),
+    ]));
+
+    $key = rowKeys($component)[0];
+
+    $component->callAction(TestAction::make('rename')->schemaComponent('lines')->arguments(['item' => $key]));
+
+    expect($component->get("data.lines.{$key}.name"))->toBe('renamed');
+});
