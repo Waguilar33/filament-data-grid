@@ -43,3 +43,35 @@ it('runs an action from a group in an Actions cell for its row', function (): vo
         ->assertDontSeeIn(cell(0, 2, ACTION_CELLS), 'Gift')
         ->assertNoJavaScriptErrors();
 });
+
+it('sizes an Actions column to its content and gives it no spare room', function (): void {
+    $page = actionCellsDemo();
+
+    $widths = $page->script(<<<'JS'
+        (() => {
+            const grid = document.querySelector('[id="form.lines"]')
+            const headers = [...grid.querySelectorAll('.slick-header-column')]
+            const cell = grid.querySelector('.slick-row .slick-cell.l3')
+            const trigger = cell.querySelector('.fi-dropdown-trigger').getBoundingClientRect()
+
+            return [Math.round(headers[3].getBoundingClientRect().width), Math.round(trigger.width), [...grid.querySelectorAll('.slick-viewport')].some((viewport) => viewport.scrollWidth > viewport.clientWidth)]
+        })()
+        JS);
+
+    expect($widths[0])->toBeLessThanOrEqual(80)
+        ->and($widths[0])->toBeGreaterThanOrEqual($widths[1] + 24)
+        ->and($widths[2])->toBeFalse();
+});
+
+it('widens an Actions column narrower than its content instead of scrolling, also after adding a row', function (): void {
+    $page = visit('/demo/row-action-cells-demo?actionsWidth=1rem')->resize(1440, 900)->waitForEvent('networkidle')->assertScript(GRID_SETTLED);
+    $overflow = <<<'JS'
+        (() => [...document.querySelectorAll('[id="form.lines"] .slick-viewport')].some((viewport) => viewport.scrollWidth > viewport.clientWidth || viewport.scrollHeight > viewport.clientHeight))()
+        JS;
+
+    expect($page->script($overflow))->toBeFalse();
+
+    $page->click('Add to lines')->assertPresent(cell(3, 0, ACTION_CELLS))->wait(0.5);
+
+    expect($page->script($overflow))->toBeFalse();
+});

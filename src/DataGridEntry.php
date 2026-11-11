@@ -25,6 +25,7 @@ use Illuminate\Support\Js;
 use Livewire\Attributes\Renderless;
 use Livewire\Component;
 use Traversable;
+use Waguilar\FilamentDataGrid\Concerns\CanBeDense;
 use Waguilar\FilamentDataGrid\Concerns\HasExpandedContent;
 use Waguilar\FilamentDataGrid\Concerns\HasExpandIconSize;
 use Waguilar\FilamentDataGrid\Concerns\HasGridHeader;
@@ -43,6 +44,7 @@ use Waguilar\FilamentDataGrid\Totals\Total;
 
 class DataGridEntry extends RepeatableEntry
 {
+    use CanBeDense;
     use HasEmptyState;
     use HasExpandedContent;
     use HasExpandIconSize;

@@ -329,7 +329,7 @@
     background-image: linear-gradient(var(--fi-data-grid-hover-bg), var(--fi-data-grid-hover-bg));
 }
 
-.fi-data-grid-canvas .fi-data-grid-cell-editable :is(.fi-data-grid-editable-value, .fi-select-input-value-label, .fi-select-input-placeholder) {
+.fi-data-grid-canvas .fi-data-grid-cell-editable .fi-data-grid-editable-value {
     border-bottom: 1px dashed var(--fi-data-grid-hint);
 }
 
@@ -339,7 +339,7 @@
     height: calc(var(--spacing) * 5);
 }
 
-.fi-data-grid-canvas .fi-data-grid-cell-editable:is(:hover, .active):not(.editable) :is(.fi-data-grid-editable-value, .fi-select-input-value-label, .fi-select-input-placeholder) {
+.fi-data-grid-canvas .fi-data-grid-cell-editable:is(:hover, .active):not(.editable) .fi-data-grid-editable-value {
     border-bottom-style: solid;
     border-bottom-color: var(--fi-data-grid-hint-active);
 }
@@ -465,7 +465,6 @@
 }
 
 .fi-data-grid-canvas .slick-cell.fi-data-grid-cell-select {
-    padding: 0;
     overflow: visible;
 }
 
@@ -501,14 +500,16 @@
     white-space: nowrap;
 }
 
+.fi-data-grid-canvas .fi-data-grid-select .fi-select-input-value-label * {
+    display: inline;
+}
+
 .fi-data-grid-canvas .fi-data-grid-select .fi-select-input-value-badges-ctn {
     flex-wrap: nowrap;
     overflow: hidden;
 }
 
 .fi-data-grid .fi-data-grid-canvas .fi-data-grid-select .fi-dropdown-panel {
-    min-width: min(22rem, calc(100vw - 2rem)) !important;
-    max-width: min(32rem, calc(100vw - 2rem)) !important;
     text-align: start;
     white-space: normal;
 }
@@ -801,6 +802,42 @@
     .fi-data-grid-canvas
     :is(.fi-ta-header-cell.fi-data-grid-after-toggle, .fi-data-grid-after-toggle:not(.fi-data-grid-child-row-wrapper > *) > .fi-ta-col > .fi-ta-text) {
     padding-inline-start: calc(var(--spacing) * 3);
+}
+
+/* dense() halves Filament's cell and header padding between columns; the grid's outer edges keep theirs so headers and cells stay aligned. */
+.fi-data-grid-dense .fi-data-grid-canvas .fi-ta-text:not(.fi-inline) {
+    padding-block: calc(var(--spacing) * 2);
+}
+
+.fi-data-grid-dense .fi-data-grid-canvas .slick-cell:not(:first-child, .fi-data-grid-cell-select) > .fi-ta-col > .fi-ta-text:not(.fi-inline),
+.fi-data-grid-dense .fi-data-grid-canvas .fi-ta-header-cell:not(:first-of-type),
+.fi-data-grid-dense .fi-data-grid-canvas .slick-cell:not(:first-child) > .fi-data-grid-editor-input {
+    padding-inline-start: calc(var(--spacing) * 1.5);
+}
+
+.fi-data-grid-dense .fi-data-grid-canvas .slick-cell:not(:last-child, .fi-data-grid-cell-select) > .fi-ta-col > .fi-ta-text:not(.fi-inline),
+.fi-data-grid-dense .fi-data-grid-canvas .fi-ta-header-cell:not(:last-of-type),
+.fi-data-grid-dense .fi-data-grid-canvas .slick-cell:not(:last-child) > .fi-data-grid-editor-input {
+    padding-inline-end: calc(var(--spacing) * 1.5);
+}
+
+.fi-data-grid-dense .fi-data-grid-canvas .fi-ta-header-cell {
+    padding-block: calc(var(--spacing) * 1.75);
+}
+
+/* A select cell's button spans the whole cell, so Filament places and sizes its dropdown against the cell, as against a form field. */
+.fi-data-grid-canvas .fi-data-grid-cell-select > .fi-ta-col,
+.fi-data-grid-canvas .fi-data-grid-cell-select > .fi-ta-col > .fi-ta-text {
+    height: 100%;
+    padding: 0;
+}
+
+:is(.fi-data-grid-heading-has-icon, .fi-ta-ctn:has(.fi-data-grid-icon-header > .fi-section-header > .fi-icon) .fi-data-grid-in-table)
+    .fi-data-grid-canvas
+    .fi-data-grid-after-toggle.fi-data-grid-cell-select:not(.fi-data-grid-child-row-wrapper > *)
+    > .fi-ta-col
+    > .fi-ta-text {
+    padding-inline-start: 0;
 }
 
 .fi-data-grid-canvas .fi-data-grid-record-link-cell-inset:not(.fi-data-grid-child-row-wrapper > *) {

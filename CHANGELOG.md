@@ -2,6 +2,15 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.42 - 2026-11-10
+
+- A select cell's dropdown is as wide as the cell and opens just below it, as Filament's select does under a form field. It used to start inset, narrower than the cell and overlapping its lower half. The grid's 22rem minimum and 32rem maximum dropdown widths are gone, so a narrow select column has a narrow dropdown, like Filament's.
+- A select cell opens at once: it uses the options sent with the grid's last render instead of asking the server on every open, which `disableOptionWhen()` used to force. Search still asks the server. Disabled flags that depend on other rows are as fresh as the last request.
+- A select cell no longer loses a click when a Livewire request lands between pressing and releasing the mouse, and an open or focused select keeps its row while the response redraws the rest. The other cells of that row update with the response.
+- Select cells are drawn as Filament draws them: the value, the clear button and the chevron, without the dashed underline that inputs keep. A label with HTML stays on one line.
+- `dense()` halves the cell and header padding between columns (rows about 41 pixels instead of 57). Works on `DataGrid` and `DataGridEntry`.
+- An `Actions` column fits its content and takes no spare room. A `width()` on it is a minimum, so a menu wider than it no longer adds scrollbars.
+
 ## v1.0.0-beta.41 - 2026-11-10
 
 - Filament's `Actions` component works as a grid cell. Give it a `key()`; its actions live in each row's schema, so `Get`, `Set` and `visible()` act on that row, as in a Filament repeater. Action groups inside open below the trigger, above the rows under it. The trailing empty row shows no actions. An `Actions` cell without a key throws `UnsupportedCellComponent`.

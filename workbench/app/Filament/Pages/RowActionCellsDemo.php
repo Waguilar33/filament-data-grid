@@ -17,6 +17,7 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Livewire\Attributes\Url;
 use Waguilar\FilamentDataGrid\DataGrid;
 
 /**
@@ -33,6 +34,9 @@ final class RowActionCellsDemo extends Page
 
     /** @var array<string, mixed>|null */
     public ?array $savedState = null;
+
+    #[Url]
+    public ?string $actionsWidth = null;
 
     public function mount(): void
     {
@@ -52,14 +56,14 @@ final class RowActionCellsDemo extends Page
                 Section::make('Lines')->schema([
                     DataGrid::make('lines')
                         ->hiddenLabel()
-                        ->addable(false)
+                        ->addable(fn (): bool => $this->actionsWidth !== null)
                         ->deletable(false)
                         ->reorderable(false)
                         ->table([
                             TableColumn::make('Product'),
                             TableColumn::make('Quantity')->width('10rem')->alignEnd(),
                             TableColumn::make('Note'),
-                            TableColumn::make('Actions')->hiddenHeaderLabel(),
+                            TableColumn::make('Actions')->hiddenHeaderLabel()->width($this->actionsWidth),
                         ])
                         ->schema([
                             Hidden::make('stock'),

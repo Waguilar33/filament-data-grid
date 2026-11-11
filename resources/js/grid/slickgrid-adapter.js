@@ -96,7 +96,7 @@ export function createGrid(
 
     const selectKey = (rowKey, field) => `${rowKey}.${field}`
 
-    const openSelect = () => [...selects.values()].find(({ select }) => select.isOpen) ?? null
+    const busySelect = () => [...selects.values()].find(({ select, element }) => select.isOpen || element.contains(document.activeElement)) ?? null
 
     const destroyDetachedSelects = () => {
         for (const [key, entry] of selects) {
@@ -156,7 +156,8 @@ export function createGrid(
             id: column.field,
             field: column.field,
             name: columnHeader(column),
-            fixedWidth: userWidths.get(column.field) ?? toPixels(column.width),
+            fixedWidth: userWidths.get(column.field) ?? (column.fitsContent ? null : toPixels(column.width)),
+            fitsContent: Boolean(column.fitsContent),
             width: userWidths.get(column.field) ?? toPixels(column.width) ?? Math.max(flexibleMinWidth(), UNMEASURED_WIDTH),
             minWidth: 60,
             resizable: true,
@@ -419,6 +420,7 @@ export function createGrid(
             activateCell(item.__key, column.field)
         })
         wrapper.addEventListener('click', (event) => event.stopPropagation())
+        wrapper.addEventListener('focusout', () => releaseFrozenLength())
         wrapper.addEventListener('keydown', (event) => {
             if (event.key === 'Tab') {
                 event.preventDefault()
@@ -874,8 +876,11 @@ export function createGrid(
         }
 
         const columns = grid.getColumns()
-        const fixed = sumOf(columns.map((column) => column.fixedWidth ?? 0))
-        const flexible = columns.filter((column) => !column.fixedWidth)
+        const contentFit = (column) =>
+            column.fitsContent && !column.fixedWidth ? Math.max(toPixels(column.source.width) ?? 0, contentSpans.get(column.field) ?? 0) : null
+        const ownWidth = (column) => column.fixedWidth ?? contentFit(column)
+        const fixed = sumOf(columns.map((column) => ownWidth(column) ?? 0))
+        const flexible = columns.filter((column) => ownWidth(column) === null)
         const spans = flexible.map((column) => {
             const width = Math.max(contentSpans.get(column.field) ?? 0, flexibleMinWidth())
 
@@ -887,7 +892,7 @@ export function createGrid(
         const currentHeaderHeight = element.querySelector('.slick-header')?.offsetHeight ?? null
         const changed =
             currentHeaderHeight !== headerHeight ||
-            columns.some((column) => column.width !== (column.fixedWidth ?? widthOf.get(column.id)))
+            columns.some((column) => column.width !== (ownWidth(column) ?? widthOf.get(column.id)))
 
         if (!changed) {
             return
@@ -895,7 +900,7 @@ export function createGrid(
 
         headerHeight = currentHeaderHeight
         columns.forEach((column) => {
-            column.width = column.fixedWidth ?? widthOf.get(column.id)
+            column.width = ownWidth(column) ?? widthOf.get(column.id)
         })
 
         grid.setColumns(columns)
@@ -910,7 +915,7 @@ export function createGrid(
         element.classList.toggle('fi-data-grid-overflows', overflows)
     }
 
-    const isBusy = () => grid.getEditorLock().isActive() || openSelect() !== null
+    const isBusy = () => grid.getEditorLock().isActive() || busySelect() !== null
 
     let resizeFrame = null
 
@@ -1212,10 +1217,12 @@ export function createGrid(
             Boolean(nextPayload.hasChildRows) !== Boolean(payload.hasChildRows)
         const editor = grid.getCellEditor()
         const active = grid.getActiveCell()
-        const open = openSelect()
-        const busyKey = editor && active ? items[active.row]?.__key : (open ? [...selects.entries()].find(([, entry]) => entry === open)?.[0].split('.')[0] : null)
+        const open = busySelect()
+        const openKey = open ? [...selects.entries()].find(([, entry]) => entry === open)?.[0] : null
+        const busyKey = editor && active ? items[active.row]?.__key : (openKey ? openKey.slice(0, openKey.lastIndexOf('.')) : null)
         const busyItem = busyKey ? items.find((item) => item.__key === busyKey) : null
         const busyField = editor && active ? grid.getColumns()[active.cell]?.field : null
+        const openField = openKey ? openKey.slice(openKey.lastIndexOf('.') + 1) : null
         const renderedLength = dataProvider.getLength()
 
         payload = nextPayload
@@ -1298,6 +1305,12 @@ export function createGrid(
         if (editor) {
             grid.getColumns().forEach((column, index) => {
                 if (index !== active.cell || !keepsTypedValue) {
+                    grid.updateCell(busyIndex, index)
+                }
+            })
+        } else if (openField !== null) {
+            grid.getColumns().forEach((column, index) => {
+                if (column.field !== openField) {
                     grid.updateCell(busyIndex, index)
                 }
             })

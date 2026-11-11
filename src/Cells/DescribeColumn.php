@@ -12,6 +12,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Infolists\Components\Entry;
+use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Component;
 use Filament\Support\Enums\Alignment;
 use Illuminate\Contracts\Support\Htmlable;
@@ -25,7 +26,7 @@ final readonly class DescribeColumn
     ) {}
 
     /**
-     * @return array{field: string, label: string, alignment: string|null, width: string|null, required: bool, headerHidden: bool, editor: array<string, mixed>}
+     * @return array{field: string, label: string, alignment: string|null, width: string|null, required: bool, headerHidden: bool, fitsContent: bool, editor: array<string, mixed>}
      */
     public function handle(Component $component, ?TableColumn $column): array
     {
@@ -39,6 +40,7 @@ final readonly class DescribeColumn
             'width' => $column?->getWidth(),
             'required' => $column?->isMarkedAsRequired() ?? ($component instanceof Field && $component->isRequired()),
             'headerHidden' => $column?->isHeaderLabelHidden() ?? false,
+            'fitsContent' => $component instanceof Actions,
             'editor' => [
                 'type' => $type->value,
                 ...$this->editorOptions($component, $type),

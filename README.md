@@ -112,7 +112,7 @@ The grid chooses how to edit each cell from the component you put in the schema:
 | Component | In the grid |
 | --- | --- |
 | `TextInput` | Edited in place. With `numeric()` it aligns right, checks `minValue()`, `maxValue()`, `integer()` and `step()` as you type, and steps like a native number input (by `step()`, or 1 when the step is `'any'`), staying within the min and max: with ArrowUp and ArrowDown, or with the up and down buttons at the end of the open editor. |
-| `Select` | Filament's own select dropdown. It supports search, the clear button, `allowHtml()`, `multiple()`, `getSearchResultsUsing()`, `getOptionLabelUsing()` and `disableOptionWhen()`. |
+| `Select` | Filament's own select dropdown, as wide as the cell and opening just below it. It supports search, the clear button, `allowHtml()`, `multiple()`, `getSearchResultsUsing()`, `getOptionLabelUsing()` and `disableOptionWhen()`. |
 | `Radio`, `ToggleButtons` | The same dropdown, listing their options. |
 | `Toggle`, `Checkbox` | A switch you click, or flip with Space. |
 | `DatePicker`, `DateTimePicker`, `TimePicker` | The browser's date or time input. It respects `minDate()`, `maxDate()` and `displayFormat()`. |
@@ -122,7 +122,7 @@ The grid chooses how to edit each cell from the component you put in the schema:
 
 Editable cells look like text, not input boxes, and still show what you can change:
 
-- **The value is underlined with a dashed line.** On hover, or when the cell is selected with the keyboard, the line turns solid in the primary color and the cell lightens slightly. The cell is outlined only while its editor is open. An empty editable cell shows the field's `placeholder()`, or a short underline when it has none. Selects underline their selected label. Toggles have no underline.
+- **The value is underlined with a dashed line.** On hover, or when the cell is selected with the keyboard, the line turns solid in the primary color and the cell lightens slightly. The cell is outlined only while its editor is open. An empty editable cell shows the field's `placeholder()`, or a short underline when it has none. Selects and toggles have no underline: a select is drawn as Filament draws it, with its value, the clear button and the chevron, and its label stays on one line.
 - **A pencil follows the header label** of every column that is editable in at least one row. It uses the `CELL_EDIT` icon alias. The trailing empty row counts, because you can type in it.
 - **Locked cells read as plain text**, with no underline and no icon. A cell is locked when its field is `disabled()` or `readOnly()`. A read-only field doesn't open an editor.
 
@@ -186,6 +186,17 @@ A field hidden in every row, with `visible(false)` or a closure that is false fo
 A component that is not a form field, an infolist entry or `Actions` throws `Waguilar\FilamentDataGrid\Exceptions\UnsupportedCellComponent`.
 
 Rows grow to fit their tallest cell, never shorter than a Filament table row, so an entry with `belowContent()` or a long name that wraps is never cut off. This applies to child rows too. The grid measures the rows again when the state changes, when a row opens or closes, and when the grid is resized.
+
+A select opens at once with the options the server sent with the grid's last render, including which ones `disableOptionWhen()` disabled, instead of asking the server again on every open. Search still asks the server when the field uses `getSearchResultsUsing()`. A disabled flag that depends on other rows is refreshed by the next request, so a `live()` select keeps it current. Filament doesn't re-check a cross-row rule like "already picked in another row" on save; add `distinct()` to the select when duplicates must be impossible.
+
+### Dense rows
+
+`dense()` halves Filament's cell and header padding between columns, so rows are about 41 pixels tall instead of 57. The grid's outer edges, editing, selects, row actions and the trailing empty row work as before, and content stays centred. It works on `DataGrid` and `DataGridEntry`:
+
+```php
+DataGrid::make('lines')
+    ->dense()
+```
 
 ### Heading, description and icon
 
@@ -300,7 +311,7 @@ Columns fit their content, and cell text stays on one line, as in [`DataGridEntr
 - When every column fits, each column gets its one-line width, and the spare room goes to the columns in proportion to that width.
 - When they don't fit, no column gets narrower than its one-line width: the grid scrolls sideways instead. Rows keep their height, and nothing is cut off.
 
-`TableColumn::width()` sets a fixed width in pixels or rem, which wins over the content and takes no spare room. In a fixed column, an input or select value that doesn't fit ends in an ellipsis, and entry text wraps. A column the user widens or narrows by dragging its header edge keeps that width. Frozen columns work as before.
+`TableColumn::width()` sets a fixed width in pixels or rem, which wins over the content and takes no spare room. An `Actions` column fits its content and takes no spare room by itself; a `width()` on it is a minimum, so a menu wider than it never makes the grid scroll. In a fixed column, an input or select value that doesn't fit ends in an ellipsis, and entry text wraps. A column the user widens or narrows by dragging its header edge keeps that width. Frozen columns work as before.
 
 The browser measures again when the rows change, when a cell's value changes (including values typed or picked that haven't reached the server yet), and when fonts load. When the window or the grid resizes, such as when Filament's sidebar opens or closes, it shares out the room again without measuring.
 
@@ -562,7 +573,7 @@ DataGridEntry::make('deliveries')
     ->wrapCells()
 ```
 
-`TableColumn::width()` sets a fixed width in pixels or rem, which wins over the content and takes no spare room. Text inside a fixed width wraps when it doesn't fit, with or without `wrapCells()`. A child column also takes any other CSS width, such as `30%` of the child table. The arrow, record action and record link columns size themselves. Each open child table sizes its own columns, from its header and its own rows, in the width the open row leaves it; the same rules apply, including `wrapCells()`, and `width()` on a child `TableColumn` wins there too. If a child table doesn't fit, the parent columns widen to make room and the grid scrolls sideways.
+`TableColumn::width()` sets a fixed width in pixels or rem, which wins over the content and takes no spare room. An `Actions` column fits its content and takes no spare room by itself; a `width()` on it is a minimum, so a menu wider than it never makes the grid scroll. Text inside a fixed width wraps when it doesn't fit, with or without `wrapCells()`. A child column also takes any other CSS width, such as `30%` of the child table. The arrow, record action and record link columns size themselves. Each open child table sizes its own columns, from its header and its own rows, in the width the open row leaves it; the same rules apply, including `wrapCells()`, and `width()` on a child `TableColumn` wins there too. If a child table doesn't fit, the parent columns widen to make room and the grid scrolls sideways.
 
 The browser measures again when the window or the grid resizes, the page, search, filters or data change, or a row opens.
 
