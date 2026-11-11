@@ -112,7 +112,7 @@ The grid chooses how to edit each cell from the component you put in the schema:
 | Component | In the grid |
 | --- | --- |
 | `TextInput` | Edited in place. With `numeric()` it aligns right, checks `minValue()`, `maxValue()`, `integer()` and `step()` as you type, and steps like a native number input (by `step()`, or 1 when the step is `'any'`), staying within the min and max: with ArrowUp and ArrowDown, or with the up and down buttons at the end of the open editor. |
-| `Select` | Filament's own select dropdown, as wide as the cell and opening just below it. It supports search, the clear button, `allowHtml()`, `multiple()`, `getSearchResultsUsing()`, `getOptionLabelUsing()` and `disableOptionWhen()`. |
+| `Select` | Filament's own select dropdown, as wide as the cell and opening just below it. It supports search, the clear button, `allowHtml()`, `multiple()`, `getSearchResultsUsing()`, `getOptionLabelUsing()`, `disableOptionWhen()` and a `placeholder()` that depends on the row, also on a locked cell. |
 | `Radio`, `ToggleButtons` | The same dropdown, listing their options. |
 | `Toggle`, `Checkbox` | A switch you click, or flip with Space. |
 | `DatePicker`, `DateTimePicker`, `TimePicker` | The browser's date or time input. It respects `minDate()`, `maxDate()` and `displayFormat()`. |

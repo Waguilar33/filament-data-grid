@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.43 - 2026-11-10
+
+- A select cell shows its own row's `placeholder()`, enabled or locked, as Filament's select does in a repeater. It used to show the placeholder evaluated once for the whole column, so a placeholder that depends on the row came out empty.
+
 ## v1.0.0-beta.42 - 2026-11-10
 
 - A select cell's dropdown is as wide as the cell and opens just below it, as Filament's select does under a form field. It used to start inset, narrower than the cell and overlapping its lower half. The grid's 22rem minimum and 32rem maximum dropdown widths are gone, so a narrow select column has a narrow dropdown, like Filament's.

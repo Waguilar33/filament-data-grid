@@ -35,6 +35,7 @@ export function mountSelectCell({ element, column, cell, value, label, callSchem
         initialState: state,
         isDisabled: Boolean(cell.disabled),
         options,
+        placeholder: cell.placeholder ?? config.placeholder,
         state,
         onStateChange: (state) => {
             const nextValue = isMultiple ? state : blankToNull(state)

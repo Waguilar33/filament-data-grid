@@ -792,7 +792,8 @@ export function createGrid(
 
         if (type === 'select') {
             const isClearable = (cell.canSelectPlaceholder ?? true) && !cell.disabled
-            const html = wrapTableCell(selectHtml(selectedLabels(item, column, cell), column.source.editor.select, { isClearable }), column.source.alignment ?? 'start').outerHTML
+            const config = { ...column.source.editor.select, placeholder: cell.placeholder ?? column.source.editor.select.placeholder }
+            const html = wrapTableCell(selectHtml(selectedLabels(item, column, cell), config, { isClearable }), column.source.alignment ?? 'start').outerHTML
 
             return probeRequest('', `slick-cell ${column.cssClass} ${cellClasses(type, cell)}`, html, edge)
         }

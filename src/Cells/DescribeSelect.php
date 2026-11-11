@@ -84,6 +84,7 @@ final readonly class DescribeSelect
 
         return [
             'options' => $options,
+            'placeholder' => $component instanceof Select ? ($component->getPlaceholder() ?? '') : null,
             'canSelectPlaceholder' => $component instanceof Select ? $component->canSelectPlaceholder() : ! $component->isRequired(),
             'label' => $isMultiple ? null : $this->describeOptions->label($component),
             'labels' => $isMultiple ? $this->describeOptions->labels($component) : null,
