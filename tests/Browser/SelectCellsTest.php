@@ -108,7 +108,9 @@ function startSlowPick(): string
             }
             window.__button(0).dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
             window.__button(0).click()
-            window.__button(0).closest('.fi-data-grid-select').querySelector('[role="option"]').click()
+            const option = window.__button(0).closest('.fi-data-grid-select').querySelector('[role="option"]')
+            window.__picked = option?.textContent.trim() ?? null
+            option?.click()
             window.__closes = 0
             const target = window.__button(1)
             target.__tag = true
@@ -125,7 +127,7 @@ it('opens a select clicked while a slow request lands between mousedown and clic
     $page->script(startSlowPick());
     $page->script('() => { window.__target.dispatchEvent(new MouseEvent("mousedown", { bubbles: true })); window.__target.focus() }');
 
-    expect($page->script('window.__finished < window.__pending'))->toBeTrue();
+    expect($page->script('JSON.stringify([window.__pending, window.__finished, window.__picked])'))->toBe(json_encode([1, 0, 'Product 1']));
 
     $page->assertScript(REQUEST_LANDED)->wait(0.2);
     $page->script('() => window.__target.click()');
