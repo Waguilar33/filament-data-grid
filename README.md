@@ -122,7 +122,7 @@ The grid chooses how to edit each cell from the component you put in the schema:
 
 Editable cells look like text, not input boxes, and still show what you can change:
 
-- **The value is underlined with a dashed line.** On hover, or when the cell is selected with the keyboard, the line turns solid in the primary color and the cell lightens slightly. The cell is outlined only while its editor is open. An empty editable cell shows the field's `placeholder()`, or a short underline when it has none. Selects underline their selected label. Toggles have no underline.
+- **The value is underlined with a dashed line.** On hover, or when the cell is selected with the keyboard, the line turns solid in the primary color and the cell lightens slightly. The cell is outlined only while its editor is open. An empty editable cell shows the field's `placeholder()`, or a short underline when it has none. Selects and toggles have no underline: a select is drawn as Filament draws it, with its value, the clear button and the chevron, and its label stays on one line.
 - **A pencil follows the header label** of every column that is editable in at least one row. It uses the `CELL_EDIT` icon alias. The trailing empty row counts, because you can type in it.
 - **Locked cells read as plain text**, with no underline and no icon. A cell is locked when its field is `disabled()` or `readOnly()`. A read-only field doesn't open an editor.
 

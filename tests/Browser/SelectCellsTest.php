@@ -8,6 +8,11 @@ const SELECT_CELLS = '[id="form.lines"]';
 
 const OPEN_PANEL = '.fi-dropdown-panel:not([style*="display: none"])';
 
+function styleOf(string $selector, string $property): string
+{
+    return sprintf('getComputedStyle(document.querySelector(%s)).%s', json_encode($selector), $property);
+}
+
 function selectCellsDemo(): AwaitableWebpage
 {
     return visit('/demo/select-cells-demo')->resize(1440, 900)->waitForEvent('networkidle')->assertScript(GRID_SETTLED);
@@ -77,77 +82,66 @@ it('opens a select with its options at once, without asking the server', functio
     expect($result)->toBe([50, false, 0]);
 });
 
+/**
+ * Pest re-runs a script that takes over about a second, so each script here returns at once and waits are polled.
+ */
 function startSlowPick(): string
 {
     return <<<'JS'
-        const rows = () => [...document.querySelectorAll('[id="form.lines"] .slick-row')].sort((a, b) => parseFloat(a.style.top) - parseFloat(b.style.top))
-        const button = (row) => rows()[row].querySelector('.slick-cell.l0 .fi-select-input-btn')
-        const frames = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
-        const fetch = window.fetch
-        let pending = 0
-        let finished = 0
-        window.fetch = async (...args) => {
-            pending++
-            try {
-                return await fetch(...args)
-            } finally {
-                finished++
+        () => {
+            const rows = () => [...document.querySelectorAll('[id="form.lines"] .slick-row')].sort((a, b) => parseFloat(a.style.top) - parseFloat(b.style.top))
+            window.__button = (row) => rows()[row].querySelector('.slick-cell.l0 .fi-select-input-btn')
+            const fetch = window.fetch
+            window.__pending = 0
+            window.__finished = 0
+            window.fetch = async (...args) => {
+                window.__pending++
+                try {
+                    return await fetch(...args)
+                } finally {
+                    window.__finished++
+                }
             }
+            window.__button(0).dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
+            window.__button(0).click()
+            window.__button(0).closest('.fi-data-grid-select').querySelector('[role="option"]').click()
+            window.__closes = 0
+            const target = window.__button(1)
+            target.__tag = true
+            window.__target = target
+            new MutationObserver(() => target.getAttribute('aria-expanded') === 'false' && window.__closes++).observe(target, { attributes: true, attributeFilter: ['aria-expanded'] })
         }
-        const landed = async () => {
-            for (let tries = 0; (pending === 0 || finished < pending) && tries < 60; tries++) {
-                await new Promise((resolve) => setTimeout(resolve, 50))
-            }
-            await new Promise((resolve) => setTimeout(resolve, 100))
-            await frames()
-            return pending > 0 && finished === pending
-        }
-        button(0).dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
-        button(0).click()
-        await frames()
-        button(0).closest('.fi-data-grid-select').querySelector('[role="option"]').click()
-        await frames()
         JS;
 }
 
+const REQUEST_LANDED = 'window.__pending > 0 && window.__finished === window.__pending';
+
 it('opens a select clicked while a slow request lands between mousedown and click', function (): void {
-    $script = startSlowPick();
+    $page = selectCellsDemo();
+    $page->script(startSlowPick());
+    $page->script('() => { window.__target.dispatchEvent(new MouseEvent("mousedown", { bubbles: true })); window.__target.focus() }');
 
-    $opened = selectCellsDemo()->script(<<<JS
-        async () => {
-            {$script}
-            const target = button(1)
-            target.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
-            target.focus()
-            const hasLanded = await landed()
-            target.click()
-            await frames()
+    expect($page->script('window.__finished'))->toBe(0);
 
-            return [hasLanded, target.isConnected, target.getAttribute('aria-expanded')]
-        }
-        JS);
+    $page->assertScript(REQUEST_LANDED)->wait(0.2);
+    $page->script('() => window.__target.click()');
 
-    expect($opened)->toBe([true, true, 'true']);
+    $page->assertScript('window.__target.getAttribute("aria-expanded") === "true"')
+        ->assertScript('window.__target.isConnected && window.__target === window.__button(1) && window.__closes === 0')
+        ->assertNoJavaScriptErrors();
 });
 
 it('keeps a select open while a slow request lands', function (): void {
-    $script = startSlowPick();
+    $page = selectCellsDemo();
+    $page->script(startSlowPick());
+    $page->script('() => { window.__target.dispatchEvent(new MouseEvent("mousedown", { bubbles: true })); window.__target.click() }');
 
-    $state = selectCellsDemo()->script(<<<JS
-        async () => {
-            {$script}
-            const target = button(1)
-            target.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
-            target.click()
-            await frames()
-            const wasOpen = target.getAttribute('aria-expanded')
-            const hasLanded = await landed()
+    expect($page->script('[window.__finished, window.__target.getAttribute("aria-expanded")]'))->toBe([0, 'true']);
 
-            return [wasOpen, hasLanded, target.isConnected, target.getAttribute('aria-expanded'), rows()[0].querySelector('.slick-cell.l2').textContent.trim()]
-        }
-        JS);
-
-    expect($state)->toBe(['true', true, true, 'true', 'Picked p1']);
+    $page->assertScript(REQUEST_LANDED)->wait(0.2)
+        ->assertScript('window.__target.isConnected && window.__target === window.__button(1) && window.__closes === 0 && window.__target.getAttribute("aria-expanded") === "true"')
+        ->assertSeeIn(cell(0, 2, SELECT_CELLS), 'Picked p1')
+        ->assertNoJavaScriptErrors();
 });
 
 it('picks in several rows while slow requests are pending', function (): void {
@@ -169,4 +163,18 @@ it('picks in several rows while slow requests are pending', function (): void {
         ->assertPresent('[data-saved-state]')
         ->assertScript(savedState().'.map((line) => line.product).join()', 'p6,p7,p5')
         ->assertNoJavaScriptErrors();
+});
+
+it('draws a picked value as Filament does, on one line and without an underline', function (): void {
+    $page = selectCellsDemo()
+        ->click(productButton(0))
+        ->click(OPEN_PANEL.' [role="option"]:has-text("Product 2") >> nth=0')
+        ->assertSeeIn(cell(0, 2, SELECT_CELLS), 'Picked p2')
+        ->assertSeeIn(cell(0, 0, SELECT_CELLS).' .fi-select-input-value-label', 'Product 2');
+
+    expect($page->script(styleOf(cell(0, 0, SELECT_CELLS).' .fi-select-input-value-label', 'borderBottomWidth')))->toBe('0px')
+        ->and($page->script(styleOf(cell(1, 0, SELECT_CELLS).' .fi-select-input-placeholder', 'borderBottomWidth')))->toBe('0px')
+        ->and($page->script(styleOf(cell(2, 1, SELECT_CELLS).' .fi-data-grid-editable-value', 'borderBottomStyle')))->toBe('dashed');
+
+    $page->assertPresent(cell(0, 0, SELECT_CELLS).' .fi-select-input-value-remove-btn');
 });

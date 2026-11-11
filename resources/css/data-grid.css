@@ -329,7 +329,7 @@
     background-image: linear-gradient(var(--fi-data-grid-hover-bg), var(--fi-data-grid-hover-bg));
 }
 
-.fi-data-grid-canvas .fi-data-grid-cell-editable :is(.fi-data-grid-editable-value, .fi-select-input-value-label, .fi-select-input-placeholder) {
+.fi-data-grid-canvas .fi-data-grid-cell-editable .fi-data-grid-editable-value {
     border-bottom: 1px dashed var(--fi-data-grid-hint);
 }
 
@@ -339,7 +339,7 @@
     height: calc(var(--spacing) * 5);
 }
 
-.fi-data-grid-canvas .fi-data-grid-cell-editable:is(:hover, .active):not(.editable) :is(.fi-data-grid-editable-value, .fi-select-input-value-label, .fi-select-input-placeholder) {
+.fi-data-grid-canvas .fi-data-grid-cell-editable:is(:hover, .active):not(.editable) .fi-data-grid-editable-value {
     border-bottom-style: solid;
     border-bottom-color: var(--fi-data-grid-hint-active);
 }
@@ -499,6 +499,10 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.fi-data-grid-canvas .fi-data-grid-select .fi-select-input-value-label * {
+    display: inline;
 }
 
 .fi-data-grid-canvas .fi-data-grid-select .fi-select-input-value-badges-ctn {

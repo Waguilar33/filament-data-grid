@@ -68,7 +68,7 @@ final class SelectCellsDemo extends Page
                                 ->live()
                                 ->disableOptionWhen(fn (string $value, Get $get): bool => $value !== $get('product') && in_array($value, array_column($get->array('../../lines'), 'product'), true))
                                 ->afterStateUpdated(function (?string $state, Set $set): void {
-                                    usleep(1_000_000);
+                                    usleep(2_000_000);
                                     $set('note', filled($state) ? "Picked {$state}" : null);
                                 }),
                             TextInput::make('quantity')->numeric(),
