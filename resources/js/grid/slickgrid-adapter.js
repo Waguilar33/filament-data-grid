@@ -41,6 +41,7 @@ export function createGrid(
     let rows = new Map()
     let items = []
     let definedEdgeInset = 0
+    let actionsMeasuredHidden = false
     const measuredHeights = new Map()
     let tableRowHeight = null
 
@@ -131,7 +132,9 @@ export function createGrid(
     const actionsWidth = () => {
         const inline = Object.values(payload.actionTemplates ?? {}).filter((template) => template.includes(INLINE_ACTIONS_CLASS))
 
-        if (inline.length === 0) {
+        actionsMeasuredHidden = inline.length > 0 && element.clientWidth === 0
+
+        if (inline.length === 0 || actionsMeasuredHidden) {
             return ACTIONS_WIDTH
         }
 
@@ -218,12 +221,14 @@ export function createGrid(
         }
 
         if (payload.hasActions) {
+            const width = actionsWidth()
+
             columns.push({
                 id: ACTIONS_COLUMN,
                 field: ACTIONS_COLUMN,
                 name: `<span class="fi-sr-only">${escapeHtml(translations.columns.actions)}</span>`,
-                fixedWidth: actionsWidth(),
-                width: actionsWidth(),
+                fixedWidth: width,
+                width,
                 resizable: false,
                 sortable: false,
                 focusable: false,
@@ -867,7 +872,7 @@ export function createGrid(
 
         pendingWidths = false
 
-        if (definedEdgeInset !== edgeInset()) {
+        if (definedEdgeInset !== edgeInset() || actionsMeasuredHidden) {
             grid.setColumns(columnDefinitions())
             contentSpans = null
         }
