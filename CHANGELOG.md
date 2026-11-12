@@ -2,6 +2,11 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.45 - 2026-11-11
+
+- A child grid with `trailingEmptyRow()` adds a new blank row once its last one is filled. It used to add one only on a full page load.
+- A child grid's row actions column fits its buttons. A child grid starts hidden, so its actions were measured at zero width and the buttons ran past the grid's edge.
+
 ## v1.0.0-beta.44 - 2026-11-10
 
 - In a `dense()` grid, the open number editor keeps room for its step arrows, which are slightly smaller, so they no longer cover the value. The row keeps its height.

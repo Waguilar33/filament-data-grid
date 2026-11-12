@@ -86,9 +86,10 @@ final readonly class BuildGridPayload
             $cells[$this->describeColumn->fieldName($component)] = $cell;
         }
 
+        $child = $isTrailingBlank ? null : $this->visibleChildGrid($item);
+        $child?->ensureTrailingEmptyRow();
         $rows = $grid->getRawState();
         $state = is_array($rows) && is_array($rows[$key] ?? null) ? $rows[$key] : [];
-        $child = $isTrailingBlank ? null : $this->visibleChildGrid($item);
         $hasSlots = ! $isTrailingBlank && $grid->hasExpandedContent();
 
         return [

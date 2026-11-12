@@ -155,3 +155,27 @@ it('uses the grid validation messages for minItems and maxItems', function (stri
     'min' => ['minItems', [['quantity' => 1]], 'Add at least 2 lines.'],
     'max' => ['maxItems', [['quantity' => 1], ['quantity' => 2], ['quantity' => 3]], 'Keep it to 2 lines.'],
 ]);
+
+it('appends a new blank row to a child grid once its last row is filled', function (): void {
+    $component = mountLines([['product_id' => '1', 'substitutes' => []]], fn (): array => [
+        DataGrid::make('lines')
+            ->trailingEmptyRow(filledBy: 'product_id')
+            ->schema([
+                Select::make('product_id')->options(['1' => 'Tea', '2' => 'Coffee'])->live(),
+                DataGrid::make('substitutes')
+                    ->trailingEmptyRow(filledBy: 'substitute_id')
+                    ->schema([
+                        Select::make('substitute_id')->options(['1' => 'Tea', '2' => 'Coffee'])->live(),
+                    ]),
+            ]),
+    ]);
+    $line = rowKeys($component)[0];
+    $substitutes = fn (): array => array_keys($component->get("data.lines.{$line}.substitutes"));
+
+    $component->set("data.lines.{$line}.substitutes.{$substitutes()[0]}.substitute_id", '2');
+
+    $childRows = grid($component)->getGridPayload()['rows'][0]['child']['payload']['rows'];
+
+    expect($substitutes())->toHaveCount(2)
+        ->and(array_column($childRows, 'isTrailingBlank'))->toBe([false, true]);
+});
