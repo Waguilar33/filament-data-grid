@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.51 - 2026-11-13
+
+- Selection checkboxes stay in one column with `compact()` and `dense()`. `dense()` halved the header checkbox's start padding, and `compact()` gave the child table's checkbox cell the grid's 4px edge padding, moving the job checkboxes 32px left of their order's.
+
 ## v1.0.0-beta.50 - 2026-11-13
 
 - `selectChildRows()`: the parent row's checkbox is whole again in a slide-over. Its column was measured while the slide-over was hidden, so the selected count took the checkbox's room; the column is measured again once the grid is visible.

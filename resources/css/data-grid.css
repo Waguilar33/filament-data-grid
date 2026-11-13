@@ -1388,12 +1388,13 @@
     padding-inline: max(var(--fi-data-grid-edge-inset, 0px), calc(var(--spacing) * 3));
 }
 
-.fi-data-grid-canvas .fi-data-grid-selection-cell {
+/* Checkboxes keep one column at every density: compact() and dense() edge and gap paddings don't apply to selection cells. */
+.fi-data-grid.fi-data-grid-entry-grid .fi-data-grid-canvas .fi-data-grid-selection-cell {
     justify-content: flex-start;
     padding-inline: calc(var(--spacing) * 3);
 }
 
-.fi-data-grid-canvas .fi-data-grid-selection-cell-inset {
+.fi-data-grid.fi-data-grid-entry-grid .fi-data-grid-canvas .fi-data-grid-selection-cell-inset {
     padding-inline-start: max(var(--fi-data-grid-edge-inset, 0px), calc(var(--spacing) * 3));
 }
 
@@ -1452,7 +1453,7 @@
     margin-inline-start: 8px;
 }
 
-.fi-data-grid-canvas .fi-data-grid-child-selection-cell {
+.fi-data-grid.fi-data-grid-entry-grid .fi-data-grid-canvas .fi-data-grid-child-selection-cell {
     padding-inline: var(--fi-data-grid-child-selection-inset, calc(var(--spacing) * 3)) calc(var(--spacing) * 3);
     display: flex;
     align-items: center;

@@ -215,3 +215,14 @@ it('keeps groups collapsed or expanded through search, filters, pages and server
     $page->assertScript(shownRows(PICK), ['# Sale S-001', 'Garland', 'Wreath', '# Order P-003', '# Sale S-002'])
         ->assertNoJavaScriptErrors();
 });
+
+it('lines up the header, group and row checkboxes in one column at every density', function (string $query): void {
+    $boxes = pickJobs($query)->script(sprintf(<<<'JS'
+        (() => {
+            const grid = document.querySelector(%s)
+            return ['.fi-data-grid-select-all', '[data-selection="group"]', '[data-selection="row"]'].map((selector) => Math.round(grid.querySelector(selector).getBoundingClientRect().left))
+        })()
+        JS, json_encode(PICK)));
+
+    expect(array_unique($boxes))->toHaveCount(1);
+})->with(['', '?compact=1', '?dense=1', '?compact=1&dense=1']);
