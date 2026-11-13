@@ -124,10 +124,10 @@ it('searches and filters the jobs inside each order and keeps open orders open',
         ->assertScript(orderLines(), ['ORD-002', '- Tree stand', '- Light string', '- Fraser Fir'])
         ->clear(ORDERS.' input[type="search"]')
         ->click(ORDERS.' .fi-data-grid-filters-trigger')
-        ->click(ORDERS.' .fi-data-grid-filter-select .fi-select-input-btn')
-        ->type(ORDERS.' .fi-data-grid-filter-select .fi-select-input-search-ctn input', 'Wre')
-        ->assertCount(ORDERS.' .fi-data-grid-filter-select [role="option"]:visible', 1)
-        ->click(ORDERS.' .fi-data-grid-filter-select [role="option"]:has-text("Wreath")')
+        ->click(ORDERS.' .fi-input-wrp:has([id$="-filter-product"]) .fi-data-grid-filter-select .fi-select-input-btn')
+        ->type(ORDERS.' .fi-input-wrp:has([id$="-filter-product"]) .fi-data-grid-filter-select .fi-select-input-search-ctn input', 'Wre')
+        ->assertCount(ORDERS.' .fi-input-wrp:has([id$="-filter-product"]) .fi-data-grid-filter-select [role="option"]:visible', 1)
+        ->click(ORDERS.' .fi-input-wrp:has([id$="-filter-product"]) .fi-data-grid-filter-select [role="option"]:has-text("Wreath")')
         ->click(ORDERS.' .fi-ta-filters-heading')
         ->click(ORDERS.' .fi-data-grid-filters-apply')
         ->assertScript(orderLines(), ['ORD-001', '- Wreath', 'ORD-004', 'ORD-006'])
@@ -184,8 +184,8 @@ it('lines up the header, order and job checkboxes in one column and keeps the or
 it('clears a multi-select filter on reset', function (): void {
     pickOrderJobs()
         ->click(ORDERS.' .fi-data-grid-filters-trigger')
-        ->click(ORDERS.' .fi-data-grid-filter-select .fi-select-input-btn')
-        ->click(ORDERS.' .fi-data-grid-filter-select [role="option"]:has-text("Wreath")')
+        ->click(ORDERS.' .fi-input-wrp:has([id$="-filter-product"]) .fi-data-grid-filter-select .fi-select-input-btn')
+        ->click(ORDERS.' .fi-input-wrp:has([id$="-filter-product"]) .fi-data-grid-filter-select [role="option"]:has-text("Wreath")')
         ->click(ORDERS.' .fi-ta-filters-heading')
         ->click(ORDERS.' .fi-data-grid-filters-apply')
         ->assertScript(orderLines(), ['ORD-001', 'ORD-004', 'ORD-006'])
@@ -193,5 +193,20 @@ it('clears a multi-select filter on reset', function (): void {
         ->click(ORDERS.' .fi-data-grid-filters-reset')
         ->assertScript(orderLines(), ['ORD-001', 'ORD-002', 'ORD-003', 'ORD-004', 'ORD-005', 'ORD-006'])
         ->click(ORDERS.' .fi-data-grid-filters-trigger')
-        ->assertDontSeeIn(ORDERS.' .fi-data-grid-filter-select .fi-select-input-btn', 'Wreath');
+        ->assertDontSeeIn(ORDERS.' .fi-input-wrp:has([id$="-filter-product"]) .fi-data-grid-filter-select .fi-select-input-btn', 'Wreath');
+});
+
+it('searches a single-value filter\'s options and filters the jobs by it', function (): void {
+    $worker = ORDERS.' .fi-input-wrp:has([id$="-filter-worker"]) .fi-data-grid-filter-select';
+
+    pickOrderJobs()
+        ->click(ORDERS.' .fi-data-grid-filters-trigger')
+        ->click($worker.' .fi-select-input-btn')
+        ->type($worker.' .fi-select-input-search-ctn input', '3')
+        ->click($worker.' [role="option"]:has-text("Worker 3")')
+        ->click(ORDERS.' .fi-data-grid-filters-apply')
+        ->assertScript(orderLines(), ['ORD-001', 'ORD-002', 'ORD-005'])
+        ->click(orderToggle('ORD-002'))
+        ->assertScript(orderLines(), ['ORD-001', 'ORD-002', '- Fraser Fir', 'ORD-005'])
+        ->assertNoJavaScriptErrors();
 });
