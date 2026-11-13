@@ -72,3 +72,34 @@ it('opens the record of a row in a new tab on a ctrl-click', function (): void {
         ->and($page->script('window.__opened[0][1]'))->toBe('_blank')
         ->and($page->script('location.hash'))->toBe('');
 });
+
+it('insets record actions and child record actions from the grid edge like the header', function (string $query): void {
+    $page = visit('/demo/actions-inset-demo'.$query)->resize(1440, 900)->waitForEvent('networkidle')
+        ->assertScript(GRID_SETTLED)
+        ->click('[id$="loads"] .fi-data-grid-parent-row:has-text("Dock A") .fi-data-grid-row-toggle')
+        ->assertPresent('[id$="loads"] .fi-data-grid-child-actions-cell');
+
+    $insets = $page->script(<<<'JS'
+        () => {
+            const gap = (outer, inner) => Math.round(outer.getBoundingClientRect().right - inner.getBoundingClientRect().right)
+            const padding = (element) => Math.round(parseFloat(getComputedStyle(element).paddingInlineEnd))
+            const parents = document.querySelector('[id$="places"] .fi-data-grid-canvas')
+            const childRow = document.querySelector('[id$="loads"] .fi-data-grid-child-row:not(.fi-data-grid-child-header)')
+            const childHeader = document.querySelector('[id$="loads"] .fi-data-grid-child-header')
+
+            return {
+                header: padding([...parents.querySelectorAll('.slick-header-column')].at(-1)),
+                actions: [...parents.querySelectorAll('.fi-data-grid-record-actions')].map((actions) => gap(parents, actions)),
+                childHeader: padding([...childHeader.querySelectorAll('.fi-data-grid-child-cell')].at(-1)),
+                childActions: gap(childRow.querySelector('.fi-data-grid-child-actions-cell'), childRow.querySelector('.fi-data-grid-record-actions')),
+            }
+        }
+        JS);
+
+    $edge = str_contains($query, 'compact') ? 16 : 24;
+
+    expect($insets['header'])->toBe($edge)
+        ->and($insets['actions'])->toBe([$edge, $edge])
+        ->and($insets['childHeader'])->toBe($edge)
+        ->and($insets['childActions'])->toBe($edge);
+})->with(['default' => '', 'compact' => '?compact=1', 'dense' => '?dense=1', 'compact and dense' => '?compact=1&dense=1']);
