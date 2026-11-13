@@ -1389,3 +1389,14 @@
 .fi-data-grid-skeleton .fi-data-grid-skeleton-toggle {
     width: calc(var(--fi-data-grid-edge-inset) + var(--spacing) * 6);
 }
+
+.fi-data-grid-canvas .slick-row.fi-data-grid-group-row > .slick-cell {
+    align-items: stretch;
+    padding: 0;
+    background-color: var(--fi-data-grid-header-bg);
+}
+
+.fi-data-grid-group-header {
+    box-sizing: border-box;
+    padding-inline: max(var(--fi-data-grid-edge-inset, 0px), calc(var(--spacing) * 3));
+}
