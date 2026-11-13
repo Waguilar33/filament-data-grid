@@ -136,3 +136,19 @@ it('starts collapsible groups collapsed when asked', function (): void {
 
     expect($payload['grouping'])->toBe(['collapsible' => true, 'collapsedByDefault' => true]);
 });
+
+it('runs row component closures once per row on save, not once per Filament state walk', function (): void {
+    $calls = new ArrayObject;
+    $component = mountPicker(fn (DataGridCheckboxList $field): DataGridCheckboxList => $field
+        ->schema([TextEntry::make('name')->belowContent(function () use ($calls): null {
+            $calls->append(true);
+
+            return null;
+        })]));
+
+    $component->set('data.jobs', ['job-1']);
+    $calls->exchangeArray([]);
+    $component->call('save')->assertHasNoErrors();
+
+    expect($calls)->toHaveCount(count(pickableJobs()));
+});

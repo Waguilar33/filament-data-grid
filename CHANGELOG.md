@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.48 - 2026-11-13
+
+- A `DataGridEntry` or `DataGridCheckboxList` in a form no longer runs its row components' closures (`belowContent()`, `visible()`, formatters) seven times per row on submit. Filament's validation and dehydration walked every read-only row; they now skip them, so a submit costs one pass per row, from the render.
+
 ## v1.0.0-beta.47 - 2026-11-13
 
 - `collapsible()` groups open and close from their header, as in a Filament table, and `collapsedGroupsByDefault()` starts them closed. Works on `DataGridEntry` and `DataGridCheckboxList`. Search and filters still apply inside closed groups, and open groups stay open through search, filters, paging and Livewire updates.
