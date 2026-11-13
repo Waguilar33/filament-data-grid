@@ -40,6 +40,8 @@ final readonly class EntryFilters
                 $filter instanceof SelectFilter => [
                     'type' => 'select',
                     'multiple' => $filter->isMultiple(),
+                    'searchable' => (bool) $filter->getSearchable(),
+                    'optionsLimit' => $filter->getOptionsLimit(),
                     'placeholder' => $this->text($filter->getPlaceholder() ?? __('filament-forms::components.select.placeholder')),
                     'options' => $this->options($filter),
                 ],

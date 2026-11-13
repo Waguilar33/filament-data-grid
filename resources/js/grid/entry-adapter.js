@@ -10,6 +10,7 @@ const SELECTION_COLUMN = '__selection'
 const CHECKBOX_WIDTH = 16
 const CHECKBOX_GAP = 12
 const SELECTION_COUNT_GAP = 8
+const SELECTION_CELL_PADDING = 12
 const LINK_WIDTH = 44
 const FALLBACK_ROW_HEIGHT = 44
 const DEFAULT_CHILD_TABLE_PADDING = 15
@@ -605,6 +606,8 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         return columns
     }
 
+    let selectionMeasuredHidden = false
+
     const selectionCountWidth = () => {
         const most = selectsChildren() ? Math.max(0, ...payload.rows.map((row) => (row.childRecords ?? []).filter((child) => child.selectable).length)) : 0
 
@@ -619,8 +622,23 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         element.appendChild(probe)
         const width = Math.ceil(probe.getBoundingClientRect().width)
         probe.remove()
+        selectionMeasuredHidden = width === 0
 
         return SELECTION_COUNT_GAP + width
+    }
+
+    // The child table is inset inside its parent row, so its checkbox column is padded to sit under the parent's checkbox.
+    const alignChildCheckboxes = (columns) => {
+        const toggle = columns.find((column) => column.id === TOGGLE_COLUMN)
+
+        if (!selectsChildren() || !toggle) {
+            return
+        }
+
+        const inset = Math.max(0, toggle.fixedWidth + SELECTION_CELL_PADDING - childTablePadding() - CHILD_TABLE_BORDER)
+
+        element.style.setProperty('--fi-data-grid-child-selection-inset', `${inset}px`)
+        payload.childColumns.filter((column) => column.selection).forEach((column) => (column.width = `${inset + CHECKBOX_WIDTH + SELECTION_CELL_PADDING}px`))
     }
 
     const selectionWidth = () => Math.max(edgeInset(), CHECKBOX_GAP) + CHECKBOX_WIDTH + selectionCountWidth() + CHECKBOX_GAP
@@ -650,7 +668,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         } else if (first.id === TOGGLE_COLUMN) {
             first.cssClass += ' fi-data-grid-toggle-cell-inset'
 
-            if (columns[1]) {
+            if (columns[1] && columns[1].id !== SELECTION_COLUMN) {
                 columns[1].cssClass += ' fi-data-grid-after-toggle'
                 columns[1].headerCssClass += ' fi-data-grid-after-toggle'
             }
@@ -757,6 +775,8 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
             .forEach((column) => {
                 column.fixedWidth = inset > 0 ? inset + TOGGLE_ICON_WIDTH + TOGGLE_BUTTON_INSET : (column.id === TOGGLE_COLUMN ? TOGGLE_WIDTH : LINK_WIDTH)
             })
+
+        alignChildCheckboxes(columns)
 
         const openRows = hasChildTable() ? parents.map((item) => item.row).filter((row) => expanded.has(row.key) && row.children.length > 0) : []
         const flexibleColumns = columns.filter((column) => column.fixedWidth === null)
@@ -1188,6 +1208,10 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
     })
 
     const fitColumns = () => {
+        if (selectionMeasuredHidden && widthOfContainer() > 0) {
+            grid.setColumns(columnDefinitions())
+        }
+
         if (layoutColumns() || measuredWidths !== columnWidths.join(',') || element.classList.contains('fi-data-grid-measuring')) {
             isLaidOut = true
 

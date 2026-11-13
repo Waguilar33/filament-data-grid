@@ -680,6 +680,8 @@ DataGridEntry::make('deliveries')
     ])
 ```
 
+A `multiple()` or `searchable()` `SelectFilter` uses Filament's own select, with search and badges; a plain one uses a native select, as in Filament.
+
 The grid applies `SelectFilter` and `TernaryFilter` itself, by comparing each row's `attribute()` (the filter's name by default) with the chosen value. Any other filter, such as a plain `Filter` with a custom query, needs `records()`. As with Filament's custom data tables, `records()` receives the filter state as `$filters`, for example `['fill_status' => ['value' => 'partial'], 'customer' => ['values' => ['Ana']]]`, and applies it itself.
 
 ### Grouping rows

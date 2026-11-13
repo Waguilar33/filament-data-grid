@@ -109,7 +109,7 @@ final class OrderJobsDemo extends Page
             ->selectChildRows()
             ->checkIfRecordIsSelectableUsing(fn (array $record): bool => $record['worker'] !== null)
             ->searchable()
-            ->filters([SelectFilter::make('product')->options(array_combine(self::PRODUCTS, self::PRODUCTS))])
+            ->filters([SelectFilter::make('product')->options(array_combine(self::PRODUCTS, self::PRODUCTS))->multiple()->searchable()])
             ->paginated($this->perPage ? [$this->perPage, 50, 100] : false)
             ->table([TableColumn::make('Order'), TableColumn::make('Customer')])
             ->schema([
