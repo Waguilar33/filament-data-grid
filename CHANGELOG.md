@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.52 - 2026-11-13
+
+- With `compact()`, record actions and child record actions at the end of a row sit 16px from the grid's edge, like the header and text cells. They had 4px: the compact edge padding assumes the cell's content brings 12px of its own, which text does and actions don't.
+
 ## v1.0.0-beta.51 - 2026-11-13
 
 - Selection checkboxes stay in one column with `compact()` and `dense()`. `dense()` halved the header checkbox's start padding, and `compact()` gave the child table's checkbox cell the grid's 4px edge padding, moving the job checkboxes 32px left of their order's.

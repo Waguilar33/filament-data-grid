@@ -238,6 +238,11 @@
     padding-inline-end: var(--spacing);
 }
 
+/* Text cells reach the 16px edge through their inner padding; an actions cell has none, so its own padding carries it, as the header's does. */
+.fi-data-grid-compact .fi-data-grid-canvas :is(.fi-data-grid-record-actions-cell, .fi-data-grid-child-actions-cell):last-child {
+    padding-inline-end: calc(var(--spacing) * 4);
+}
+
 .fi-data-grid-compact .fi-data-grid-canvas .fi-ta-header-cell:first-of-type {
     padding-inline-start: calc(var(--spacing) * 4);
 }
