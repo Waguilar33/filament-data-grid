@@ -13,6 +13,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Text;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\Width;
 use Filament\Tables\Filters\SelectFilter;
 use Waguilar\FilamentDataGrid\DataGridCheckboxList;
 
@@ -36,6 +37,10 @@ final class OrderJobsDemo extends Page
     public int $count = 6;
 
     public ?int $perPage = null;
+
+    public bool $compact = false;
+
+    public bool $dense = false;
 
     /**
      * Orders keyed 1..n and jobs keyed by their own ids from 1, so order and job keys overlap.
@@ -80,6 +85,8 @@ final class OrderJobsDemo extends Page
     {
         $this->count = (int) request()->query('count', '6');
         $this->perPage = request()->has('perPage') ? (int) request()->query('perPage') : null;
+        $this->compact = request()->boolean('compact');
+        $this->dense = request()->boolean('dense');
         $this->form->fill();
     }
 
@@ -89,6 +96,7 @@ final class OrderJobsDemo extends Page
             Action::make('addJobs')
                 ->label('Add jobs')
                 ->slideOver()
+                ->modalWidth(Width::FourExtraLarge)
                 ->schema([$this->picker()])
                 ->action(fn (array $data) => $this->savedState = ['added' => $data['job_ids']]),
         ];
@@ -107,6 +115,8 @@ final class OrderJobsDemo extends Page
             ->hiddenLabel()
             ->records(fn (): array => self::orders($count))
             ->selectChildRows()
+            ->compact($this->compact)
+            ->dense($this->dense)
             ->checkIfRecordIsSelectableUsing(fn (array $record): bool => $record['worker'] !== null)
             ->searchable()
             ->filters([SelectFilter::make('product')->options(array_combine(self::PRODUCTS, self::PRODUCTS))->multiple()->searchable(), SelectFilter::make('worker')->options(['Worker 1' => 'Worker 1', 'Worker 2' => 'Worker 2', 'Worker 3' => 'Worker 3'])->searchable()])

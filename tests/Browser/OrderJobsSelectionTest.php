@@ -158,8 +158,8 @@ it('works inside a slide-over action', function (): void {
         ->assertNoJavaScriptErrors();
 });
 
-it('lines up the header, order and job checkboxes in one column and keeps the order checkbox whole in a slide-over', function (string $where): void {
-    $page = pickOrderJobs();
+it('lines up the header, order and job checkboxes in one column and keeps the order checkbox whole in a slide-over', function (string $where, string $query): void {
+    $page = pickOrderJobs($query);
     $grid = ORDERS;
 
     if ($where === 'slide-over') {
@@ -179,7 +179,7 @@ it('lines up the header, order and job checkboxes in one column and keeps the or
 
     expect(array_unique(array_column($boxes, 0)))->toHaveCount(1)
         ->and(array_column($boxes, 1))->toBe([16, 16, 16]);
-})->with(['page', 'slide-over']);
+})->with(['page', 'slide-over'])->with(['', '?compact=1', '?dense=1', '?compact=1&dense=1']);
 
 it('clears a multi-select filter on reset', function (): void {
     pickOrderJobs()
