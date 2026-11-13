@@ -19,6 +19,7 @@ use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Traversable;
+use Waguilar\FilamentDataGrid\Exceptions\UnsupportedChildRowSelection;
 use Waguilar\FilamentDataGrid\Support\SelectedKeysStateCast;
 
 class DataGridCheckboxList extends Field implements HasEmbeddedView, HasNestedRecursiveValidationRulesContract
@@ -34,10 +35,22 @@ class DataGridCheckboxList extends Field implements HasEmbeddedView, HasNestedRe
 
     protected ?Closure $checkIfRecordIsSelectableUsing = null;
 
+    protected bool|Closure $isSelectingChildRows = false;
+
     /**
      * @var array<string, mixed>|null
      */
     private ?array $cachedRecords = null;
+
+    /**
+     * @var array<string, mixed>|null
+     */
+    private ?array $cachedChildRecords = null;
+
+    /**
+     * @var array<string, bool>
+     */
+    private array $cachedSelectable = [];
 
     protected function setUp(): void
     {
@@ -62,7 +75,7 @@ class DataGridCheckboxList extends Field implements HasEmbeddedView, HasNestedRe
     public function records(array|Collection|Closure $records): static
     {
         $this->records = $records;
-        $this->cachedRecords = null;
+        $this->forgetRecords();
 
         return $this;
     }
@@ -86,26 +99,85 @@ class DataGridCheckboxList extends Field implements HasEmbeddedView, HasNestedRe
         $keyed = [];
 
         foreach ($records as $key => $record) {
-            $recordKey = $record instanceof Model ? $record->getKey() : $key;
-
-            if (is_string($recordKey) || is_int($recordKey)) {
-                $keyed[(string) $recordKey] = $record;
-            }
+            $keyed[self::rowKey($key, $record)] = $record;
         }
 
         return $this->cachedRecords = $keyed;
     }
 
+    public static function rowKey(int|string $key, mixed $record): string
+    {
+        $modelKey = $record instanceof Model ? $record->getKey() : null;
+
+        return (string) (is_string($modelKey) || is_int($modelKey) ? $modelKey : $key);
+    }
+
+    public function selectChildRows(bool|Closure $condition = true): static
+    {
+        $this->isSelectingChildRows = $condition;
+
+        return $this;
+    }
+
+    public function isSelectingChildRows(): bool
+    {
+        return (bool) $this->evaluate($this->isSelectingChildRows);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function getChildRecords(): array
+    {
+        if ($this->cachedChildRecords !== null) {
+            return $this->cachedChildRecords;
+        }
+
+        $this->ensureGridHasContainer();
+        $records = [];
+
+        foreach ($this->grid->getItems() as $item) {
+            $children = $this->grid->getChildRowsEntry($item) ?? throw UnsupportedChildRowSelection::withoutChildRows((string) $this->getName());
+
+            foreach ($children->getItems() as $childKey => $child) {
+                $record = $child->getRecord() ?? $child->getConstantState();
+                $key = self::rowKey($childKey, $record);
+
+                if (array_key_exists($key, $records)) {
+                    throw UnsupportedChildRowSelection::duplicateKey((string) $this->getName(), $key);
+                }
+
+                $records[$key] = $record;
+            }
+        }
+
+        return $this->cachedChildRecords = $records;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function getSelectableRecords(): array
+    {
+        return $this->isSelectingChildRows() ? $this->getChildRecords() : $this->getRecords();
+    }
+
     public function checkIfRecordIsSelectableUsing(?Closure $callback): static
     {
         $this->checkIfRecordIsSelectableUsing = $callback;
+        $this->cachedSelectable = [];
 
         return $this;
     }
 
     public function isRecordSelectable(string $key): bool
     {
-        $record = $this->getRecords()[$key] ?? null;
+        return $this->cachedSelectable[$key] ??= $this->evaluateRecordSelectable($key);
+    }
+
+    private function evaluateRecordSelectable(string $key): bool
+    {
+        $record = $this->getSelectableRecords()[$key] ?? null;
 
         if ($record === null) {
             return false;
@@ -128,9 +200,22 @@ class DataGridCheckboxList extends Field implements HasEmbeddedView, HasNestedRe
     public function getSelectableKeys(): array
     {
         return array_values(array_filter(
-            array_map(strval(...), array_keys($this->getRecords())),
+            array_map(strval(...), array_keys($this->getSelectableRecords())),
             fn (string $key): bool => $this->isRecordSelectable($key),
         ));
+    }
+
+    private function forgetRecords(): void
+    {
+        $this->cachedRecords = null;
+        $this->cachedChildRecords = null;
+        $this->cachedSelectable = [];
+    }
+
+    private function ensureGridHasContainer(): void
+    {
+        // Filament gives a child component its container only once its schema lists its components.
+        $this->getChildSchema()?->getComponents(withHidden: true);
     }
 
     /**
@@ -255,16 +340,23 @@ class DataGridCheckboxList extends Field implements HasEmbeddedView, HasNestedRe
     {
         $clone = parent::getClone();
         $clone->bindGrid($this->grid->getClone());
-        $clone->cachedRecords = null;
+        $clone->forgetRecords();
 
         return $clone;
     }
 
     public function toEmbeddedHtml(): string
     {
-        $this->cachedRecords = null;
-        // Filament gives a child component its container only once its schema lists its components.
-        $this->getChildSchema()?->getComponents(withHidden: true);
+        $this->forgetRecords();
+        $this->ensureGridHasContainer();
+
+        if ($this->isSelectingChildRows() && $this->grid->getGrouping() !== null) {
+            throw UnsupportedChildRowSelection::grouped((string) $this->getName());
+        }
+
+        if ($this->isSelectingChildRows()) {
+            $this->getChildRecords();
+        }
 
         return $this->wrapEmbeddedHtml($this->grid->renderSelectionGrid(), labelTag: 'div');
     }

@@ -20,6 +20,8 @@ use Waguilar\FilamentDataGrid\DataGridEntry;
 
 final readonly class BuildEntryPayload
 {
+    private const CHILD_SELECTION_WIDTH = '2.5rem';
+
     public function __construct(private DescribeCell $describeCell) {}
 
     /**
@@ -42,6 +44,7 @@ final readonly class BuildEntryPayload
         return [
             'columns' => $columns,
             'childColumns' => [
+                ...($children !== null && $entry->selectsChildRows() ? [$this->describeChildSelectionColumn()] : []),
                 ...array_map(
                     fn (TableColumn $column): array => $this->describeTableColumn($column),
                     array_values($children?->getTableColumns() ?? []),
@@ -127,6 +130,7 @@ final readonly class BuildEntryPayload
             'search' => $entry->isServerSide() ? '' : $this->searchText($entry, $item),
             'filterValues' => $entry->isServerSide() ? [] : $entry->getEntryFilters()->rawValues($item),
             'children' => $children === null ? [] : $this->describeChildren($entry, $key, $item, $children),
+            'childRecords' => $children === null || ! $entry->selectsChildRows() ? [] : $this->describeChildRecords($entry, $children),
             'above' => $entry->renderExpandedAbove($item),
             'below' => $entry->renderExpandedBelow($item),
             'selectable' => $entry->isRowSelectable($key),
@@ -198,7 +202,7 @@ final readonly class BuildEntryPayload
                 ];
             }
 
-            $rows[] = $cells;
+            $rows[] = $entry->selectsChildRows() ? [['visible' => true], ...array_pad($cells, $columnCount, ['visible' => false])] : $cells;
         }
 
         return $rows;
@@ -259,6 +263,56 @@ final readonly class BuildEntryPayload
             'width' => $column->getWidth(),
             'headerHidden' => $column->isHeaderLabelHidden(),
         ];
+    }
+
+    /**
+     * @return array{label: string, alignment: string, width: string, headerHidden: true, selection: true}
+     */
+    private function describeChildSelectionColumn(): array
+    {
+        return [
+            'label' => $this->text(__('filament-data-grid::data-grid.entry.select_row')),
+            'alignment' => Alignment::Start->value,
+            'width' => self::CHILD_SELECTION_WIDTH,
+            'headerHidden' => true,
+            'selection' => true,
+        ];
+    }
+
+    /**
+     * @return list<array{key: string, selectable: bool, search: string, filterValues: array<string, mixed>}>
+     */
+    private function describeChildRecords(DataGridEntry $entry, RepeatableEntry $children): array
+    {
+        $records = [];
+
+        foreach ($children->getItems() as $childKey => $child) {
+            $records[] = [
+                ...$entry->describeChildSelection($childKey, $child),
+                'search' => $this->childSearchText($entry, $child),
+                'filterValues' => $entry->getEntryFilters()->rawValues($child),
+            ];
+        }
+
+        return $records;
+    }
+
+    private function childSearchText(DataGridEntry $entry, Schema $child): string
+    {
+        if (! $entry->isSearchable()) {
+            return '';
+        }
+
+        $fields = $entry->getSearchableFields();
+        $texts = [];
+
+        foreach ($this->cellComponents($child, null) as $component) {
+            if ($fields === null || in_array($this->fieldName($component), $fields, true)) {
+                $texts[] = $this->componentSearchText($component);
+            }
+        }
+
+        return mb_strtolower(implode(' ', array_filter($texts, fn (string $text): bool => $text !== '')));
     }
 
     /**

@@ -1445,3 +1445,25 @@
 .dark .fi-data-grid-group-count {
     color: var(--gray-400);
 }
+
+.fi-data-grid-selection-count {
+    font-size: var(--text-sm);
+    line-height: var(--text-sm--line-height);
+    font-variant-numeric: tabular-nums;
+    color: var(--gray-500);
+}
+
+.dark .fi-data-grid-selection-count {
+    color: var(--gray-400);
+}
+
+.fi-data-grid-canvas .fi-data-grid-selection-cell .fi-data-grid-selection-count {
+    margin-inline-start: 8px;
+}
+
+.fi-data-grid-canvas .fi-data-grid-child-selection-cell {
+    display: flex;
+    align-items: center;
+    align-self: stretch;
+    overflow: visible;
+}
