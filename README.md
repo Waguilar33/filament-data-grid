@@ -994,7 +994,7 @@ DataGridCheckboxList::make('job_ids')
 - `defaultGroup()` and `collapsedGroupsByDefault()` work as on `DataGridEntry`. Each group header has a checkbox for all of that group's selectable rows that match the search and filters, on every page, as in Filament, and shows how many of them are selected, such as `2/5`. It works on a closed group without opening it.
 - The selection stays when the search, the filters or the page change. Filament's table clears it on a new filter (`deselectAllRecordsWhenFiltered()`); a form field keeps it, as `CheckboxList` keeps checked options that a search hides.
 - `searchable()`, `filters()`, `paginated()`, `defaultPaginationPageOption()`, `compact()`, `dense()` and `wrapCells()` work as on `DataGridEntry`. The rows are searched and filtered in the browser, so only `SelectFilter` and `TernaryFilter` apply; a `Filter` with a custom query does not.
-- Row closures such as `belowContent()` run once per row on each render. Submitting the form doesn't run them again: Filament's validation skips the grid's read-only rows.
+- Row closures such as `belowContent()` run once per row on each render. Submitting the form doesn't run them again: Filament's validation skips the grid's read-only rows. Filament versions older than 5.11 run them once more while saving.
 - Use `paginated()` for more than about a hundred rows. The grid measures every row it shows, so 500 rows on one page take about 3 seconds to appear; 25 per page take about 0.4 seconds.
 
 ## Validation

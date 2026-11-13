@@ -4,7 +4,7 @@ All notable changes to `filament-data-grid` will be documented in this file.
 
 ## v1.0.0-beta.48 - 2026-11-13
 
-- A `DataGridEntry` or `DataGridCheckboxList` in a form no longer runs its row components' closures (`belowContent()`, `visible()`, formatters) seven times per row on submit. Filament's validation and dehydration walked every read-only row; they now skip them, so a submit costs one pass per row, from the render.
+- A `DataGridEntry` or `DataGridCheckboxList` in a form no longer runs its row components' closures (`belowContent()`, `visible()`, formatters) seven times per row on submit. Filament's validation and dehydration walked every read-only row; they now skip them, so a submit costs one pass per row, from the render. On Filament versions older than 5.11, which look up state paths without an index, it costs two.
 
 ## v1.0.0-beta.47 - 2026-11-13
 

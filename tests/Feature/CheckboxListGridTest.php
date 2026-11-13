@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Text;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Tables\Grouping\Group;
@@ -137,7 +138,7 @@ it('starts collapsible groups collapsed when asked', function (): void {
     expect($payload['grouping'])->toBe(['collapsible' => true, 'collapsedByDefault' => true]);
 });
 
-it('runs row component closures once per row on save, not once per Filament state walk', function (): void {
+it('runs row component closures once per row on save, not once per Filament state walk (twice before Filament indexed its dehydration lookup)', function (): void {
     $calls = new ArrayObject;
     $component = mountPicker(fn (DataGridCheckboxList $field): DataGridCheckboxList => $field
         ->schema([TextEntry::make('name')->belowContent(function () use ($calls): null {
@@ -150,5 +151,7 @@ it('runs row component closures once per row on save, not once per Filament stat
     $calls->exchangeArray([]);
     $component->call('save')->assertHasNoErrors();
 
-    expect($calls)->toHaveCount(count(pickableJobs()));
+    $passes = method_exists(Component::class, 'searchOtherComponentWithStatePath') ? 1 : 2;
+
+    expect($calls)->toHaveCount($passes * count(pickableJobs()));
 });

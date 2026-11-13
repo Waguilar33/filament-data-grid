@@ -36,14 +36,4 @@ class ReadOnlyRowSchema extends Schema
     public function saveRelationships(): void {}
 
     public function loadStateFromRelationships(bool $shouldHydrate = false): void {}
-
-    /**
-     * Filament before 5.11 walks every row here on submit; later versions no longer call it.
-     *
-     * @return array<string, bool>
-     */
-    protected function buildDehydratedComponentsCache(): array
-    {
-        return [];
-    }
 }
