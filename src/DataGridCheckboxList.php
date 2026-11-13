@@ -223,6 +223,13 @@ class DataGridCheckboxList extends Field implements HasEmbeddedView, HasNestedRe
         return $this;
     }
 
+    public function collapsedGroupsByDefault(bool|Closure $condition = true): static
+    {
+        $this->grid->collapsedGroupsByDefault($condition);
+
+        return $this;
+    }
+
     public function compact(bool|Closure $condition = true): static
     {
         $this->grid->compact($condition);

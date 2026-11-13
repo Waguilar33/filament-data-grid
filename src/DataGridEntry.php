@@ -11,10 +11,13 @@ use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Filament\Support\Components\Attributes\ExposedLivewireMethod;
 use Filament\Support\Enums\Alignment;
+use Filament\Support\Enums\IconSize;
 use Filament\Support\Facades\FilamentAsset;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\Column;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\BaseFilter;
+use Filament\Tables\View\TablesIconAlias;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Contracts\Pagination\Paginator;
 use Illuminate\Contracts\Support\Htmlable;
@@ -42,6 +45,8 @@ use Waguilar\FilamentDataGrid\Exceptions\UnsupportedChildTable;
 use Waguilar\FilamentDataGrid\Exceptions\UnsupportedRecordActions;
 use Waguilar\FilamentDataGrid\Exceptions\UnsupportedTotals;
 use Waguilar\FilamentDataGrid\Totals\Total;
+
+use function Filament\Support\generate_icon_html;
 
 class DataGridEntry extends RepeatableEntry
 {
@@ -818,6 +823,7 @@ class DataGridEntry extends RepeatableEntry
                 ],
                 'icons' => [
                     'expand' => $this->getExpandIconHtml(),
+                    'collapseGroup' => generate_icon_html(Heroicon::ChevronUp, TablesIconAlias::GROUPING_COLLAPSE_BUTTON, size: IconSize::Small)?->toHtml(),
                 ],
                 'loadingSkeletonDelay' => $this->hasLoadingSkeleton() ? $this->getLoadingSkeletonDelay() : null,
             ]),

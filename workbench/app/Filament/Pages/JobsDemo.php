@@ -44,6 +44,8 @@ final class JobsDemo extends Page
 
     public bool $dense = false;
 
+    public bool $collapsed = false;
+
     /**
      * @return array<string, array{product: string, sale: string|null, order: string, quantity: int, unit: string|null}>
      */
@@ -66,9 +68,10 @@ final class JobsDemo extends Page
         return $jobs;
     }
 
-    public static function jobGroup(): Group
+    public static function jobGroup(bool $collapsible = false): Group
     {
         return Group::make('sale')
+            ->collapsible($collapsible)
             ->getKeyFromRecordUsing(fn (array $record): string => self::text($record['sale'] ?? $record['order']))
             ->getTitleFromRecordUsing(fn (array $record): string => isset($record['sale']) ? 'Sale '.self::text($record['sale']) : 'Order '.self::text($record['order']))
             ->titlePrefixedWithLabel(false);
@@ -90,7 +93,8 @@ final class JobsDemo extends Page
                         ->hiddenLabel()
                         ->records(fn (): array => self::jobs($count))
                         ->checkIfRecordIsSelectableUsing(fn (array $record): bool => $record['unit'] !== null)
-                        ->defaultGroup(self::jobGroup())
+                        ->defaultGroup(self::jobGroup($this->collapsed))
+                        ->collapsedGroupsByDefault($this->collapsed)
                         ->searchable()
                         ->filters([SelectFilter::make('product')->options(array_combine(self::PRODUCTS, self::PRODUCTS))])
                         ->compact($this->compact)
@@ -110,7 +114,7 @@ final class JobsDemo extends Page
                     DataGridEntry::make('jobs')
                         ->hiddenLabel()
                         ->state(self::jobs($count))
-                        ->defaultGroup(self::jobGroup())
+                        ->defaultGroup(self::jobGroup($this->collapsed))
                         ->table([TableColumn::make('Product'), TableColumn::make('Order'), TableColumn::make('Quantity')->alignEnd()])
                         ->schema([
                             TextEntry::make('product'),
@@ -129,6 +133,7 @@ final class JobsDemo extends Page
         $this->onlyPicker = request()->boolean('onlyPicker');
         $this->compact = request()->boolean('compact');
         $this->dense = request()->boolean('dense');
+        $this->collapsed = request()->boolean('collapsed');
         $this->form->fill();
     }
 
@@ -143,7 +148,8 @@ final class JobsDemo extends Page
                     DataGridCheckboxList::make('job_ids')
                         ->records(fn (): array => self::jobs($this->count))
                         ->checkIfRecordIsSelectableUsing(fn (array $record): bool => $record['unit'] !== null)
-                        ->defaultGroup(self::jobGroup())
+                        ->defaultGroup(self::jobGroup($this->collapsed))
+                        ->collapsedGroupsByDefault($this->collapsed)
                         ->searchable()
                         ->filters([SelectFilter::make('product')->options(array_combine(self::PRODUCTS, self::PRODUCTS))])
                         ->paginated([2, 50, 100])

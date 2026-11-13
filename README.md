@@ -698,7 +698,17 @@ DataGridEntry::make('jobs')
     )
 ```
 
-Rows of the same group are kept together, in the order their group first appears; within a group they keep their own order. Search and filters hide a group with no matching rows. With paging, each page shows the headers of its own groups. `collapsible()` and `date()` groups aren't supported yet.
+Rows of the same group are kept together, in the order their group first appears; within a group they keep their own order. Search and filters hide a group with no matching rows. With paging, each page shows the headers of its own groups; a group that spans two pages shows its header on both. `date()` groups aren't supported yet.
+
+A `collapsible()` group opens and closes from its header, as in a Filament table. Add `collapsedGroupsByDefault()`, Filament's table method, to start every group closed:
+
+```php
+DataGridEntry::make('jobs')
+    ->defaultGroup(Group::make('sale')->collapsible())
+    ->collapsedGroupsByDefault()
+```
+
+Only the headers of closed groups are drawn. Search and filters still look inside closed groups: a group with no matching rows disappears, and one with matches stays as it was. Pages count rows, not groups, as in Filament. Which groups are open survives search, filters, paging and Livewire updates until the page reloads or the modal closes.
 
 ### Totals
 
@@ -981,7 +991,7 @@ DataGridCheckboxList::make('job_ids')
 - `records()` takes an array, a collection or a closure. Each row's key is its model key, or its array key for array rows. The state is a list of those keys as strings, for example `['12', '15']`.
 - `checkIfRecordIsSelectableUsing()` is Filament's own method name. A row it rejects has no checkbox, as in a Filament table, and the field rejects its key on save, as it does any key that isn't one of the rows. To say why, use `belowContent()` on one of the row's entries. Eloquent rows get `$record`; for array rows, read `$component->getContainer()->getConstantState()`.
 - The header checkbox selects the selectable rows on the current page that match the search and filters. Once rows are selected, a bar shows the count, with Filament's "Select all N" (every selectable row matching the search and filters, on every page) and "Deselect all" (the whole selection).
-- `defaultGroup()` works as on `DataGridEntry`. Each group header has a checkbox for that group's selectable rows on the current page, as in Filament.
+- `defaultGroup()` and `collapsedGroupsByDefault()` work as on `DataGridEntry`. Each group header has a checkbox for all of that group's selectable rows that match the search and filters, on every page, as in Filament, and shows how many of them are selected, such as `2/5`. It works on a closed group without opening it.
 - The selection stays when the search, the filters or the page change. Filament's table clears it on a new filter (`deselectAllRecordsWhenFiltered()`); a form field keeps it, as `CheckboxList` keeps checked options that a search hides.
 - `searchable()`, `filters()`, `paginated()`, `defaultPaginationPageOption()`, `compact()`, `dense()` and `wrapCells()` work as on `DataGridEntry`. The rows are searched and filtered in the browser, so only `SelectFilter` and `TernaryFilter` apply; a `Filter` with a custom query does not.
 - Use `paginated()` for more than about a hundred rows. The grid measures every row it shows, so 500 rows on one page take about 3 seconds to appear; 25 per page take about 0.4 seconds.

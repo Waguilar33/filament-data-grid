@@ -2,6 +2,12 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.47 - 2026-11-13
+
+- `collapsible()` groups open and close from their header, as in a Filament table, and `collapsedGroupsByDefault()` starts them closed. Works on `DataGridEntry` and `DataGridCheckboxList`. Search and filters still apply inside closed groups, and open groups stay open through search, filters, paging and Livewire updates.
+- `DataGridCheckboxList`: a group's checkbox now selects all of the group's matching selectable rows on every page, as Filament does, instead of only those on the current page. The group header shows how many are selected, such as `2/5`.
+- Columns of an entry grid are sized from every row on the page, so opening or closing a row group doesn't move them.
+
 ## v1.0.0-beta.46 - 2026-11-13
 
 - `DataGridCheckboxList`: a form field that shows rows as a grid with checkboxes. Its state is the list of selected row keys. Rows that can't be selected (`checkIfRecordIsSelectableUsing()`) have no checkbox and are rejected on save. Header, group and "Select all N" checkboxes, as in a Filament table. Search, filters, paging, grouping, `compact()` and `dense()` as on `DataGridEntry`; the selection survives all of them.
