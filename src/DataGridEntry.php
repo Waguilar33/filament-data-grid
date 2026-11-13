@@ -31,6 +31,7 @@ use Waguilar\FilamentDataGrid\Concerns\HasExpandIconSize;
 use Waguilar\FilamentDataGrid\Concerns\HasGridHeader;
 use Waguilar\FilamentDataGrid\Entry\BuildEntryPayload;
 use Waguilar\FilamentDataGrid\Entry\Concerns\HasEmptyState;
+use Waguilar\FilamentDataGrid\Entry\Concerns\HasGrouping;
 use Waguilar\FilamentDataGrid\Entry\Concerns\HasLoadingSkeleton;
 use Waguilar\FilamentDataGrid\Entry\Concerns\HasRecordActions;
 use Waguilar\FilamentDataGrid\Entry\Concerns\HasRecordUrl;
@@ -49,6 +50,7 @@ class DataGridEntry extends RepeatableEntry
     use HasExpandedContent;
     use HasExpandIconSize;
     use HasGridHeader;
+    use HasGrouping;
     use HasLoadingSkeleton;
     use HasRecordActions;
     use HasRecordUrl;

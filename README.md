@@ -682,6 +682,24 @@ DataGridEntry::make('deliveries')
 
 The grid applies `SelectFilter` and `TernaryFilter` itself, by comparing each row's `attribute()` (the filter's name by default) with the chosen value. Any other filter, such as a plain `Filter` with a custom query, needs `records()`. As with Filament's custom data tables, `records()` receives the filter state as `$filters`, for example `['fill_status' => ['value' => 'partial'], 'customer' => ['values' => ['Ana']]]`, and applies it itself.
 
+### Grouping rows
+
+`defaultGroup()` takes Filament's own `Group`, or a field name, as a table's `defaultGroup()` does. A header row with the group's title (and description, if any) starts each group:
+
+```php
+use Filament\Tables\Grouping\Group;
+
+DataGridEntry::make('jobs')
+    ->defaultGroup(
+        Group::make('sale')
+            ->getKeyFromRecordUsing(fn (array $record): string => $record['sale'] ?? $record['order'])
+            ->getTitleFromRecordUsing(fn (array $record): string => $record['sale'] ? "Sale {$record['sale']}" : "Order {$record['order']}")
+            ->titlePrefixedWithLabel(false),
+    )
+```
+
+Rows of the same group are kept together, in the order their group first appears; within a group they keep their own order. Search and filters hide a group with no matching rows. With paging, each page shows the headers of its own groups. `collapsible()` and `date()` groups aren't supported yet.
+
 ### Totals
 
 `totals()` adds a footer row under the grid with the sum of the columns you list. Each `Total` names an entry of `schema()` and sums that entry's state, before `formatStateUsing()`. A blank or non-numeric state counts as 0. Columns without a total stay empty, and `totalsLabel()` takes the first column when that column has no total of its own. The label's cell spans every column before the first total. It follows the first column's alignment, or with `totalsLabelAlignment(Alignment::End)` it ends right next to the first total:

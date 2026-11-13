@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## Unreleased
+
+- `DataGridEntry::defaultGroup()` groups rows under a header row, using Filament's own `Group` (key, title, description and label prefix), including a key and title computed from each record.
+
 ## v1.0.0-beta.45 - 2026-11-11
 
 - A child grid with `trailingEmptyRow()` adds a new blank row once its last one is filled. It used to add one only on a full page load.

@@ -143,7 +143,11 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
 
         visible = []
 
-        pageRows.forEach((row) => {
+        pageRows.forEach((row, index) => {
+            if (row.group && (index === 0 || pageRows[index - 1].group?.key !== row.group.key)) {
+                visible.push({ kind: 'group', group: row.group, row })
+            }
+
             visible.push({ kind: 'parent', row })
 
             if (!expanded.has(row.key) || !canExpand(row)) {
@@ -209,7 +213,14 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
             column.actions || row.children.some((cells) => cells[index] && cells[index].visible !== false) ? [index] : [],
         )
 
+    const groupHtml = (group) =>
+        `<div class="fi-ta-group-header fi-data-grid-group-header"><div><h3 class="fi-ta-group-heading">${group.title}</h3>${group.description ? `<p class="fi-ta-group-description">${group.description}</p>` : ''}</div></div>`
+
     const formatChildRow = (item) => {
+        if (item.kind === 'group') {
+            return groupHtml(item.group)
+        }
+
         const shown = shownChildColumns(item.row)
         const style = `grid-template-columns: ${childTemplates.get(item.row.key) ?? childGridTemplate(shown.map((index) => payload.childColumns[index]))}`
         const edges = [
@@ -598,14 +609,16 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
     const measureKey = (item) =>
         item.kind === 'parent'
             ? `parent:${item.row.key}`
-            : item.kind === 'child-slot'
+            : item.kind === 'group'
+              ? `group:${item.row.key}`
+              : item.kind === 'child-slot'
               ? `slot:${item.row.key}:${item.slot}`
               : item.kind === 'child-header'
                 ? `header:${item.row.key}`
                 : `child:${item.row.key}:${item.childIndex}`
 
     const needsMeasuring = (item) =>
-        (item.kind === 'child' || item.kind === 'child-header' || item.kind === 'child-slot' || (item.kind === 'parent' && typeof item.row.height !== 'number')) &&
+        (['child', 'child-header', 'child-slot', 'group'].includes(item.kind) || (item.kind === 'parent' && typeof item.row.height !== 'number')) &&
         !measuredHeights.has(measureKey(item))
 
     const parentProbeHtml = (item, columns) => {
@@ -671,12 +684,12 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         element.appendChild(probe)
 
         const heights = [...probe.children].map((row) =>
-            (row.querySelector('.fi-data-grid-child-row, .fi-data-grid-child-slot') ?? row).getBoundingClientRect().height,
+            (row.querySelector('.fi-data-grid-child-row, .fi-data-grid-child-slot, .fi-data-grid-group-header') ?? row).getBoundingClientRect().height,
         )
 
         probe.remove()
         pending.forEach((item, index) =>
-            measuredHeights.set(measureKey(item), Math.max(item.kind === 'child-slot' || item.kind === 'child-header' ? 0 : rowHeight(), Math.ceil(heights[index]))),
+            measuredHeights.set(measureKey(item), Math.max(['child-slot', 'child-header', 'group'].includes(item.kind) ? 0 : rowHeight(), Math.ceil(heights[index]))),
         )
     }
 
@@ -691,7 +704,9 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
     }
 
     const childRowHeight = (item) =>
-        contentHeight(item) +
+        item.kind === 'group'
+            ? contentHeight(item)
+            : contentHeight(item) +
         (item.isFirst ? childTablePadding() : 0) +
         (item.isLast ? childTablePadding() : 0)
 
@@ -722,7 +737,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
 
             return {
                 height: childRowHeight(item),
-                cssClasses: `fi-data-grid-child-row-wrapper ${isLast ? 'fi-data-grid-row-last' : ''}`,
+                cssClasses: `${item.kind === 'group' ? 'fi-data-grid-group-row' : 'fi-data-grid-child-row-wrapper'} ${isLast ? 'fi-data-grid-row-last' : ''}`,
                 focusable: false,
                 selectable: false,
                 columns: { 0: { colspan: '*' } },

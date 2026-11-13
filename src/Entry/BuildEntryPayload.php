@@ -69,13 +69,14 @@ final readonly class BuildEntryPayload
      */
     public function rows(DataGridEntry $entry, array $items): array
     {
-        $rows = [];
+        $groups = [];
 
         foreach ($items as $key => $item) {
-            $rows[] = $this->describeRow($entry, (string) $key, $item);
+            $group = $entry->describeRowGroup((string) $key, $item);
+            $groups[$group['key'] ?? ''][] = [...$this->describeRow($entry, (string) $key, $item), 'group' => $group];
         }
 
-        return $rows;
+        return array_merge(...array_values($groups));
     }
 
     public function searchText(DataGridEntry $entry, Schema $item): string
