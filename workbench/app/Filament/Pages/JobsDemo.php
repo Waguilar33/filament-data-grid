@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Workbench\App\Filament\Pages;
 
+use Filament\Actions\Action;
 use Filament\Infolists\Components\RepeatableEntry\TableColumn;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Pages\Page;
@@ -129,6 +130,28 @@ final class JobsDemo extends Page
         $this->compact = request()->boolean('compact');
         $this->dense = request()->boolean('dense');
         $this->form->fill();
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('addJobs')
+                ->label('Add jobs')
+                ->slideOver()
+                ->modalWidth('5xl')
+                ->schema([
+                    DataGridCheckboxList::make('job_ids')
+                        ->records(fn (): array => self::jobs($this->count))
+                        ->checkIfRecordIsSelectableUsing(fn (array $record): bool => $record['unit'] !== null)
+                        ->defaultGroup(self::jobGroup())
+                        ->searchable()
+                        ->filters([SelectFilter::make('product')->options(array_combine(self::PRODUCTS, self::PRODUCTS))])
+                        ->paginated([2, 50, 100])
+                        ->table([TableColumn::make('Product'), TableColumn::make('Order')])
+                        ->schema([TextEntry::make('product'), TextEntry::make('order')]),
+                ])
+                ->action(fn (array $data) => $this->savedState = ['added' => $data['job_ids']]),
+        ];
     }
 
     public function save(): void

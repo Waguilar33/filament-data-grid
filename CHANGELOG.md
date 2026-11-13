@@ -2,7 +2,7 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
-## Unreleased
+## v1.0.0-beta.46 - 2026-11-13
 
 - `DataGridCheckboxList`: a form field that shows rows as a grid with checkboxes. Its state is the list of selected row keys. Rows that can't be selected (`checkIfRecordIsSelectableUsing()`) have no checkbox and are rejected on save. Header, group and "Select all N" checkboxes, as in a Filament table. Search, filters, paging, grouping, `compact()` and `dense()` as on `DataGridEntry`; the selection survives all of them.
 - A `DataGridEntry` in a form no longer writes nulls into the form data for row components with content below them.

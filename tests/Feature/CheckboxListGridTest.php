@@ -7,6 +7,7 @@ use Filament\Schemas\Components\Text;
 use Filament\Schemas\Components\Utilities\Get;
 use Livewire\Features\SupportTesting\Testable;
 use Waguilar\FilamentDataGrid\DataGridCheckboxList;
+use Waguilar\FilamentDataGrid\Support\SelectedKeysStateCast;
 use Workbench\App\Models\DemoOrder;
 
 /**
@@ -113,4 +114,16 @@ it('gives Eloquent rows their record in the row components, for a reason line', 
     ]);
 
     expect(picker($component)->getGrid()->getGridPayload()['rows'][0]['cells']['reference']['html'])->toContain('Blocked: A-1');
+});
+
+it('shows the first page size by default', function (): void {
+    $payload = picker(mountPicker(fn (DataGridCheckboxList $field): DataGridCheckboxList => $field->paginated([25, 50, 100])))->getGrid()->getGridPayload();
+
+    expect($payload['recordsPerPage'])->toBe(25)
+        ->and($payload['recordsPerPageOptions'])->toBe([25, 50, 100]);
+});
+
+it('casts the selection to a list of unique string keys', function (): void {
+    expect((new SelectedKeysStateCast)->set(['job-1', 'job-1', '', ['nested'], 12, null]))->toBe(['job-1', '12'])
+        ->and((new SelectedKeysStateCast)->get('job-1'))->toBe([]);
 });

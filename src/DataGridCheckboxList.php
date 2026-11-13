@@ -11,7 +11,6 @@ use Filament\Forms\Components\Field;
 use Filament\Infolists\Components\RepeatableEntry\TableColumn;
 use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\StateCasts\Contracts\StateCast;
-use Filament\Schemas\Components\StateCasts\OptionsArrayStateCast;
 use Filament\Schemas\Schema;
 use Filament\Support\Components\Contracts\HasEmbeddedView;
 use Filament\Tables\Filters\BaseFilter;
@@ -20,6 +19,7 @@ use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Traversable;
+use Waguilar\FilamentDataGrid\Support\SelectedKeysStateCast;
 
 class DataGridCheckboxList extends Field implements HasEmbeddedView, HasNestedRecursiveValidationRulesContract
 {
@@ -151,7 +151,7 @@ class DataGridCheckboxList extends Field implements HasEmbeddedView, HasNestedRe
      */
     public function getDefaultStateCasts(): array
     {
-        return [...parent::getDefaultStateCasts(), new OptionsArrayStateCast(shouldCastToInteger: false)];
+        return [...parent::getDefaultStateCasts(), new SelectedKeysStateCast];
     }
 
     public function getGrid(): DataGridEntry

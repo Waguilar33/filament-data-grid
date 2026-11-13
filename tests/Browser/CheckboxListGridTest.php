@@ -120,3 +120,22 @@ it('selects every matching row across pages from the selection bar, then deselec
         ->assertMissing(PICK.' .fi-data-grid-selection-indicator')
         ->assertNoJavaScriptErrors();
 });
+
+it('works inside a slide-over action', function (): void {
+    $slideOver = '.fi-modal-window [id$=".job_ids"]';
+
+    pickJobs('?count=12')
+        ->click('Add jobs')
+        ->assertVisible($slideOver.' .fi-data-grid-select-all')
+        ->click($slideOver.' .fi-data-grid-selection-checkbox[data-key="job-2"]')
+        ->assertSeeIn($slideOver, '1 record selected')
+        ->click($slideOver.' .fi-data-grid-filters-trigger')
+        ->select($slideOver.' .fi-ta-filters select', 'Garland')
+        ->click($slideOver.' .fi-data-grid-filters-apply')
+        ->click($slideOver.' .fi-data-grid-select-all')
+        ->click($slideOver.' .fi-data-grid-select-all-matching')
+        ->assertSeeIn($slideOver, '4 records selected')
+        ->click('.fi-modal-window .fi-modal-footer button[type="submit"]')
+        ->assertScript(savedState('added'), ['job-2', 'job-1', 'job-6', 'job-11'])
+        ->assertNoJavaScriptErrors();
+});
