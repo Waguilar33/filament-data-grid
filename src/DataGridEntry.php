@@ -600,15 +600,30 @@ class DataGridEntry extends RepeatableEntry
 
     public function isRowSelectable(string $key): bool
     {
-        return $this->rowSelection?->isRecordSelectable($key) ?? false;
+        return ! $this->selectsChildRows() && ($this->rowSelection?->isRecordSelectable($key) ?? false);
+    }
+
+    public function selectsChildRows(): bool
+    {
+        return $this->rowSelection?->isSelectingChildRows() ?? false;
     }
 
     /**
-     * @return array{disabled: bool}|null
+     * @return array{key: string, selectable: bool}
+     */
+    public function describeChildSelection(int|string $childKey, Schema $child): array
+    {
+        $key = DataGridCheckboxList::rowKey($childKey, $child->getRecord() ?? $child->getConstantState());
+
+        return ['key' => $key, 'selectable' => $this->rowSelection?->isRecordSelectable($key) ?? false];
+    }
+
+    /**
+     * @return array{disabled: bool, children: bool}|null
      */
     public function describeRowSelection(): ?array
     {
-        return $this->rowSelection === null ? null : ['disabled' => $this->rowSelection->isDisabled()];
+        return $this->rowSelection === null ? null : ['disabled' => $this->rowSelection->isDisabled(), 'children' => $this->selectsChildRows()];
     }
 
     /**

@@ -70,14 +70,14 @@ it('sends each row, whether it can be selected, and the grid groups and columns'
 
     expect(array_column($payload['rows'], 'key'))->toBe(['job-1', 'job-2', 'job-3'])
         ->and(array_column($payload['rows'], 'selectable'))->toBe([true, false, true])
-        ->and($payload['selection'])->toBe(['disabled' => false])
+        ->and($payload['selection'])->toBe(['disabled' => false, 'children' => false])
         ->and(array_column($payload['columns'], 'field'))->toBe(['name']);
 });
 
 it('marks the selection disabled when the field is disabled', function (): void {
     $payload = picker(mountPicker(fn (DataGridCheckboxList $field): DataGridCheckboxList => $field->disabled()))->getGrid()->getGridPayload();
 
-    expect($payload['selection'])->toBe(['disabled' => true]);
+    expect($payload['selection'])->toBe(['disabled' => true, 'children' => false]);
 });
 
 it('keys Eloquent records by their model key', function (): void {

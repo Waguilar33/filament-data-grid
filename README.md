@@ -997,6 +997,43 @@ DataGridCheckboxList::make('job_ids')
 - Row closures such as `belowContent()` run once per row on each render. Submitting the form doesn't run them again: Filament's validation skips the grid's read-only rows. Filament versions older than 5.11 run them once more while saving.
 - Use `paginated()` for more than about a hundred rows. The grid measures every row it shows, so 500 rows on one page take about 3 seconds to appear; 25 per page take about 0.4 seconds.
 
+### Selecting child rows
+
+When each record is a parent carrying its own children, such as orders with their jobs, `selectChildRows()` puts the checkboxes on the child rows. The parent rows keep their own columns and open to show their children, as on `DataGridEntry`:
+
+```php
+DataGridCheckboxList::make('job_ids')
+    ->records(fn () => Order::query()->with('jobs')->get())
+    ->selectChildRows()
+    ->checkIfRecordIsSelectableUsing(fn (Job $record): bool => $record->worker_id !== null)
+    ->searchable()
+    ->filters([SelectFilter::make('product')->options($products)])
+    ->paginated([25, 50, 100])
+    ->table([TableColumn::make('Order'), TableColumn::make('Customer'), TableColumn::make('Date')])
+    ->schema([
+        TextEntry::make('number'),
+        TextEntry::make('customer.name'),
+        TextEntry::make('date')->date(),
+        RepeatableEntry::make('jobs')
+            ->table([TableColumn::make('Product'), TableColumn::make('Worker')])
+            ->schema([
+                TextEntry::make('product')
+                    ->belowContent(fn (Job $record): ?Text => $record->worker_id === null ? Text::make('Waiting for a worker')->color('gray') : null),
+                TextEntry::make('worker.name'),
+            ]),
+    ])
+```
+
+- The state is the list of selected child keys: each child's model key, or its key in the parent's children array. Child keys must be unique across all parents, or the field throws `UnsupportedChildRowSelection`. A parent key is never a value, even when it equals a child key.
+- `checkIfRecordIsSelectableUsing()` receives the child record.
+- Each parent row shows its open arrow, then a checkbox for all of its selectable children that match the search and filters, then how many of them are selected, such as `2/5`. The checkbox works on a closed parent without opening it. A parent with no selectable children has no checkbox.
+- Search matches a parent when its own text or any child's text matches. When the parent's own text matches, all its children show; otherwise only the matching ones.
+- Filters apply to the children: a parent shows while any of its children passes, and only the passing children show under it.
+- Pages count parents, so a parent and its children are never split across pages. The header checkbox selects the matching children of the parents on the current page, and "Select all N" counts matching selectable children.
+- Rows start closed. Which parents are open survives search, filters, paging and Livewire updates.
+- Eager-load the children (`with('jobs')`): the field reads them through the grid's own rows, once per request.
+- `defaultGroup()` can't be combined with `selectChildRows()`.
+
 ## Validation
 
 Validation runs on the server through Filament, using `Repeater`'s keys (`data.lines.{uuid}.quantity`). Invalid cells are outlined in red and show their message on hover. A summary below the grid lists each error by row and column:

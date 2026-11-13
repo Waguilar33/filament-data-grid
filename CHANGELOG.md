@@ -2,6 +2,11 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.49 - 2026-11-13
+
+- `DataGridCheckboxList::selectChildRows()`: parent rows with their own columns open to show their child rows, and the checkboxes select the children. Each parent has a checkbox for its matching selectable children, works while closed, and shows how many are selected, such as `2/5`. Search and filters reach the children. The state is the list of child keys.
+- A row's open arrow and a group's collapse button respond to Enter and Space when focused. The grid used to swallow those keys.
+
 ## v1.0.0-beta.48 - 2026-11-13
 
 - A `DataGridEntry` or `DataGridCheckboxList` in a form no longer runs its row components' closures (`belowContent()`, `visible()`, formatters) seven times per row on submit. Filament's validation and dehydration walked every read-only row; they now skip them, so a submit costs one pass per row, from the render. On Filament versions older than 5.11, which look up state paths without an index, it costs two.
