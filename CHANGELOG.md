@@ -2,6 +2,12 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.50 - 2026-11-13
+
+- `selectChildRows()`: the parent row's checkbox is whole again in a slide-over. Its column was measured while the slide-over was hidden, so the selected count took the checkbox's room; the column is measured again once the grid is visible.
+- The header checkbox, the parent rows' checkboxes and the child rows' checkboxes line up in one column. The child table's checkbox column is padded to sit under its parent's.
+- A `multiple()` or `searchable()` `SelectFilter` in an entry grid's filter panel uses Filament's select, with search and badges, instead of a list of checkboxes.
+
 ## v1.0.0-beta.49 - 2026-11-13
 
 - `DataGridCheckboxList::selectChildRows()`: parent rows with their own columns open to show their child rows, and the checkboxes select the children. Each parent has a checkbox for its matching selectable children, works while closed, and shows how many are selected, such as `2/5`. Search and filters reach the children. The state is the list of child keys.

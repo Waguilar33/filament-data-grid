@@ -124,7 +124,11 @@ it('searches and filters the jobs inside each order and keeps open orders open',
         ->assertScript(orderLines(), ['ORD-002', '- Tree stand', '- Light string', '- Fraser Fir'])
         ->clear(ORDERS.' input[type="search"]')
         ->click(ORDERS.' .fi-data-grid-filters-trigger')
-        ->select(ORDERS.' .fi-ta-filters select', 'Wreath')
+        ->click(ORDERS.' .fi-input-wrp:has([id$="-filter-product"]) .fi-data-grid-filter-select .fi-select-input-btn')
+        ->type(ORDERS.' .fi-input-wrp:has([id$="-filter-product"]) .fi-data-grid-filter-select .fi-select-input-search-ctn input', 'Wre')
+        ->assertCount(ORDERS.' .fi-input-wrp:has([id$="-filter-product"]) .fi-data-grid-filter-select [role="option"]:visible', 1)
+        ->click(ORDERS.' .fi-input-wrp:has([id$="-filter-product"]) .fi-data-grid-filter-select [role="option"]:has-text("Wreath")')
+        ->click(ORDERS.' .fi-ta-filters-heading')
         ->click(ORDERS.' .fi-data-grid-filters-apply')
         ->assertScript(orderLines(), ['ORD-001', '- Wreath', 'ORD-004', 'ORD-006'])
         ->click(ORDERS.' .fi-data-grid-select-all')
@@ -151,5 +155,58 @@ it('works inside a slide-over action', function (): void {
         ->assertSeeIn($slideOver, '3 records selected')
         ->click('.fi-modal-window .fi-modal-footer button[type="submit"]')
         ->assertScript(savedState('added'), ['9', '10', '11'])
+        ->assertNoJavaScriptErrors();
+});
+
+it('lines up the header, order and job checkboxes in one column and keeps the order checkbox whole in a slide-over', function (string $where): void {
+    $page = pickOrderJobs();
+    $grid = ORDERS;
+
+    if ($where === 'slide-over') {
+        $page->click('Add jobs')->assertVisible('.fi-modal-window .slick-row[data-row="0"]');
+        $grid = '.fi-modal-window [id$=".job_ids"]';
+    }
+
+    $page->click($grid.' .slick-row[data-row="1"] .fi-data-grid-row-toggle')->assertScript(GRID_SETTLED);
+
+    $boxes = $page->script(sprintf(<<<'JS'
+        (() => {
+            const grid = document.querySelector(%s)
+            const box = (selector) => { const rect = grid.querySelector(selector).getBoundingClientRect(); return [Math.round(rect.left), Math.round(rect.width)] }
+            return [box('.fi-data-grid-select-all'), box('[data-selection="parent"]'), box('.fi-data-grid-child-selection-cell input')]
+        })()
+        JS, json_encode($grid)));
+
+    expect(array_unique(array_column($boxes, 0)))->toHaveCount(1)
+        ->and(array_column($boxes, 1))->toBe([16, 16, 16]);
+})->with(['page', 'slide-over']);
+
+it('clears a multi-select filter on reset', function (): void {
+    pickOrderJobs()
+        ->click(ORDERS.' .fi-data-grid-filters-trigger')
+        ->click(ORDERS.' .fi-input-wrp:has([id$="-filter-product"]) .fi-data-grid-filter-select .fi-select-input-btn')
+        ->click(ORDERS.' .fi-input-wrp:has([id$="-filter-product"]) .fi-data-grid-filter-select [role="option"]:has-text("Wreath")')
+        ->click(ORDERS.' .fi-ta-filters-heading')
+        ->click(ORDERS.' .fi-data-grid-filters-apply')
+        ->assertScript(orderLines(), ['ORD-001', 'ORD-004', 'ORD-006'])
+        ->click(ORDERS.' .fi-data-grid-filters-trigger')
+        ->click(ORDERS.' .fi-data-grid-filters-reset')
+        ->assertScript(orderLines(), ['ORD-001', 'ORD-002', 'ORD-003', 'ORD-004', 'ORD-005', 'ORD-006'])
+        ->click(ORDERS.' .fi-data-grid-filters-trigger')
+        ->assertDontSeeIn(ORDERS.' .fi-input-wrp:has([id$="-filter-product"]) .fi-data-grid-filter-select .fi-select-input-btn', 'Wreath');
+});
+
+it('searches a single-value filter\'s options and filters the jobs by it', function (): void {
+    $worker = ORDERS.' .fi-input-wrp:has([id$="-filter-worker"]) .fi-data-grid-filter-select';
+
+    pickOrderJobs()
+        ->click(ORDERS.' .fi-data-grid-filters-trigger')
+        ->click($worker.' .fi-select-input-btn')
+        ->type($worker.' .fi-select-input-search-ctn input', '3')
+        ->click($worker.' [role="option"]:has-text("Worker 3")')
+        ->click(ORDERS.' .fi-data-grid-filters-apply')
+        ->assertScript(orderLines(), ['ORD-001', 'ORD-002', 'ORD-005'])
+        ->click(orderToggle('ORD-002'))
+        ->assertScript(orderLines(), ['ORD-001', 'ORD-002', '- Fraser Fir', 'ORD-005'])
         ->assertNoJavaScriptErrors();
 });

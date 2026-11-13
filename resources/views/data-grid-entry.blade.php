@@ -113,7 +113,7 @@
                                             <x-filament-forms::field-wrapper
                                                 :id="$entry->getId() . '-filter-' . $filter['name']"
                                                 :label="$filter['label']"
-                                                :label-tag="$filter['type'] === 'select' && $filter['multiple'] ? 'div' : 'label'"
+                                                :label-tag="$filter['type'] === 'select' && ($filter['multiple'] || $filter['searchable']) ? 'div' : 'label'"
                                             >
                                                 @if ($filter['type'] === 'checkbox')
                                                     <label class="fi-data-grid-filter-checkbox">
@@ -122,19 +122,45 @@
                                                             x-model="draftFilters[{{ \Illuminate\Support\Js::from($filter['name']) }}]"
                                                         />
                                                     </label>
-                                                @elseif ($filter['type'] === 'select' && $filter['multiple'])
-                                                    <div class="fi-data-grid-filter-options">
-                                                        @foreach ($filter['options'] as $option)
-                                                            <label class="fi-data-grid-filter-option">
-                                                                <x-filament::input.checkbox
-                                                                    :value="$option['value']"
-                                                                    x-model="draftFilters[{{ \Illuminate\Support\Js::from($filter['name']) }}]"
-                                                                />
-
-                                                                <span>{{ $option['label'] }}</span>
-                                                            </label>
-                                                        @endforeach
-                                                    </div>
+                                                @elseif ($filter['type'] === 'select' && ($filter['multiple'] || $filter['searchable']))
+                                                    <x-filament::input.wrapper>
+                                                        <div
+                                                            x-load
+                                                            x-load-src="{{ \Filament\Support\Facades\FilamentAsset::getAlpineComponentSrc('select', 'filament/forms') }}"
+                                                            x-data="selectFormComponent({
+                                                                canSelectPlaceholder: true,
+                                                                clearButtonLabel: @js(__('filament-forms::components.select.actions.clear.label')),
+                                                                errorMessage: @js(__('filament-forms::components.select.error_message')),
+                                                                hasDynamicOptions: false,
+                                                                hasDynamicSearchResults: false,
+                                                                id: @js($entry->getId() . '-filter-' . $filter['name']),
+                                                                initialOptionLabel: null,
+                                                                initialOptionLabels: [],
+                                                                initialState: draftFilters[@js($filter['name'])],
+                                                                isMultiple: @js($filter['multiple']),
+                                                                isSearchable: @js($filter['searchable']),
+                                                                loadingMessage: @js(__('filament-forms::components.select.loading_message')),
+                                                                noOptionsMessage: @js(__('filament-forms::components.select.no_options_message')),
+                                                                noSearchResultsMessage: @js(__('filament-forms::components.select.no_search_results_message')),
+                                                                options: @js($filter['options']),
+                                                                optionsLimit: @js($filter['optionsLimit']),
+                                                                placeholder: @js($filter['placeholder']),
+                                                                removeButtonLabel: @js(__('filament-forms::components.select.actions.remove_option.label')),
+                                                                searchingMessage: @js(__('filament-forms::components.select.searching_message')),
+                                                                searchLabel: @js(__('filament-forms::components.select.search_label')),
+                                                                searchPrompt: @js(__('filament-forms::components.select.search_prompt')),
+                                                                state: draftFilters[@js($filter['name'])],
+                                                            })"
+                                                            x-init="
+                                                                $watch('state', (value) => (draftFilters[@js($filter['name'])] = value))
+                                                                $watch(() => draftFilters[@js($filter['name'])], (value) => JSON.stringify(value) !== JSON.stringify(state) && (state = value))
+                                                            "
+                                                            wire:ignore
+                                                            class="fi-select-input fi-data-grid-filter-select"
+                                                        >
+                                                            <div x-ref="select"></div>
+                                                        </div>
+                                                    </x-filament::input.wrapper>
                                                 @else
                                                     <x-filament::input.wrapper>
                                                         <x-filament::input.select
