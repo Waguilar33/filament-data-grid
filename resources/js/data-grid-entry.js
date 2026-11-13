@@ -5,8 +5,12 @@ import { callInParallel, isDarkMode } from './grid/page.js'
 const SERVER_SEARCH_DEBOUNCE_MS = 300
 const REVEAL_DURATION_MS = 150
 
-export default function dataGridEntry({ schemaComponent, translations, icons, loadingSkeletonDelay = null }) {
+export default function dataGridEntry({ schemaComponent, translations, icons, loadingSkeletonDelay = null }, selectionState = null) {
+    let selectedSet = null
+
     return {
+        selected: selectionState ?? [],
+        selectableMatchingCount: 0,
         grid: null,
         childTables: null,
         appliedPayload: null,
@@ -53,10 +57,23 @@ export default function dataGridEntry({ schemaComponent, translations, icons, lo
                 icons,
                 isDarkMode: isDarkMode(),
                 onChange: (state) => Object.assign(this, state),
+                selection: payload.selection
+                    ? {
+                          isSelected: (key) => this.selectedKeys().has(key),
+                          toggle: (keys, isSelected) => this.toggleSelection(keys, isSelected),
+                      }
+                    : null,
                 onReady: () => this.reveal(),
             })
 
             this.isMounted = true
+
+            if (payload.selection) {
+                this.$watch('selected', () => {
+                    selectedSet = null
+                    this.grid.refreshSelection()
+                })
+            }
             this.$watch('search', (value) => this.searchFor(value))
             this.$watch('total', () => this.keepRecordsPerPageShown())
             this.keepRecordsPerPageShown()
@@ -68,6 +85,37 @@ export default function dataGridEntry({ schemaComponent, translations, icons, lo
             if (table && this.hasLoadingSkeleton) {
                 this.observe(table, ['class'], () => this.showSkeleton(table.classList.contains('fi-ta-content-loading')))
             }
+        },
+
+        get selectedCount() {
+            return (Array.isArray(this.selected) ? this.selected : Object.values(this.selected ?? {})).length
+        },
+
+        get unselectedMatchingCount() {
+            const selected = new Set((Array.isArray(this.selected) ? this.selected : Object.values(this.selected ?? {})).map(String))
+
+            return this.grid?.matchingSelectableKeys().filter((key) => !selected.has(key)).length ?? 0
+        },
+
+        selectAllMatching() {
+            this.toggleSelection(this.grid.matchingSelectableKeys(), true)
+        },
+
+        deselectAll() {
+            this.selected = []
+        },
+
+        selectedKeys() {
+            selectedSet ??= new Set((Array.isArray(this.selected) ? this.selected : Object.values(this.selected ?? {})).map(String))
+
+            return selectedSet
+        },
+
+        toggleSelection(keys, isSelected) {
+            const selected = new Set(this.selectedKeys())
+
+            keys.forEach((key) => (isSelected ? selected.add(key) : selected.delete(key)))
+            this.selected = [...selected]
         },
 
         showSkeleton(shows) {

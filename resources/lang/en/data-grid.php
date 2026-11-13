@@ -18,6 +18,9 @@ return [
         'expand' => 'Expand row',
         'collapse' => 'Collapse row',
         'open_record' => 'Open',
+        'select_all' => 'Select all',
+        'select_row' => 'Select row',
+        'select_group' => 'Select :title',
     ],
     'errors' => [
         'row' => 'Row :row',

@@ -16,7 +16,7 @@
 <div
     x-load
     x-load-src="{{ $alpineSrc }}"
-    x-data="filamentDataGridEntry({{ $config }})"
+    x-data="filamentDataGridEntry({{ $config }}@if ($selectionState !== null), {{ $selectionState }}@endif)"
     wire:key="{{ $entry->getLivewireKey() }}.data-grid-entry"
     id="{{ $entry->getId() }}"
     @class(['fi-data-grid fi-data-grid-entry-grid', 'fi-data-grid-compact' => $entry->isCompact(), 'fi-data-grid-dense' => $entry->hasDenseRows(), 'fi-data-grid-heading-has-icon' => $hasHeader && filled($icon)])
@@ -162,6 +162,34 @@
                             </x-filament::dropdown>
                         @endif
                     </div>
+                </div>
+            @endif
+
+            @if ($payload['selection'] !== null)
+                <div x-cloak x-show="selectedCount > 0" class="fi-ta-selection-indicator fi-data-grid-selection-indicator">
+                    <div>
+                        <span x-text="window.pluralize(@js(__('filament-tables::table.selection_indicator.selected_count')), selectedCount, { count: new Intl.NumberFormat(@js(str_replace('_', '-', app()->getLocale()))).format(selectedCount) })"></span>
+                    </div>
+
+                    @if (! $payload['selection']['disabled'])
+                        <div>
+                            <div class="fi-ta-selection-indicator-actions-ctn">
+                                <x-filament::link
+                                    color="primary"
+                                    tag="button"
+                                    x-on:click="selectAllMatching()"
+                                    x-show="unselectedMatchingCount > 0"
+                                    class="fi-data-grid-select-all-matching"
+                                >
+                                    <span x-text="window.pluralize(@js(__('filament-tables::table.selection_indicator.actions.select_all.label')), selectableMatchingCount, { count: new Intl.NumberFormat(@js(str_replace('_', '-', app()->getLocale()))).format(selectableMatchingCount) })"></span>
+                                </x-filament::link>
+
+                                <x-filament::link color="danger" tag="button" x-on:click="deselectAll()" class="fi-data-grid-deselect-all">
+                                    {{ __('filament-tables::table.selection_indicator.actions.deselect_all.label') }}
+                                </x-filament::link>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             @endif
 

@@ -951,6 +951,41 @@ To make every grid in your app server-side, set it once in a service provider. A
 DataGridEntry::configureUsing(fn (DataGridEntry $entry) => $entry->serverSide());
 ```
 
+## Selecting rows
+
+`DataGridCheckboxList` is a form field that shows rows as a read-only grid with a checkbox on each, like Filament's `CheckboxList` laid out as a table. Its state is the list of selected row keys, so `$get()`, `live()`, validation and saving work as for any field:
+
+```php
+use Filament\Infolists\Components\RepeatableEntry\TableColumn;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Text;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Grouping\Group;
+use Waguilar\FilamentDataGrid\DataGridCheckboxList;
+
+DataGridCheckboxList::make('job_ids')
+    ->records(fn () => Job::query()->pending()->get())
+    ->checkIfRecordIsSelectableUsing(fn (Job $record): bool => $record->unit_id !== null)
+    ->defaultGroup(Group::make('sale')->getKeyFromRecordUsing(fn (Job $record): string => $record->sale_id ?? "order-{$record->order_id}"))
+    ->searchable()
+    ->filters([SelectFilter::make('product')->options($products)])
+    ->paginated([25, 50, 100])
+    ->table([TableColumn::make('Product'), TableColumn::make('Quantity')->alignEnd()])
+    ->schema([
+        TextEntry::make('product')
+            ->belowContent(fn (Job $record): ?Text => $record->unit_id === null ? Text::make('Waiting for its unit')->color('gray') : null),
+        TextEntry::make('quantity')->numeric(),
+    ])
+```
+
+- `records()` takes an array, a collection or a closure. Each row's key is its model key, or its array key for array rows. The state is a list of those keys as strings, for example `['12', '15']`.
+- `checkIfRecordIsSelectableUsing()` is Filament's own method name. A row it rejects has no checkbox, as in a Filament table, and the field rejects its key on save, as it does any key that isn't one of the rows. To say why, use `belowContent()` on one of the row's entries. Eloquent rows get `$record`; for array rows, read `$component->getContainer()->getConstantState()`.
+- The header checkbox selects the selectable rows on the current page that match the search and filters. Once rows are selected, a bar shows the count, with Filament's "Select all N" (every selectable row matching the search and filters, on every page) and "Deselect all" (the whole selection).
+- `defaultGroup()` works as on `DataGridEntry`. Each group header has a checkbox for that group's selectable rows on the current page, as in Filament.
+- The selection stays when the search, the filters or the page change. Filament's table clears it on a new filter (`deselectAllRecordsWhenFiltered()`); a form field keeps it, as `CheckboxList` keeps checked options that a search hides.
+- `searchable()`, `filters()`, `paginated()`, `defaultPaginationPageOption()`, `compact()`, `dense()` and `wrapCells()` work as on `DataGridEntry`. The rows are searched and filtered in the browser, so only `SelectFilter` and `TernaryFilter` apply; a `Filter` with a custom query does not.
+- Use `paginated()` for more than about a hundred rows. The grid measures every row it shows, so 500 rows on one page take about 3 seconds to appear; 25 per page take about 0.4 seconds.
+
 ## Validation
 
 Validation runs on the server through Filament, using `Repeater`'s keys (`data.lines.{uuid}.quantity`). Invalid cells are outlined in red and show their message on hover. A summary below the grid lists each error by row and column:

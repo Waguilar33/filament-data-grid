@@ -6,6 +6,9 @@ import { createWidthProbe, distribute, probeRequest, sumOf, toPixels } from './c
 const TOGGLE_COLUMN = '__toggle'
 const ACTIONS_COLUMN = '__actions'
 const LINK_COLUMN = '__link'
+const SELECTION_COLUMN = '__selection'
+const CHECKBOX_WIDTH = 16
+const CHECKBOX_GAP = 12
 const LINK_WIDTH = 44
 const FALLBACK_ROW_HEIGHT = 44
 const DEFAULT_CHILD_TABLE_PADDING = 15
@@ -26,6 +29,13 @@ const childGridTemplate = (columns) =>
 
 const tableCellHtml = (html, alignment) => `<div class="fi-ta-col"><div class="fi-ta-text fi-align-${alignment ?? 'start'}">${html}</div></div>`
 
+const stripTags = (html) => {
+    const element = document.createElement('div')
+    element.innerHTML = html
+
+    return element.textContent ?? ''
+}
+
 const cellContent = (cell) => (cell && cell.visible !== false ? (cell.html ?? '') : '')
 
 const childCellClasses = (column, isHeader = false) =>
@@ -43,9 +53,11 @@ const childCellHtml = (cell, column, isHeader) => {
     return `<div class="${classes}" role="cell">${childCellContent(cell, column)}</div>`
 }
 
-export function createEntryGrid(element, { payload, translations, icons, isDarkMode, onChange, onReady, childTables = null }) {
+export function createEntryGrid(element, { payload, translations, icons, isDarkMode, onChange, onReady, childTables = null, selection = null }) {
     let rows = []
     let visible = []
+    let viewRows = []
+    let matchingRows = []
     let search = ''
     let page = payload.page ?? 1
     let recordsPerPage = payload.recordsPerPage ?? null
@@ -142,6 +154,8 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         hasMatchingRows = matching.length > 0
 
         visible = []
+        viewRows = pageRows
+        matchingRows = matching
 
         pageRows.forEach((row, index) => {
             if (row.group && (index === 0 || pageRows[index - 1].group?.key !== row.group.key)) {
@@ -186,12 +200,15 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         }
 
         measureRows()
+        rememberSelection()
+        updateSelectAll()
 
         onChange?.({
             page,
             pageCount: pageCountFor(total),
             recordsPerPage,
             total,
+            selectableMatchingCount: matching.filter((row) => row.selectable).length,
             first: total === 0 ? 0 : start + 1,
             last: start + pageRows.length,
         })
@@ -320,9 +337,79 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         })
     }
 
+    const hasSelection = () => Boolean(payload.selection && selection)
+
+    const spanStart = (item) => (item.kind === 'group' && hasSelection() ? 1 : 0)
+
+    const selectableKeys = (candidates) => candidates.filter((row) => row.selectable).map((row) => row.key)
+
+    const groupKeys = (group) => selectableKeys(viewRows.filter((row) => row.group?.key === group.key))
+
+    const selectionState = (keys) => {
+        const count = keys.filter((key) => selection.isSelected(key)).length
+
+        return { checked: keys.length > 0 && count === keys.length, indeterminate: count > 0 && count < keys.length }
+    }
+
+    const checkboxHtml = (target, label, { checked, indeterminate = false }, extra = '') =>
+        `<input type="checkbox" class="fi-checkbox-input fi-data-grid-selection-checkbox" data-selection="${target}" aria-label="${escapeHtml(label)}"${extra}${checked ? ' checked' : ''}${indeterminate ? ' data-indeterminate' : ''}${payload.selection?.disabled ? ' disabled' : ''}>`
+
+    const formatSelection = (rowIndex, cellIndex, value, column, item) => {
+        if (item.kind === 'parent') {
+            return item.row.selectable
+                ? checkboxHtml('row', translations.select_row, { checked: selection.isSelected(item.row.key) }, ` data-key="${escapeHtml(item.row.key)}"`)
+                : ''
+        }
+
+        if (item.kind === 'group') {
+            const keys = groupKeys(item.group)
+
+            return keys.length > 0
+                ? checkboxHtml('group', translations.select_group.replace(':title', stripTags(item.group.title)), selectionState(keys), ` data-group="${escapeHtml(item.group.key ?? '')}"`)
+                : ''
+        }
+
+        return formatChildRow(item)
+    }
+
+    let renderedSelection = new Set()
+
+    const rememberSelection = () => {
+        renderedSelection = new Set(hasSelection() ? viewRows.filter((row) => row.selectable && selection.isSelected(row.key)).map((row) => row.key) : [])
+    }
+
+    const markIndeterminate = () => element.querySelectorAll('.fi-data-grid-selection-checkbox').forEach((checkbox) => (checkbox.indeterminate = checkbox.hasAttribute('data-indeterminate')))
+
+    const updateSelectAll = () => {
+        const checkbox = element.querySelector('.fi-data-grid-select-all')
+
+        if (!checkbox || !hasSelection()) {
+            return
+        }
+
+        const keys = selectableKeys(viewRows)
+        const { checked, indeterminate } = selectionState(keys)
+
+        checkbox.checked = checked
+        checkbox.indeterminate = indeterminate
+        checkbox.disabled = keys.length === 0 || Boolean(payload.selection.disabled)
+    }
+
+    const toggleSelection = (checkbox) => {
+        const target = checkbox.dataset.selection
+        const keys =
+            target === 'row'
+                ? [checkbox.dataset.key]
+                : target === 'group'
+                  ? groupKeys(viewRows.find((row) => (row.group?.key ?? '') === checkbox.dataset.group)?.group ?? {})
+                  : selectableKeys(viewRows)
+
+        selection.toggle(keys, target === 'row' ? checkbox.checked : !selectionState(keys).checked)
+    }
+
     const formatCell = (rowIndex, cellIndex, value, column, item) => {
         if (item.kind !== 'parent') {
-            return cellIndex === 0 ? formatChildRow(item) : ''
+            return cellIndex === spanStart(item) ? formatChildRow(item) : ''
         }
 
         const cell = item.row.cells[column.field]
@@ -403,6 +490,23 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
             })
         }
 
+        if (hasSelection()) {
+            columns.unshift({
+                id: SELECTION_COLUMN,
+                field: SELECTION_COLUMN,
+                name: `<input type="checkbox" class="fi-checkbox-input fi-data-grid-select-all" data-selection="page" aria-label="${escapeHtml(translations.select_all)}">`,
+                fixedWidth: selectionWidth(),
+                width: selectionWidth(),
+                resizable: false,
+                sortable: false,
+                focusable: false,
+                selectable: false,
+                cssClass: 'fi-data-grid-cell fi-data-grid-selection-cell',
+                headerCssClass: 'fi-ta-header-cell fi-data-grid-header fi-data-grid-selection-cell',
+                formatter: formatSelection,
+            })
+        }
+
         insetEdgeColumns(columns)
 
         if (frozenColumnIndex() >= 0) {
@@ -412,6 +516,8 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
 
         return columns
     }
+
+    const selectionWidth = () => Math.max(edgeInset(), CHECKBOX_GAP) + CHECKBOX_WIDTH + CHECKBOX_GAP
 
     const widthOfContainer = () => containerWidth ?? element.getBoundingClientRect().width
 
@@ -432,7 +538,10 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
         const [first] = columns
         const last = columns.at(-1)
 
-        if (first.id === TOGGLE_COLUMN) {
+        if (first.id === SELECTION_COLUMN) {
+            first.cssClass += ' fi-data-grid-selection-cell-inset'
+            first.headerCssClass += ' fi-data-grid-selection-cell-inset'
+        } else if (first.id === TOGGLE_COLUMN) {
             first.cssClass += ' fi-data-grid-toggle-cell-inset'
 
             if (columns[1]) {
@@ -731,6 +840,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
                         expanded.has(item.row.key) ? 'fi-data-grid-parent-row-expanded' : '',
                         item.row.link ? 'fi-data-grid-parent-row-linked' : '',
                         isLast ? 'fi-data-grid-row-last' : '',
+                        hasSelection() && item.row.selectable && selection.isSelected(item.row.key) ? 'fi-selected fi-data-grid-row-selected' : '',
                     ].join(' '),
                 }
             }
@@ -740,7 +850,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
                 cssClasses: `${item.kind === 'group' ? 'fi-data-grid-group-row' : 'fi-data-grid-child-row-wrapper'} ${isLast ? 'fi-data-grid-row-last' : ''}`,
                 focusable: false,
                 selectable: false,
-                columns: { 0: { colspan: '*' } },
+                columns: spanStart(item) > 0 ? { 0: { colspan: 1 }, [spanStart(item)]: { colspan: '*' } } : { 0: { colspan: '*' } },
             }
         },
     }
@@ -840,6 +950,17 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
     }
 
     grid.onRendered.subscribe(positionChildTables)
+    grid.onRendered.subscribe(markIndeterminate)
+
+    const clickSelection = (event) => {
+        const checkbox = event.target.closest?.('.fi-data-grid-selection-checkbox, .fi-data-grid-select-all')
+
+        if (checkbox && hasSelection() && element.contains(checkbox)) {
+            toggleSelection(checkbox)
+        }
+    }
+
+    element.addEventListener('click', clickSelection)
     grid.onFooterRowCellRendered.subscribe((event, { node, column }) => renderTotal(node, column))
     renderTotals()
 
@@ -1024,6 +1145,22 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
 
         redraw,
 
+        matchingSelectableKeys: () => selectableKeys(matchingRows),
+
+        refreshSelection() {
+            const changed = new Set(viewRows.filter((row) => row.selectable && selection.isSelected(row.key) !== renderedSelection.has(row.key)).map((row) => row.key))
+            const changedGroups = new Set(viewRows.filter((row) => changed.has(row.key) && row.group).map((row) => row.group.key))
+            const indexes = visible.flatMap((item, index) =>
+                (item.kind === 'parent' && changed.has(item.row.key)) || (item.kind === 'group' && changedGroups.has(item.group.key)) ? [index] : [],
+            )
+
+            rememberSelection()
+            grid.invalidateRows(indexes)
+            grid.render()
+            updateSelectAll()
+            markIndeterminate()
+        },
+
         setPayload(nextPayload) {
             const hadToggles = hasChildren()
             const columnsChanged =
@@ -1066,6 +1203,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
             element.removeEventListener('mouseover', hoverFrozenRow)
             element.removeEventListener('mouseleave', clearHoveredRows)
             element.removeEventListener('auxclick', openRecordLinkInNewTab)
+            element.removeEventListener('click', clickSelection)
             document.fonts?.removeEventListener?.('loadingdone', remeasure)
             grid.destroy()
             grid = null
