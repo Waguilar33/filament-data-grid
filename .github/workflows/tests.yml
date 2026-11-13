@@ -123,6 +123,8 @@ jobs:
           composer config audit.block-insecure false
           composer require "laravel/framework:13.*" "filament/filament:${{ matrix.filament }}" --no-interaction --no-update
           composer require --dev "orchestra/testbench:^11.3" "pestphp/pest:${{ matrix.pest }}" "pestphp/pest-plugin-browser:${{ matrix.browser }}" --no-interaction --no-update
+          # paratest 7.28.0 breaks Pest 5.3.5's --parallel test discovery (TypeError in WrapperRunner).
+          composer require --dev "brianium/paratest:<7.28" --no-interaction --no-update
           composer update --prefer-stable --prefer-dist --no-interaction
 
       - name: List installed versions
