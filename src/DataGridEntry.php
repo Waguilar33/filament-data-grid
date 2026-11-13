@@ -41,7 +41,6 @@ use Waguilar\FilamentDataGrid\Entry\Concerns\HasRecordUrl;
 use Waguilar\FilamentDataGrid\Entry\DescribeTableRecord;
 use Waguilar\FilamentDataGrid\Entry\EntryFilters;
 use Waguilar\FilamentDataGrid\Entry\EntryPage;
-use Waguilar\FilamentDataGrid\Entry\ReadOnlyRowSchema;
 use Waguilar\FilamentDataGrid\Exceptions\UnsupportedChildTable;
 use Waguilar\FilamentDataGrid\Exceptions\UnsupportedRecordActions;
 use Waguilar\FilamentDataGrid\Exceptions\UnsupportedTotals;
@@ -667,15 +666,6 @@ class DataGridEntry extends RepeatableEntry
     public function isToggledHidden(string $field): bool
     {
         return in_array($field, $this->toggledHiddenFields, true);
-    }
-
-    protected function makeChildSchema(string $key): Schema
-    {
-        if ($key !== 'default') {
-            return parent::makeChildSchema($key);
-        }
-
-        return ReadOnlyRowSchema::make($this->getLivewire())->parentComponent($this, shouldFlushCachedHierarchy: false);
     }
 
     public function getChildRowsEntry(Schema $item): ?RepeatableEntry
