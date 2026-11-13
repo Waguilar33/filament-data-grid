@@ -13,11 +13,35 @@ trait HasGrouping
 {
     protected string|Group|Closure|null $defaultGroup = null;
 
+    protected bool|Closure $areGroupsCollapsedByDefault = false;
+
     public function defaultGroup(string|Group|Closure|null $group): static
     {
         $this->defaultGroup = $group;
 
         return $this;
+    }
+
+    public function collapsedGroupsByDefault(bool|Closure $condition = true): static
+    {
+        $this->areGroupsCollapsedByDefault = $condition;
+
+        return $this;
+    }
+
+    public function areGroupsCollapsedByDefault(): bool
+    {
+        return (bool) $this->evaluate($this->areGroupsCollapsedByDefault);
+    }
+
+    /**
+     * @return array{collapsible: bool, collapsedByDefault: bool}|null
+     */
+    public function describeGrouping(): ?array
+    {
+        $collapsible = $this->getGrouping()?->isCollapsible();
+
+        return $collapsible === null ? null : ['collapsible' => $collapsible, 'collapsedByDefault' => $collapsible && $this->areGroupsCollapsedByDefault()];
     }
 
     public function getGrouping(): ?Group

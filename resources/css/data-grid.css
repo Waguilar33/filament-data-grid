@@ -1434,3 +1434,14 @@
 .fi-data-grid-dense .fi-data-grid-canvas .slick-row.fi-data-grid-group-row:has(> .fi-data-grid-selection-cell) .fi-data-grid-group-header {
     padding-inline-start: calc(var(--spacing) * 1.5);
 }
+
+.fi-data-grid-group-count {
+    font-size: var(--text-sm);
+    line-height: var(--text-sm--line-height);
+    font-variant-numeric: tabular-nums;
+    color: var(--gray-500);
+}
+
+.dark .fi-data-grid-group-count {
+    color: var(--gray-400);
+}

@@ -49,3 +49,13 @@ it('leaves rows ungrouped without a default group', function (): void {
     expect(array_column($rows, 'key'))->toBe(['a', 'b', 'c', 'd'])
         ->and(array_column($rows, 'group'))->toBe([null, null, null, null]);
 });
+
+it('describes whether groups collapse and start collapsed', function (Group|string|null $group, bool $collapsedByDefault, ?array $expected): void {
+    expect(groupedEntry($group)->collapsedGroupsByDefault($collapsedByDefault)->getGridPayload()['grouping'])->toBe($expected);
+})->with([
+    'no group' => [null, true, null],
+    'not collapsible' => [Group::make('sale'), false, ['collapsible' => false, 'collapsedByDefault' => false]],
+    'collapsed by default only applies to collapsible groups' => [Group::make('sale'), true, ['collapsible' => false, 'collapsedByDefault' => false]],
+    'collapsible' => [Group::make('sale')->collapsible(), false, ['collapsible' => true, 'collapsedByDefault' => false]],
+    'collapsible and collapsed' => [Group::make('sale')->collapsible(), true, ['collapsible' => true, 'collapsedByDefault' => true]],
+]);

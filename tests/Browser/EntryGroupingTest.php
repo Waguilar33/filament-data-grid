@@ -22,3 +22,17 @@ it('shows a group header before each group of rows', function (): void {
     ]);
     $page->assertNoJavaScriptErrors();
 });
+
+it('collapses a group of a read-only grid from its header or its keyboard-focused toggle', function (): void {
+    $page = visit('/demo/jobs-demo?collapsed=1')->resize(1440, 900)->waitForEvent('networkidle')->assertScript(GRID_SETTLED);
+    $rows = sprintf('document.querySelectorAll(%s).length', json_encode(JOBS.' .slick-row.fi-data-grid-parent-row'));
+
+    $page->assertScript($rows, 6)
+        ->click(JOBS.' .slick-row[data-row="0"] .fi-ta-group-heading')
+        ->assertScript($rows, 4)
+        ->assertAttribute(JOBS.' .slick-row[data-row="0"] .fi-data-grid-group-toggle', 'aria-expanded', 'false')
+        ->assertMissing(JOBS.' .fi-data-grid-group-count')
+        ->keys(JOBS.' .slick-row[data-row="0"] .fi-data-grid-group-toggle', 'Enter')
+        ->assertScript($rows, 6)
+        ->assertNoJavaScriptErrors();
+});

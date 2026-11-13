@@ -61,6 +61,7 @@ final readonly class BuildEntryPayload
             'recordsPerPageOptions' => $entry->getPaginationPageOptions(),
             'recordsPerPage' => $entry->getDefaultPaginationPageOption(),
             'selection' => $entry->describeRowSelection(),
+            'grouping' => $entry->describeGrouping(),
         ];
     }
 

@@ -139,3 +139,79 @@ it('works inside a slide-over action', function (): void {
         ->assertScript(savedState('added'), ['job-2', 'job-1', 'job-6', 'job-11'])
         ->assertNoJavaScriptErrors();
 });
+
+function groupHeader(string $grid, string $group): string
+{
+    return sprintf('%s .slick-row.fi-data-grid-group-row:has([data-group="%s"])', $grid, $group);
+}
+
+function groupCount(string $group): string
+{
+    return sprintf('document.querySelector(%s)?.textContent', json_encode(groupHeader(PICK, $group).' .fi-data-grid-group-count'));
+}
+
+function shownRows(string $grid): string
+{
+    return sprintf(<<<'JS'
+        [...document.querySelectorAll('%s .grid-canvas .slick-row')]
+            .sort((a, b) => parseFloat(a.style.top) - parseFloat(b.style.top))
+            .map((row) => row.classList.contains('fi-data-grid-group-row') ? `# ${row.querySelector('.fi-ta-group-heading').textContent.trim()}` : row.querySelector('.fi-data-grid-entry .fi-in-text-item')?.textContent.trim())
+        JS, $grid);
+}
+
+it('starts with every group collapsed and expands or collapses a group from its header', function (): void {
+    pickJobs('?collapsed=1&onlyPicker=1')
+        ->assertScript(shownRows(PICK), ['# Sale S-001', '# Order P-003', '# Sale S-002', '# Sale S-003', '# Order P-006'])
+        ->assertAttribute(groupHeader(PICK, 'S-001').' .fi-data-grid-group-toggle', 'aria-expanded', 'false')
+        ->click(groupHeader(PICK, 'S-001').' .fi-ta-group-heading')
+        ->assertScript(shownRows(PICK), ['# Sale S-001', 'Garland', 'Wreath', '# Order P-003', '# Sale S-002', '# Sale S-003', '# Order P-006'])
+        ->assertAttribute(groupHeader(PICK, 'S-001').' .fi-data-grid-group-toggle', 'aria-expanded', 'true')
+        ->click(groupHeader(PICK, 'S-001').' .fi-data-grid-group-toggle')
+        ->assertMissing(jobCheckbox('job-1'))
+        ->assertNoJavaScriptErrors();
+});
+
+it('selects a collapsed group without expanding it and counts its selected rows', function (): void {
+    pickJobs('?collapsed=1&onlyPicker=1')
+        ->assertScript(groupCount('S-001'), '0/2')
+        ->click(groupCheckbox('S-001'))
+        ->assertSee('2 selected')
+        ->assertMissing(jobCheckbox('job-1'))
+        ->assertScript(groupCount('S-001'), '2/2')
+        ->click(groupHeader(PICK, 'S-001').' .fi-ta-group-heading')
+        ->click(jobCheckbox('job-2'))
+        ->assertSee('1 selected')
+        ->assertScript(groupCount('S-001'), '1/2')
+        ->assertNoJavaScriptErrors();
+});
+
+it('selects a whole group from its header when the group spans two pages', function (): void {
+    pickJobs('?perPage=1&onlyPicker=1')
+        ->click(groupCheckbox('S-001'))
+        ->assertSee('2 selected')
+        ->click(PICK.' .fi-pagination-items [rel="next"]')
+        ->assertScript(checkedKeys(), ['job-2'])
+        ->assertScript(sprintf('document.querySelector(%s).checked', json_encode(groupCheckbox('S-001'))), true)
+        ->assertScript(groupCount('S-001'), '2/2');
+});
+
+it('keeps groups collapsed or expanded through search, filters, pages and server round trips', function (): void {
+    $page = pickJobs('?collapsed=1&onlyPicker=1&count=12&perPage=4')
+        ->click(groupHeader(PICK, 'S-001').' .fi-ta-group-heading')
+        ->type(PICK.' input[type="search"]', 'Garland')
+        ->assertScript(shownRows(PICK), ['# Sale S-001', 'Garland', '# Order P-006', '# Sale S-006'])
+        ->clear(PICK.' input[type="search"]')
+        ->click(PICK.' .fi-data-grid-filters-trigger')
+        ->select(PICK.' .fi-ta-filters select', 'Garland')
+        ->click(PICK.' .fi-data-grid-filters-apply')
+        ->assertScript(shownRows(PICK), ['# Sale S-001', 'Garland', '# Order P-006', '# Sale S-006'])
+        ->click(PICK.' .fi-data-grid-filters-trigger')
+        ->click(PICK.' .fi-ta-filters-header button')
+        ->click(PICK.' .fi-pagination-items [rel="next"]')
+        ->click(PICK.' .fi-pagination-items [rel="prev"]')
+        ->click(jobCheckbox('job-1'))
+        ->assertSee('1 selected');
+
+    $page->assertScript(shownRows(PICK), ['# Sale S-001', 'Garland', 'Wreath', '# Order P-003', '# Sale S-002'])
+        ->assertNoJavaScriptErrors();
+});
