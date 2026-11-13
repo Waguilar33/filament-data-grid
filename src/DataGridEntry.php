@@ -127,6 +127,8 @@ class DataGridEntry extends RepeatableEntry
 
     protected Alignment|string|Closure|null $totalsLabelAlignment = null;
 
+    private ?DataGridCheckboxList $rowSelection = null;
+
     private bool $isRendering = false;
 
     private bool $hasCachedState = false;
@@ -575,6 +577,44 @@ class DataGridEntry extends RepeatableEntry
         return is_int($height) && $height > 0 ? $height : null;
     }
 
+    /**
+     * @internal
+     */
+    public function selectRowsWith(DataGridCheckboxList $field): static
+    {
+        $this->rowSelection = $field;
+
+        return $this;
+    }
+
+    public function hasRowSelection(): bool
+    {
+        return $this->rowSelection !== null;
+    }
+
+    public function isRowSelectable(string $key): bool
+    {
+        return $this->rowSelection?->isRecordSelectable($key) ?? false;
+    }
+
+    /**
+     * @return array{disabled: bool}|null
+     */
+    public function describeRowSelection(): ?array
+    {
+        return $this->rowSelection === null ? null : ['disabled' => $this->rowSelection->isDisabled()];
+    }
+
+    /**
+     * @internal
+     */
+    public function renderSelectionGrid(): string
+    {
+        $this->flushCachedState();
+
+        return $this->renderGridView();
+    }
+
     public function isTableContent(): bool
     {
         return $this->isTableContent;
@@ -701,6 +741,9 @@ class DataGridEntry extends RepeatableEntry
         return [...$payload, 'isEmpty' => $isEmpty, 'hasEmptyState' => ! $this->isTableContent() && $this->hasEmptyState()];
     }
 
+    // Row schemas read constant state; Filament would otherwise write nulls for their nested non-entry components into the form data.
+    public function fillStateWithNull(): void {}
+
     public function getConstantStateUsing(mixed $callback): static
     {
         $this->flushCachedState();
@@ -750,9 +793,14 @@ class DataGridEntry extends RepeatableEntry
 
     private function renderEmbeddedHtml(): string
     {
+        return $this->wrapEmbeddedHtml($this->renderGridView());
+    }
+
+    private function renderGridView(): string
+    {
         $items = $this->isServerSide() ? null : $this->getItems();
 
-        $html = view($this->isTableContent() ? 'filament-data-grid::data-grid-table-content' : 'filament-data-grid::data-grid-entry', [
+        return view($this->isTableContent() ? 'filament-data-grid::data-grid-table-content' : 'filament-data-grid::data-grid-entry', [
             'entry' => $this,
             'payload' => $this->buildGridPayload($items),
             'childTables' => $items === null ? [] : $this->renderChildTables($items),
@@ -773,9 +821,8 @@ class DataGridEntry extends RepeatableEntry
                 ],
                 'loadingSkeletonDelay' => $this->hasLoadingSkeleton() ? $this->getLoadingSkeletonDelay() : null,
             ]),
+            'selectionState' => $this->rowSelection === null ? null : '$wire.'.$this->rowSelection->applyStateBindingModifiers("\$entangle('{$this->rowSelection->getStatePath()}')"),
         ])->render();
-
-        return $this->wrapEmbeddedHtml($html);
     }
 
     /**

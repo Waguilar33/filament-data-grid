@@ -18,6 +18,9 @@ return [
         'expand' => 'Expandir fila',
         'collapse' => 'Contraer fila',
         'open_record' => 'Abrir',
+        'select_all' => 'Seleccionar todo',
+        'select_row' => 'Seleccionar fila',
+        'select_group' => 'Seleccionar :title',
     ],
     'errors' => [
         'row' => 'Fila :row',

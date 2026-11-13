@@ -60,6 +60,7 @@ final readonly class BuildEntryPayload
             'filters' => $entry->getEntryFilters()->describe(),
             'recordsPerPageOptions' => $entry->getPaginationPageOptions(),
             'recordsPerPage' => $entry->getDefaultPaginationPageOption(),
+            'selection' => $entry->describeRowSelection(),
         ];
     }
 
@@ -127,6 +128,7 @@ final readonly class BuildEntryPayload
             'children' => $children === null ? [] : $this->describeChildren($entry, $key, $item, $children),
             'above' => $entry->renderExpandedAbove($item),
             'below' => $entry->renderExpandedBelow($item),
+            'selectable' => $entry->isRowSelectable($key),
             'height' => $entry->getRowHeight($entry->hasRowHeightPerRow() ? $this->rawState($item) : []),
             ...$entry->describeRecord($key, $item),
         ];

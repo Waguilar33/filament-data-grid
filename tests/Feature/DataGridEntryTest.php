@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\RepeatableEntry\TableColumn;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Text;
 use Filament\Support\Enums\IconSize;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Filters\Filter;
@@ -527,4 +528,16 @@ it('renders the search toolbar only when the grid has rows', function (): void {
     mountDeliveries(fn (DataGridEntry $entry): DataGridEntry => $entry->searchable()->state([]))
         ->assertDontSeeHtml('fi-ta-header-toolbar')
         ->assertDontSeeHtml('fi-ta-search-field');
+});
+
+it('writes nothing into the form data when a row component has content below it', function (): void {
+    $component = mountLines([], fn (): array => [
+        DataGridEntry::make('deliveries')
+            ->state([['number' => 'DLV-1']])
+            ->schema([
+                TextEntry::make('number')->belowContent(Text::make('Late')),
+            ]),
+    ]);
+
+    expect($component->get('data'))->toBe(['lines' => []]);
 });
