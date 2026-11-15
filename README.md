@@ -554,6 +554,7 @@ Livewire must be able to find the component on later requests. On Livewire 3 tha
 - It works in a standalone `DataGridEntry` (browser mode) and in `toTableContent()`, where Filament pages the parents and the children follow. It can't be combined with `serverSide()`: pages loaded that way don't go through Livewire's render, so they can't mount components, and the grid throws `UnsupportedChildTable`.
 - Filament remembers a table's per-page choice in the session by component class, so every child table of the same class opens with the per-page the user last picked in any of them.
 - `childTable()` replaces a nested `RepeatableEntry` child table. `expandedAbove()` and `expandedBelow()` still show above and below it.
+- The component can be a closure that gets the row's `$state` and `$record` and returns `null` for a row that has no child table, such as a payment method with no payments. That row opens only for its `expandedAbove()` and `expandedBelow()` content.
 
 ### Looks like a Filament table
 

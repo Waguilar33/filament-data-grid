@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.54 - 2026-11-15
+
+- `childTable()` can decide per row: pass a closure that receives the row's `$state` (and `$record`) and returns the component, or `null` for a row with no child table. That row opens only for its `expandedAbove()` / `expandedBelow()` content, or doesn't open at all.
+
 ## v1.0.0-beta.53 - 2026-11-15
 
 - With `frozenColumns()`, a grid wider than its room keeps its scrolling pane to the grid's edge when the room changes without the window resizing, such as when the panel sidebar opens or closes. The pane kept its old width, cutting off the last columns or leaving a gap, because column widths did not change and the canvas was never resized.

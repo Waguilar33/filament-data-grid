@@ -513,16 +513,24 @@ class DataGridEntry extends RepeatableEntry
         return $this;
     }
 
-    public function getChildTableComponent(): ?string
+    /**
+     * @param  array<array-key, mixed>  $state
+     */
+    public function getChildTableComponent(array $state = [], ?Model $record = null): ?string
     {
-        $component = $this->evaluate($this->childTable);
+        $component = $this->evaluate($this->childTable, [
+            'record' => $record ?? $state,
+            'state' => $state,
+        ], [
+            Model::class => $record,
+        ]);
 
         return is_string($component) && $component !== '' ? $component : null;
     }
 
     public function hasChildTable(): bool
     {
-        return $this->getChildTableComponent() !== null;
+        return $this->childTable instanceof Closure || $this->getChildTableComponent() !== null;
     }
 
     /**
@@ -531,16 +539,20 @@ class DataGridEntry extends RepeatableEntry
      */
     public function renderChildTables(array $items): array
     {
-        $component = $this->getChildTableComponent();
-
-        if ($component === null) {
+        if (! $this->hasChildTable()) {
             return [];
         }
 
         $html = [];
 
         foreach ($items as $key => $item) {
-            $html[(string) $key] = $this->renderChildTable($component, (string) $key, $item);
+            $record = $item->getRecord(withParentComponentRecord: false);
+            $state = $record instanceof Model ? $record->toArray() : $item->getConstantState();
+            $component = $this->getChildTableComponent(is_array($state) ? $state : [], $record instanceof Model ? $record : null);
+
+            if ($component !== null) {
+                $html[(string) $key] = $this->renderChildTable($component, (string) $key, $item);
+            }
         }
 
         return $html;

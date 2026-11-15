@@ -197,3 +197,21 @@ it('draws an IconHeader on a plain Filament table, icon beside the heading and d
 
     expect($layout)->toBe(['gap' => 12, 'top' => 0]);
 });
+
+it('opens a child table only for the rows childTable() names a component for', function (): void {
+    $page = visit('/demo/cash-shift-demo?withoutTransferTable=1')->waitForEvent('networkidle');
+    $standalone = '.fi-data-grid-entry-grid:not(.fi-data-grid-in-table)';
+
+    $page->script(<<<'JS'
+        async () => {
+            for (let tries = 0; !document.querySelector('.fi-data-grid-entry-grid:not(.fi-data-grid-in-table) .slick-header') && tries < 100; tries++) {
+                await new Promise((resolve) => setTimeout(resolve, 50))
+            }
+        }
+        JS);
+
+    $page->assertScript(sprintf('document.querySelectorAll(%s).length', json_encode($standalone.' .fi-data-grid-child-table-host')), 3)
+        ->assertScript(sprintf('document.querySelector(%s) === null', json_encode($standalone.' .fi-data-grid-child-table-host[data-row-key="transfer"]')), true)
+        ->assertScript(sprintf('document.querySelectorAll(%s).length', json_encode($standalone.' .fi-data-grid-row-toggle')), 3)
+        ->assertNoJavaScriptErrors();
+});
