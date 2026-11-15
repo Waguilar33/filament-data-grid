@@ -747,6 +747,7 @@ export function createGrid(
     }
 
     let headerHeight = null
+    let fittedWidth = null
 
     const contentWidths = createWidthProbe(element, { wraps: false })
     const MAX_CACHED_WIDTHS = 2000
@@ -901,10 +902,16 @@ export function createGrid(
             columns.some((column) => column.width !== (ownWidth(column) ?? widthOf.get(column.id)))
 
         if (!changed) {
+            if (fittedWidth !== element.clientWidth) {
+                fittedWidth = element.clientWidth
+                grid.resizeCanvas()
+            }
+
             return
         }
 
         headerHeight = currentHeaderHeight
+        fittedWidth = element.clientWidth
         columns.forEach((column) => {
             column.width = ownWidth(column) ?? widthOf.get(column.id)
         })
