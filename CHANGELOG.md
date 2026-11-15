@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.53 - 2026-11-15
+
+- With `frozenColumns()`, a grid wider than its room keeps its scrolling pane to the grid's edge when the room changes without the window resizing, such as when the panel sidebar opens or closes. The pane kept its old width, cutting off the last columns or leaving a gap, because column widths did not change and the canvas was never resized.
+
 ## v1.0.0-beta.52 - 2026-11-13
 
 - With `compact()`, record actions and child record actions at the end of a row sit 16px from the grid's edge, like the header and text cells. They had 4px: the compact edge padding assumes the cell's content brings 12px of its own, which text does and actions don't.

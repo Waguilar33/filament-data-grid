@@ -100,3 +100,22 @@ it('shares the room again when the grid narrows and widens, without wrapping', f
 it('lines up the first scrolling header with its cells in a compact grid', function (): void {
     visitWidths(1024, '?compact=1')->assertScript(HEADER_ALIGNED, true);
 });
+
+it('keeps the scrolling pane to the grid edge when an overflowing grid with a frozen column narrows and widens', function (): void {
+    $paneGap = <<<'JS'
+        (() => {
+            const grid = document.querySelector('[id="form.dispatch"] .fi-data-grid-canvas')
+            const viewport = grid.querySelector('.slick-viewport-right')
+
+            return Math.round(Math.abs(grid.getBoundingClientRect().right - viewport.getBoundingClientRect().right))
+        })()
+        JS;
+    $page = visitWidths(1100, '?compact=1')->assertScript(COLUMN_FIT, json_encode(['clipped' => [], 'tall' => false, 'overflows' => true]));
+
+    foreach (['900px', '700px', ''] as $width) {
+        $page->script(sprintf('document.querySelector(%s).closest(".fi-section").style.width = "%s"', json_encode(DISPATCH), $width));
+        $page->assertScript(GRID_SETTLED);
+
+        expect($page->script($paneGap))->toBeLessThanOrEqual(1);
+    }
+});
