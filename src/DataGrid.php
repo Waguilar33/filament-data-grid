@@ -80,6 +80,8 @@ class DataGrid extends Repeater
     {
         parent::setUp();
 
+        $this->deleteAction(null);
+
         $this->registerActions([
             fn (DataGrid $component): Action => $component->getEditCellAction(),
         ]);
@@ -87,6 +89,15 @@ class DataGrid extends Repeater
         $this->afterStateHydrated(static function (DataGrid $component): void {
             $component->hydrateItems();
             $component->ensureTrailingEmptyRow();
+        });
+    }
+
+    public function deleteAction(?Closure $callback): static
+    {
+        return parent::deleteAction(function (Action $action) use ($callback): Action {
+            $modified = $this->evaluate($callback, ['action' => $action->link()]);
+
+            return $modified instanceof Action ? $modified : $action;
         });
     }
 

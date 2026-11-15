@@ -2,6 +2,11 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.56 - 2026-11-15
+
+- The delete action keeps the style set through `deleteAction()`, such as `->iconButton()`. It was always rendered as a link. Without a style it is still a link.
+- A grid that starts with no rows sizes its actions column when the first row arrives. The column kept the 56px used while there was nothing to measure, so a labelled delete action was cut off at the grid's edge.
+
 ## v1.0.0-beta.55 - 2026-11-15
 
 - A `childTable()` closure gets `$record` as before, the entry's own record, and the row as `$state`. beta.54 passed the row as `$record`, which broke closures typed to the entry's record.

@@ -341,7 +341,7 @@ DataGrid::make('lines')
     ])
 ```
 
-An action without a style renders as a link with its label and icon, the same as a record action in a Filament table and in `DataGridEntry`. `->button()`, `->iconButton()` and the other styles are respected. The actions column is as wide as the widest row's actions, and the plugin never groups them for you: 15 actions show 15 actions.
+An action without a style renders as a link with its label and icon, the same as a record action in a Filament table and in `DataGridEntry`. `->button()`, `->iconButton()` and the other styles are respected. The delete action too: style it with `->deleteAction(fn (Action $action): Action => $action->iconButton())`. The actions column is as wide as the widest row's actions, and the plugin never groups them for you: 15 actions show 15 actions.
 
 To put actions in a menu, wrap them in an `ActionGroup`. It renders as the dropdown you configured, next to any other actions:
 

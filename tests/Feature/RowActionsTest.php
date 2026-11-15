@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Filament\Actions\Action;
 use Filament\Actions\Testing\TestAction;
 use Filament\Forms\Components\TextInput;
 use Waguilar\FilamentDataGrid\DataGrid;
@@ -44,4 +45,29 @@ it('renders a delete action per row and none on the trailing blank row', functio
     expect(rowActionsHtml($payload, 0))->toContain("mountAction('delete'")
         ->and(rowActionsHtml($payload, 1))->toBeNull()
         ->and($payload['actionTemplates'])->toHaveCount(1);
+});
+
+it('renders the delete action as a link by default', function (): void {
+    $component = mountLines(
+        [['name' => 'a']],
+        fn (): array => [DataGrid::make('lines')->schema([TextInput::make('name')])],
+    );
+
+    expect(rowActionsHtml(grid($component)->getGridPayload(), 0))
+        ->toContain('fi-ac-link-action')
+        ->toContain('fi-link-label')
+        ->not->toContain('fi-icon-btn');
+});
+
+it('renders the delete action in the style the grid configures', function (): void {
+    $component = mountLines(
+        [['name' => 'a']],
+        fn (): array => [DataGrid::make('lines')->deleteAction(fn (Action $action): Action => $action->iconButton())->schema([TextInput::make('name')])],
+    );
+
+    expect(rowActionsHtml(grid($component)->getGridPayload(), 0))
+        ->toContain('fi-icon-btn')
+        ->not->toContain('fi-ac-link-action')
+        ->not->toContain('fi-link-label')
+        ->not->toContain('>Delete<');
 });
