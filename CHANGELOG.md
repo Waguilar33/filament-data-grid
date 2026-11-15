@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.55 - 2026-11-15
+
+- A `childTable()` closure gets `$record` as before, the entry's own record, and the row as `$state`. beta.54 passed the row as `$record`, which broke closures typed to the entry's record.
+
 ## v1.0.0-beta.54 - 2026-11-15
 
 - `childTable()` can decide per row: pass a closure that receives the row's `$state` (and `$record`) and returns the component, or `null` for a row with no child table. That row opens only for its `expandedAbove()` / `expandedBelow()` content, or doesn't open at all.

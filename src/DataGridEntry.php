@@ -516,14 +516,9 @@ class DataGridEntry extends RepeatableEntry
     /**
      * @param  array<array-key, mixed>  $state
      */
-    public function getChildTableComponent(array $state = [], ?Model $record = null): ?string
+    public function getChildTableComponent(array $state = []): ?string
     {
-        $component = $this->evaluate($this->childTable, [
-            'record' => $record ?? $state,
-            'state' => $state,
-        ], [
-            Model::class => $record,
-        ]);
+        $component = $this->evaluate($this->childTable, ['state' => $state]);
 
         return is_string($component) && $component !== '' ? $component : null;
     }
@@ -548,7 +543,7 @@ class DataGridEntry extends RepeatableEntry
         foreach ($items as $key => $item) {
             $record = $item->getRecord(withParentComponentRecord: false);
             $state = $record instanceof Model ? $record->toArray() : $item->getConstantState();
-            $component = $this->getChildTableComponent(is_array($state) ? $state : [], $record instanceof Model ? $record : null);
+            $component = $this->getChildTableComponent(is_array($state) ? $state : []);
 
             if ($component !== null) {
                 $html[(string) $key] = $this->renderChildTable($component, (string) $key, $item);
