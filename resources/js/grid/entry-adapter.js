@@ -98,7 +98,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
     const hasChildTable = () => !hasNativeChildTable() && payload.childColumns.length > 0
 
     const canExpandIn = (data, row) =>
-        Boolean(data.childTable && childTables) || (data.childColumns.length > 0 && row.children?.length > 0) || Boolean(row.above) || Boolean(row.below)
+        Boolean(data.childTable && childTables?.has(String(row.key))) || (data.childColumns.length > 0 && row.children?.length > 0) || Boolean(row.above) || Boolean(row.below)
 
     const canExpand = (row) => canExpandIn(payload, row)
 
@@ -214,7 +214,7 @@ export function createEntryGrid(element, { payload, translations, icons, isDarkM
                 group.push({ kind: 'child-slot', slot: 'above', row })
             }
 
-            if (hasNativeChildTable()) {
+            if (hasNativeChildTable() && childTables.has(String(row.key))) {
                 group.push({ kind: 'child-table', row, tableStart: true, tableEnd: true })
             } else if (hasChildTable() && childIndexes(row).length > 0) {
                 const indexes = childIndexes(row)

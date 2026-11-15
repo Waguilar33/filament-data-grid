@@ -16,6 +16,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
+use Livewire\Attributes\Url;
 use Waguilar\FilamentDataGrid\DataGridEntry;
 use Waguilar\FilamentDataGrid\Support\IconHeader;
 use Waguilar\FilamentDataGrid\Totals\Total;
@@ -24,6 +25,9 @@ use Workbench\App\Livewire\ShiftMovementsTable;
 
 final class CashShiftDemo extends Page implements HasTable
 {
+    #[Url]
+    public bool $withoutTransferTable = false;
+
     use InteractsWithTable;
 
     protected static ?int $navigationSort = 4;
@@ -54,6 +58,10 @@ final class CashShiftDemo extends Page implements HasTable
                 ])
                 ->totalsLabelAlignment(Alignment::End)
                 ->loadingSkeleton()
+                ->when($this->withoutTransferTable, fn (DataGridEntry $entry): DataGridEntry => $entry->childTable(
+                    fn (array $state): ?string => $state['key'] === 'transfer' ? null : ShiftMovementsTable::class,
+                    fn (array $record): array => ['method' => $record['key']],
+                ))
                 ->state(FakeCashShift::methods()),
             Livewire::make(ShiftMovementsTable::class, ['method' => 'card', 'withHeading' => true])->key('plain-movements'),
         ]);
