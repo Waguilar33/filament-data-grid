@@ -57,3 +57,19 @@ it('refuses to combine a child table with server-side pages', function (): void 
     expect(fn () => $entry->getGridPayload())->toThrow(UnsupportedChildTable::class)
         ->and(fn () => $entry->serverSide(false)->getGridPayload())->not->toThrow(UnsupportedChildTable::class);
 });
+
+it('hands a childTable() closure the row as $state', function (): void {
+    $entry = DataGridEntry::make('methods')
+        ->childTable(fn (array $state): ?string => $state['key'] === 'transfer' ? null : ShiftMovementsTable::class)
+        ->schema([TextEntry::make('key')]);
+
+    expect($entry->getChildTableComponent(['key' => 'transfer']))->toBeNull()
+        ->and($entry->getChildTableComponent(['key' => 'card']))->toBe(ShiftMovementsTable::class)
+        ->and($entry->hasChildTable())->toBeTrue();
+});
+
+it('renders no child table host for a row the closure skips', function (): void {
+    $html = Livewire::withQueryParams(['withoutTransferTable' => true])->test(CashShiftDemo::class)->html();
+
+    expect(substr_count($html, 'class="fi-data-grid-child-table-host"'))->toBe(7);
+});
