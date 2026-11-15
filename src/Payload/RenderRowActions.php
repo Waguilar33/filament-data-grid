@@ -30,7 +30,7 @@ final class RenderRowActions
         $deleteAction = $grid->isDeletable() ? $grid->getAction($grid->getDeleteActionName()) : null;
 
         if ($deleteAction !== null) {
-            $actions[] = $deleteAction(['item' => $key])->link();
+            $actions[] = $deleteAction(['item' => $key]);
         }
 
         $html = implode('', array_map(fn (Action|ActionGroup $action): string => $action->isVisible() ? $action->toHtml() : '', $actions));
