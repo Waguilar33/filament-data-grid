@@ -2,6 +2,10 @@
 
 All notable changes to `filament-data-grid` will be documented in this file.
 
+## v1.0.0-beta.57 - 2026-11-16
+
+- A grid does less layout work while loading and resizing. When only its height changes, such as a container growing or a child row opening below it, it no longer refits its columns or remeasures its rows; it still does when its width or header height changes. Masked number cells that finish formatting together remeasure the grid once instead of once per cell, the edge inset is read from one hidden element kept in the grid instead of one created and removed per read, and syncing row heights renders the grid once instead of twice. On the demo page with five grids, forced layouts while loading drop from 236 to 184, and ten height-only resizes go from 200 forced layouts to none.
+
 ## v1.0.0-beta.56 - 2026-11-15
 
 - The delete action keeps the style set through `deleteAction()`, such as `->iconButton()`. It was always rendered as a link. Without a style it is still a link.
