@@ -67,14 +67,17 @@ export function createGrid(
         tableRowHeight = height > 0 ? height : null
     }
 
-    const edgeInset = () => {
-        const probe = document.createElement('div')
-        probe.style.paddingInlineStart = 'var(--fi-data-grid-edge-inset, 0px)'
-        element.appendChild(probe)
-        const inset = parseFloat(getComputedStyle(probe).paddingInlineStart) || 0
-        probe.remove()
+    let edgeProbe = null
 
-        return inset
+    const edgeInset = () => {
+        if (!edgeProbe?.isConnected) {
+            edgeProbe = document.createElement('div')
+            edgeProbe.hidden = true
+            edgeProbe.style.paddingInlineStart = 'var(--fi-data-grid-edge-inset, 0px)'
+            element.appendChild(edgeProbe)
+        }
+
+        return parseFloat(getComputedStyle(edgeProbe).paddingInlineStart) || 0
     }
     let frozenLength = null
     let pendingRowHeights = false
@@ -370,6 +373,10 @@ export function createGrid(
     }
 
     function renderMaskedCells() {
+        if (maskedCellsToRender.size === 0) {
+            return
+        }
+
         const cells = [...maskedCellsToRender.values()]
         const active = grid.getCellEditor() ? grid.getActiveCell() : null
 
@@ -723,8 +730,6 @@ export function createGrid(
 
         pendingRowHeights = false
         grid.invalidateRowHeights()
-        grid.updateRowCount()
-        grid.invalidate()
         grid.resizeCanvas()
         positionChildren()
     }
@@ -872,6 +877,8 @@ export function createGrid(
         }
 
         if (element.clientWidth === 0) {
+            fittedWidth = 0
+
             return
         }
 
@@ -944,8 +951,11 @@ export function createGrid(
         alignGlyphs()
         cancelAnimationFrame(resizeFrame)
         resizeFrame = requestAnimationFrame(() => {
-            fitColumns()
-            syncRowHeights()
+            if (element.clientWidth !== fittedWidth || (element.querySelector('.slick-header')?.offsetHeight ?? null) !== headerHeight) {
+                fitColumns()
+                syncRowHeights()
+            }
+
             markHorizontalOverflow()
             positionChildren()
         })
